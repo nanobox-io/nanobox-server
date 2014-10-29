@@ -8,27 +8,6 @@ import (
 	"strings"
 )
 
-func parseLine(line string, m map[string]string) error {
-	//Empty line
-	if len(line) <= 0 {
-		return nil
-	}
-
-	line = strings.TrimSpace(line)
-	//Commented line
-	if strings.HasPrefix(line, "#") {
-		return nil
-	}
-
-	//Extract key-value pair
-	splitLine := strings.Fields(line)
-	if len(splitLine) != 2 {
-		return errors.New("Incorrectly formatted line (expected key value): " + line)
-	}
-	m[splitLine[0]] = splitLine[1]
-	return nil
-}
-
 //
 func parseConfig(fileName string) (map[string]string, error) {
 	file, err := os.Open(fileName)
@@ -51,4 +30,25 @@ func parseConfig(fileName string) (map[string]string, error) {
 	}
 
 	return m, err
+}
+
+func parseLine(line string, m map[string]string) error {
+	//Empty line
+	if len(line) <= 0 {
+		return nil
+	}
+
+	line = strings.TrimSpace(line)
+	//Commented line
+	if strings.HasPrefix(line, "#") {
+		return nil
+	}
+
+	//Extract key-value pair
+	splitLine := strings.Fields(line)
+	if len(splitLine) != 2 {
+		return errors.New("Incorrectly formatted line (expected key value): " + line)
+	}
+	m[splitLine[0]] = splitLine[1]
+	return nil
 }
