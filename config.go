@@ -16,7 +16,7 @@ func parseLine(line string, m map[string]string) error {
 
 	line = strings.TrimSpace(line)
 	//Commented line
-	if ([]rune(line))[0] == '#' {
+	if strings.HasPrefix(line, "#") {
 		return nil
 	}
 
@@ -33,9 +33,9 @@ func parseLine(line string, m map[string]string) error {
 func parseConfig(fileName string) (map[string]string, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
-		file.Close()
 		return nil, err
 	}
+	defer file.Close()
 
 	//Read line by line, sending lines to parseLine
 	m := make(map[string]string)
