@@ -18,7 +18,7 @@ func parseLine(line string, m map[string]string) error {
 	//Commented line
 	if ([]rune(line))[0] == '#' {
 		return nil
-    }
+	}
 
 	//Extract key-value pair
 	splitLine := strings.Fields(line)
