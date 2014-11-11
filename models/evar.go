@@ -1,102 +1,119 @@
 package models
 
-import(
-  "encoding/JSON"
-  "fmt"
-  // "io"
-  // "net/http"
-  "time"
+import (
+	"encoding/JSON"
+	"fmt"
+	// "io"
+	// "net/http"
+	"time"
 
-  "github.com/nanobox-core/nanobox-server/db"
+	"github.com/nanobox-core/nanobox-server/db"
 
-  "code.google.com/p/go-uuid/uuid"
+	"code.google.com/p/go-uuid/uuid"
 )
 
-type(
+type (
 
-  //
-  EVar struct {
-    AppID     string    `json:"app_id"`     //
-    CreatedAt time.Time `json:"created_at"` //
-    ID        string    `json:"id"`         //
-    Internal  bool      `json:"internal"`   //
-    ServiceID string    `json:"service_id"` //
-    Title     string    `json:"title"`      //
-    UpdatedAt time.Time `json:"updated_at"` //
-    Value     string    `json:"value"`      //
-  }
+	//
+	EVar struct {
+		AppID     string    `json:"app_id"`     //
+		CreatedAt time.Time `json:"created_at"` //
+		ID        string    `json:"id"`         //
+		Internal  bool      `json:"internal"`   //
+		ServiceID string    `json:"service_id"` //
+		Title     string    `json:"title"`      //
+		UpdatedAt time.Time `json:"updated_at"` //
+		Value     string    `json:"value"`      //
+	}
 
-  //
-  EVarCreateOptions struct {
-    AppID string `json:"app_id,omitempty"`
-    Title string `json:"title,omitempty"`
-    Value string `json:"value,omitempty"`
-  }
+	//
+	EVarCreateOptions struct {
+		AppID string `json:"app_id,omitempty"`
+		Title string `json:"title,omitempty"`
+		Value string `json:"value,omitempty"`
+	}
 
-  //
-  EVarUpdateOptions struct {
-    Title string `json:"title,omitempty"`
-    Value string `json:"value,omitempty"`
-  }
-
+	//
+	EVarUpdateOptions struct {
+		Title string `json:"title,omitempty"`
+		Value string `json:"value,omitempty"`
+	}
 )
+
+//
+var EVarChan chan int
+
+//
+func init() {
+  EVarChan = make(chan int, 1)
+}
+
+// List
+func (m *EVar) List() {
+  var evars []EVar
+  do(func(){db.ReadAll("evars", &evars, EVarChan)})
+}
 
 // Create
 func (m *EVar) Create(body []byte) {
 
-  evar := &EVar{}
+	evar := &EVar{}
 
-  if err := json.Unmarshal(body, evar); err != nil {
-    panic(err)
-  }
+	if err := json.Unmarshal(body, evar); err != nil {
+		panic(err)
+	}
 
-  evar.ID = uuid.New()
-  evar.CreatedAt = time.Now()
+	evar.ID = uuid.New()
+	evar.CreatedAt = time.Now()
 
-  evar.save()
+	evar.save()
 }
 
 // Get
-func (n *EVar) Get(id string) {
-  evar := &EVar{}
-  db.Read("evars", id, evar)
-
-  fmt.Printf("EVAR: %#v", evar)
+func (m *EVar) Get(id string) {
+	evar := &EVar{}
+	do(func(){db.Read("evars", id, evar, EVarChan)})
 }
 
 // Update
 func (m *EVar) Update(id string, body []byte) {
+	evar := &EVar{}
 
-  evar := &EVar{}
+	db.Read("evars", id, evar, EVarChan)
 
-  db.Read("evars", id, evar)
+	if err := json.Unmarshal(body, evar); err != nil {
+		panic(err)
+	}
 
-  if err := json.Unmarshal(body, evar); err != nil {
-    panic(err)
-  }
-
-  evar.save()
+	evar.save()
 }
 
 // Destroy
 func (m *EVar) Destroy(id string) {
-  db.Delete("evars", id)
+	do(func(){db.Delete("evars", id, EVarChan)})
 }
 
 // Save
 func (m *EVar) Save() {
-  m.save()
+	m.save()
 }
 
 // Count
 func (m *EVar) Count() {
+
 }
 
 // private
 
 // save
 func (m *EVar) save() {
-  m.UpdatedAt = time.Now()
+	m.UpdatedAt = time.Now()
 
-  db.Write("evars", m.ID, m)
+	do(func(){db.Write("evars", m.ID, m, EVarChan)})
+}
+
+// do
+func do(action func()) {
+  go action()
+  <- EVarChan
 }

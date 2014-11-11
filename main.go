@@ -31,7 +31,7 @@ func main() {
 	//
 	router.host = opts["host"]
 	router.port = opts["port"]
-	router.addr = router.host+":"+router.port
+	router.addr = router.host + ":" + router.port
 
 	if err := router.start(); err != nil {
 		fmt.Printf("Unable to start router: %s", err)

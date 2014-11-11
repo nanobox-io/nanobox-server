@@ -1,54 +1,63 @@
 package main
 
 import (
-  "fmt"
-  "net/http"
+	"fmt"
+	"net/http"
 
-  "github.com/gorilla/pat"
+	"github.com/gorilla/pat"
 
-  "github.com/nanobox-core/nanobox-server/controllers"
+	"github.com/nanobox-core/nanobox-server/controllers"
 )
 
-type(
+type (
 
-  //
-  Router struct{
-    host, port, addr string
-  }
-
+	//
+	Router struct {
+		host, port, addr string
+	}
 )
 
 //
 func (r *Router) start() error {
-  fmt.Println("Starting router... \n")
+	fmt.Println("Starting router...")
 
-  //
-  p := pat.New()
+	//
+	p := pat.New()
 
-  //
-  registerRoutes(p)
+	//
+	fmt.Println("Registering routes...")
+	registerRoutes(p)
 
-  //
-  http.Handle("/", p)
-  err := http.ListenAndServe(r.addr, nil)
-  if err != nil {
-    return err
-  }
+	fmt.Println("Listening at " + r.addr)
 
-  fmt.Println("Listening... \n")
+	//
+	http.Handle("/", p)
+	err := http.ListenAndServe(r.addr, nil)
+	if err != nil {
+		return err
+	}
 
-  return nil
+	return nil
 }
 
 //
 func registerRoutes(p *pat.Router) {
 
-  // evars
-  evars := &controllers.EVars{}
+	// evars
+	evars := &controllers.EVars{}
 
-  p.Delete("/evars/{slug}", evars.Delete)
-  p.Put("/evars/{slug}", evars.Update)
-  p.Get("/evars/{slug}", evars.Show)
-  p.Get("/evars", evars.Index)
-  p.Post("/evars", evars.Create)
+	p.Delete("/evars/{slug}", evars.Delete)
+	p.Put("/evars/{slug}", evars.Update)
+	p.Get("/evars/{slug}", evars.Show)
+	p.Post("/evars", evars.Create)
+	p.Get("/evars", evars.Index)
+
+	// services
+	// services := &controllers.Services{}
+
+	// p.Delete("/services/{slug}", services.Delete)
+	// p.Put("/services/{slug}", services.Update)
+	// p.Get("/services/{slug}", services.Show)
+	// p.Post("/services", services.Create)
+	// p.Get("/services", services.Index)
 }
