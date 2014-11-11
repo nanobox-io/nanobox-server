@@ -39,7 +39,7 @@ func Write(collection, resourceID string, v interface{}, c chan<- int) {
 		os.Exit(1)
 	}
 
-  c <- 0
+	c <- 0
 }
 
 // Read
@@ -54,7 +54,7 @@ func Read(collection, resourceID string, v interface{}, c chan<- int) interface{
 		panic(err)
 	}
 
-  c <- 0
+	c <- 0
 
 	return v
 }
@@ -86,7 +86,7 @@ func ReadAll(collection string, v interface{}, c chan<- int) {
 		panic(err)
 	}
 
-  c <- 0
+	c <- 0
 }
 
 // Delete
@@ -97,7 +97,7 @@ func Delete(collection, resourceID string, c chan<- int) {
 		os.Exit(1)
 	}
 
-  c <- 0
+	c <- 0
 }
 
 // private

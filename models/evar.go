@@ -45,13 +45,13 @@ var EVarChan chan int
 
 //
 func init() {
-  EVarChan = make(chan int, 1)
+	EVarChan = make(chan int, 1)
 }
 
 // List
 func (m *EVar) List() {
-  var evars []EVar
-  do(func(){db.ReadAll("evars", &evars, EVarChan)})
+	var evars []EVar
+	do(func() { db.ReadAll("evars", &evars, EVarChan) })
 }
 
 // Create
@@ -72,7 +72,7 @@ func (m *EVar) Create(body []byte) {
 // Get
 func (m *EVar) Get(id string) {
 	evar := &EVar{}
-	do(func(){db.Read("evars", id, evar, EVarChan)})
+	do(func() { db.Read("evars", id, evar, EVarChan) })
 }
 
 // Update
@@ -90,7 +90,7 @@ func (m *EVar) Update(id string, body []byte) {
 
 // Destroy
 func (m *EVar) Destroy(id string) {
-	do(func(){db.Delete("evars", id, EVarChan)})
+	do(func() { db.Delete("evars", id, EVarChan) })
 }
 
 // Save
@@ -109,11 +109,11 @@ func (m *EVar) Count() {
 func (m *EVar) save() {
 	m.UpdatedAt = time.Now()
 
-	do(func(){db.Write("evars", m.ID, m, EVarChan)})
+	do(func() { db.Write("evars", m.ID, m, EVarChan) })
 }
 
 // do
 func do(action func()) {
-  go action()
-  <- EVarChan
+	go action()
+	<-EVarChan
 }
