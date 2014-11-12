@@ -2,39 +2,81 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
+
+	"github.com/gorilla/pat"
+
+	"github.com/nanobox-core/nanobox-server/api"
+	"github.com/nanobox-core/nanobox-server/db"
 )
 
-var router Router
+type (
+
+	//
+	Nanobox struct {
+		api api.API
+		db  db.Driver
+
+		opts map[string]string
+	}
+)
 
 //
 func main() {
 
-	// command line args w/o program
-	args := os.Args[1:]
-
-	// set default config file
-	config := "default.conf"
-
-	// override default if config file provided
-	if len(args) >= 1 {
-		config = args[0]
+	// everything inside of nanobox should only be created once
+	nanobox := &Nanobox{
+		api: api.API{},
+		db:  db.Driver{},
 	}
 
-	// parse config file
-	opts, err := parseConfig(config)
-	if err != nil {
-		fmt.Printf("Unable to parse config file: %s", err)
+	// boot sequence...
+
+	// parse the provided config file or use defautls
+	if err := nanobox.config(); err != nil {
+		fmt.Println("Unable to configure. Aborting... ", err)
 		os.Exit(1)
 	}
 
-	//
-	router.host = opts["host"]
-	router.port = opts["port"]
-	router.addr = router.host + ":" + router.port
+	// initialize the database driver
+	if status := nanobox.db.Init(nanobox.opts); status != 0 {
+		fmt.Println("Unable to initialize database driver. Aborting...")
+		os.Exit(status)
+	}
 
-	if err := router.start(); err != nil {
-		fmt.Printf("Unable to start router: %s", err)
+	// initialize the api
+	if status := nanobox.api.Init(nanobox.opts, &nanobox.db); status != 0 {
+		fmt.Println("Unable to initialize API. Aborting...")
+		os.Exit(status)
+	}
+
+	// start nanobox
+	if err := nanobox.Start(); err != nil {
+		fmt.Printf("Unable to start nanobox: %s", err)
 		os.Exit(1)
 	}
+}
+
+// Start
+func (n *Nanobox) Start() error {
+  fmt.Println("Starting server...")
+
+  //
+  p := pat.New()
+
+  //
+  fmt.Println("Registering routes...")
+  api.InitRoutes(p, &n.api)
+
+  fmt.Println("Listening at " + n.api.Server.Addr)
+
+  //
+  http.Handle("/", p)
+  err := http.ListenAndServe(n.api.Server.Addr, nil)
+  if err != nil {
+    return err
+  }
+
+  return nil
 }
