@@ -1,10 +1,10 @@
 package api
 
-import(
-  "fmt"
-  "net/http"
+import (
+	"fmt"
+	"net/http"
 
-  "github.com/gorilla/pat"
+	"github.com/gorilla/pat"
 
 	"github.com/nanobox-core/nanobox-server/db"
 )
@@ -19,12 +19,12 @@ type (
 	}
 
 	// Server represents
-  Server struct {
-    Addr string
-    host string
-    port string
-    debugging string
-  }
+	Server struct {
+		Addr      string
+		host      string
+		port      string
+		debugging string
+	}
 )
 
 // Init
@@ -38,9 +38,9 @@ func (api *API) Init(opts map[string]string, driver *db.Driver) int {
 
 	api.Server.debugging = opts["debugging"]
 
-  api.Server.host = opts["host"]
-  api.Server.port = opts["port"]
-  api.Server.Addr = opts["host"] + ":" + opts["port"]
+	api.Server.host = opts["host"]
+	api.Server.port = opts["port"]
+	api.Server.Addr = opts["host"] + ":" + opts["port"]
 
 	//
 	return 0
@@ -51,20 +51,20 @@ func InitRoutes(p *pat.Router, api *API) {
 
 	watch := (api.Server.debugging == "true")
 
-  // evars
-  p.Delete("/evars/{slug}", handle(api.DeleteEVar, watch))
-  p.Put("/evars/{slug}", handle(api.UpdateEVar, watch))
-  p.Get("/evars/{slug}", handle(api.GetEVar, watch))
-  p.Post("/evars", handle(api.CreateEVar, watch))
-  p.Get("/evars", handle(api.ListEVars, watch))
+	// evars
+	p.Delete("/evars/{slug}", handle(api.DeleteEVar, watch))
+	p.Put("/evars/{slug}", handle(api.UpdateEVar, watch))
+	p.Get("/evars/{slug}", handle(api.GetEVar, watch))
+	p.Post("/evars", handle(api.CreateEVar, watch))
+	p.Get("/evars", handle(api.ListEVars, watch))
 }
 
 // handle
-func handle(fn func (http.ResponseWriter, *http.Request), watch bool) http.HandlerFunc {
-  return func(w http.ResponseWriter, req *http.Request) {
+func handle(fn func(http.ResponseWriter, *http.Request), watch bool) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
 
-  	if watch {
-	  	fmt.Printf(`
+		if watch {
+			fmt.Printf(`
 Request:
 --------------------------------------------------------------------------------
 %#v
@@ -74,10 +74,10 @@ Response:
 %#v
 
 
-`, req, w )
+`, req, w)
 
-	  }
+		}
 
-    fn(w, req)
-  }
+		fn(w, req)
+	}
 }

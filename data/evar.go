@@ -1,7 +1,7 @@
 package data
 
 import (
-	"encoding/JSON"
+	// "fmt"
 	"time"
 
 	"code.google.com/p/go-uuid/uuid"
@@ -43,65 +43,44 @@ type (
 )
 
 // List
-func (e *EVars) List(driver *db.Driver) error {
-	trans := db.Transaction{Action: "readall", Collection: "evars", Container: e.EVars}
-
+func (e *EVars) List(driver *db.Driver) {
+	trans := db.Transaction{Action: "readall", Collection: "evars", Container: &e.EVars}
 	driver.Transact(trans)
-
-	return nil
 }
 
 // Create
-func (e *EVar) Create(body []byte, driver *db.Driver) error {
-
-	if err := json.Unmarshal(body, e); err != nil {
-		panic(err)
-	}
+func (e *EVar) Create(driver *db.Driver) {
 
 	e.ID = uuid.New()
 	e.CreatedAt = time.Now()
 
-	e.save(driver)
-
-	return nil
+	trans := db.Transaction{Action: "write", Collection: "evars", Resource: e.ID, Container: e}
+	e.save(trans, driver)
 }
 
 // Get
-func (e *EVar) Get(resourceID string, driver *db.Driver) error {
+func (e *EVar) Get(resourceID string, driver *db.Driver) {
 	trans := db.Transaction{Action: "read", Collection: "evars", Resource: resourceID, Container: e}
 	driver.Transact(trans)
-
-	return nil
 }
 
 // Update
-func (e *EVar) Update(resourceID string, body []byte, driver *db.Driver) error {
+func (e *EVar) Update(resourceID string, driver *db.Driver) {
 	trans := db.Transaction{Action: "read", Collection: "evars", Resource: resourceID, Container: e}
-	driver.Transact(trans)
-
-	if err := json.Unmarshal(body, e); err != nil {
-		panic(err)
-	}
-
-	e.save(driver)
-
-	return nil
+	e.save(trans, driver)
 }
 
 // Destroy
-func (e *EVar) Destroy(resourceID string, driver *db.Driver) error {
+func (e *EVar) Destroy(resourceID string, driver *db.Driver) {
 	trans := db.Transaction{Action: "delete", Collection: "evars", Resource: resourceID}
 	driver.Transact(trans)
-
-	return nil
 }
 
 // private
 
 // save
-func (e *EVar) save(driver *db.Driver) {
+func (e *EVar) save(trans db.Transaction, driver *db.Driver) {
 	e.UpdatedAt = time.Now()
 
-	trans := db.Transaction{Action: "write", Collection: "evars", Resource: e.ID, Container: e}
 	driver.Transact(trans)
 }

@@ -53,30 +53,30 @@ func main() {
 
 	// start nanobox
 	if err := nanobox.Start(); err != nil {
-		fmt.Printf("Unable to start nanobox: %s", err)
+		fmt.Printf("Unable to start nanobox: %v", err)
 		os.Exit(1)
 	}
 }
 
 // Start
 func (n *Nanobox) Start() error {
-  fmt.Println("Starting server...")
+	fmt.Println("Starting server...")
 
-  //
-  p := pat.New()
+	//
+	p := pat.New()
 
-  //
-  fmt.Println("Registering routes...")
-  api.InitRoutes(p, &n.api)
+	//
+	fmt.Println("Registering routes...")
+	api.InitRoutes(p, &n.api)
 
-  fmt.Println("Listening at " + n.api.Server.Addr)
+	fmt.Println("Listening at " + n.api.Server.Addr)
 
-  //
-  http.Handle("/", p)
-  err := http.ListenAndServe(n.api.Server.Addr, nil)
-  if err != nil {
-    return err
-  }
+	//
+	http.Handle("/", p)
+	err := http.ListenAndServe(n.api.Server.Addr, nil)
+	if err != nil {
+		return err
+	}
 
-  return nil
+	return nil
 }
