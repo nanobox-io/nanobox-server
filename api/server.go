@@ -20,25 +20,28 @@ type (
 
 	// Server represents
 	Server struct {
-		Addr      string
-		host      string
-		port      string
-		debugging string
+		Addr string
+		host string
+		port string
 	}
+)
+
+//
+var (
+	debugging bool
 )
 
 // Init
 func (api *API) Init(opts map[string]string, driver *db.Driver) int {
 	fmt.Println("Initializing API...")
 
+	debugging = (opts["debugging"] == "true")
+
 	// = nanobox.db
 	api.Driver = driver
 
 	//
 	api.Server = &Server{}
-
-	api.Server.debugging = opts["debugging"]
-
 	api.Server.host = opts["host"]
 	api.Server.port = opts["port"]
 	api.Server.Addr = opts["host"] + ":" + opts["port"]
@@ -50,14 +53,12 @@ func (api *API) Init(opts map[string]string, driver *db.Driver) int {
 // registerRoutes
 func InitRoutes(p *pat.Router, api *API) {
 
-	watch := (api.Server.debugging == "true")
-
 	// evars
-	p.Delete("/evars/{slug}", handle(api.DeleteEVar, watch))
-	p.Put("/evars/{slug}", handle(api.UpdateEVar, watch))
-	p.Get("/evars/{slug}", handle(api.GetEVar, watch))
-	p.Post("/evars", handle(api.CreateEVar, watch))
-	p.Get("/evars", handle(api.ListEVars, watch))
+	p.Delete("/evars/{slug}", handle(api.DeleteEVar, debugging))
+	p.Put("/evars/{slug}", handle(api.UpdateEVar, debugging))
+	p.Get("/evars/{slug}", handle(api.GetEVar, debugging))
+	p.Post("/evars", handle(api.CreateEVar, debugging))
+	p.Get("/evars", handle(api.ListEVars, debugging))
 }
 
 // handle

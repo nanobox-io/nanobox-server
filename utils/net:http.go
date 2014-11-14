@@ -7,10 +7,11 @@ import (
 )
 
 // WriteResponse
-func WriteResponse(v interface{}, w http.ResponseWriter) {
+func WriteResponse(v interface{}, w http.ResponseWriter, status int) {
 	b := ToJSON(v)
 
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
 	w.Write(b)
 }
 

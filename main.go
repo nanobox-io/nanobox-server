@@ -9,16 +9,18 @@ import (
 
 	"github.com/nanobox-core/nanobox-server/api"
 	"github.com/nanobox-core/nanobox-server/db"
+	"github.com/nanobox-core/nanobox-server/workers"
 )
 
 type (
 
 	//
 	Nanobox struct {
-		api api.API
-		db  db.Driver
+		api     api.API         //
+		db      db.Driver       //
+		workers workers.Factory //
 
-		opts map[string]string
+		opts map[string]string //
 	}
 )
 
@@ -27,8 +29,9 @@ func main() {
 
 	// everything inside of nanobox should only be created once
 	nanobox := &Nanobox{
-		api: api.API{},
-		db:  db.Driver{},
+		api:     api.API{},
+		db:      db.Driver{},
+		workers: workers.Factory{},
 	}
 
 	// boot sequence...
@@ -51,6 +54,13 @@ func main() {
 		os.Exit(status)
 	}
 
+	// initialize workers
+	if status := nanobox.workers.Init(nanobox.opts); status != 0 {
+		fmt.Println("Unable to initialize workers. Aborting...")
+		os.Exit(status)
+	}
+
+	//
 	// start nanobox
 	if err := nanobox.Start(); err != nil {
 		fmt.Printf("Unable to start nanobox: %v", err)

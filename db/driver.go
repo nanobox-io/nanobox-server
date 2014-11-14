@@ -15,8 +15,8 @@ type (
 
 	// Driver represents
 	Driver struct {
-		dir      string
 		channels map[string]chan int
+		dir      string
 	}
 
 	// Transaction represents
@@ -28,16 +28,24 @@ type (
 	}
 )
 
+//
+var (
+	debugging bool
+)
+
 // Init
 func (d *Driver) Init(opts map[string]string) int {
 	fmt.Printf("Creating database directory at '%v'...\n", opts["db_dir"])
 
+	debugging = (opts["debugging"] == "true")
+
 	d.dir = opts["db_dir"]
 
+	//
 	d.channels = make(map[string]chan int)
 
 	// make a ping channel
-	ping := make(chan int, 1)
+	ping := make(chan int)
 	d.channels["ping"] = ping
 
 	//
@@ -54,44 +62,30 @@ func (d *Driver) Init(opts map[string]string) int {
 func (d *Driver) Transact(trans Transaction) {
 
 	//
-	c := d.getChan(trans.Collection)
+	done := d.getOrCreateChan(trans.Collection)
 
 	//
 	switch trans.Action {
 	case "write":
-		go d.write(trans, c)
+		go d.write(trans, done)
 	case "read":
-		go d.read(trans, c)
+		go d.read(trans, done)
 	case "readall":
-		go d.readAll(trans, c)
+		go d.readAll(trans, done)
 	case "delete":
-		go d.delete(trans, c)
+		go d.delete(trans, done)
 	default:
 		fmt.Println("Unsupported action ", trans.Action)
 	}
 
 	// wait...
-	<-c
-}
-
-// getChan
-func (d *Driver) getChan(channel string) chan int {
-
-	c, ok := d.channels[channel]
-
-	// if the chan doesn't exist make it
-	if !ok {
-		d.channels[channel] = make(chan int, 1)
-		return d.channels[channel]
-	}
-
-	return c
+	<-done
 }
 
 // private
 
 // write
-func (d *Driver) write(trans Transaction, c chan<- int) {
+func (d *Driver) write(trans Transaction, done chan<- int) {
 
 	//
 	dir := d.dir + "/" + trans.Collection
@@ -122,11 +116,11 @@ func (d *Driver) write(trans Transaction, c chan<- int) {
 	}
 
 	// release...
-	c <- 0
+	done <- 0
 }
 
 // read
-func (d *Driver) read(trans Transaction, c chan<- int) interface{} {
+func (d *Driver) read(trans Transaction, done chan<- int) interface{} {
 
 	dir := d.dir + "/" + trans.Collection
 
@@ -141,13 +135,13 @@ func (d *Driver) read(trans Transaction, c chan<- int) interface{} {
 	}
 
 	// release...
-	c <- 0
+	done <- 0
 
 	return trans.Container
 }
 
 // readAll
-func (d *Driver) readAll(trans Transaction, c chan<- int) {
+func (d *Driver) readAll(trans Transaction, done chan<- int) {
 
 	dir := d.dir + "/" + trans.Collection
 
@@ -175,11 +169,11 @@ func (d *Driver) readAll(trans Transaction, c chan<- int) {
 	}
 
 	// release...
-	c <- 0
+	done <- 0
 }
 
 // delete
-func (d *Driver) delete(trans Transaction, c chan<- int) {
+func (d *Driver) delete(trans Transaction, done chan<- int) {
 
 	dir := d.dir + "/" + trans.Collection
 
@@ -190,10 +184,24 @@ func (d *Driver) delete(trans Transaction, c chan<- int) {
 	}
 
 	// release...
-	c <- 0
+	done <- 0
 }
 
 // helpers
+
+// getChan
+func (d *Driver) getOrCreateChan(channel string) chan int {
+
+	c, ok := d.channels[channel]
+
+	// if the chan doesn't exist make it
+	if !ok {
+		d.channels[channel] = make(chan int)
+		return d.channels[channel]
+	}
+
+	return c
+}
 
 // mkDir
 func mkDir(d string) error {
