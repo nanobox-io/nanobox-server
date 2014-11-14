@@ -60,7 +60,6 @@ func main() {
 
 // Start
 func (n *Nanobox) Start() error {
-	fmt.Println("Starting server...")
 
 	//
 	p := pat.New()
@@ -69,7 +68,8 @@ func (n *Nanobox) Start() error {
 	fmt.Println("Registering routes...")
 	api.InitRoutes(p, &n.api)
 
-	fmt.Println("Listening at " + n.api.Server.Addr)
+	fmt.Println("Starting server...")
+	fmt.Printf("\nListening at %v\n", n.api.Server.Addr)
 
 	//
 	http.Handle("/", p)

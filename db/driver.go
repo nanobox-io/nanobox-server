@@ -30,6 +30,8 @@ type (
 
 // Init
 func (d *Driver) Init(opts map[string]string) int {
+	fmt.Printf("Creating database directory at '%v'...\n", opts["db_dir"])
+
 	d.dir = opts["db_dir"]
 
 	d.channels = make(map[string]chan int)

@@ -29,6 +29,7 @@ type (
 
 // Init
 func (api *API) Init(opts map[string]string, driver *db.Driver) int {
+	fmt.Println("Initializing API...")
 
 	// = nanobox.db
 	api.Driver = driver

@@ -22,6 +22,8 @@ func (n *Nanobox) config() error {
 		conf = args[0]
 	}
 
+	fmt.Printf("Configuring nanobox using '%v'...\n", conf)
+
 	// parse config file
 	opts, err := parseConfig(conf)
 	if err != nil {

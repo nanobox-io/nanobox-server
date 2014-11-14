@@ -27,4 +27,4 @@ _testmain.go
 .DS_Store
 TODO
 nanobox-server
-./tmp
+tmp
