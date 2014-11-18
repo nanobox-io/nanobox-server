@@ -11,46 +11,47 @@ import (
 )
 
 // ListEVars
-func (api *API) ListEVars(w http.ResponseWriter, req *http.Request) {
+func (api *API) ListEVars(res http.ResponseWriter, req *http.Request) {
 	evars := &data.EVars{}
 	evars.List(api.Driver)
-	utils.WriteResponse(evars.EVars, w, http.StatusOK)
+	utils.WriteResponse(evars.EVars, res, http.StatusOK)
 }
 
 // CreateEVar
-func (api *API) CreateEVar(w http.ResponseWriter, req *http.Request) {
+func (api *API) CreateEVar(res http.ResponseWriter, req *http.Request) {
 	evar := &data.EVar{}
 	utils.ParseBody(req, evar)
 	evar.Create(api.Driver)
-	utils.WriteResponse(evar, w, http.StatusCreated)
+	utils.WriteResponse(evar, res, http.StatusCreated)
 
 	//
 	worker := workers.EVar{
-		ID:     evar.ID,
 		Action: "create",
+		ID: evar.ID,
+		Response: res,
 	}
 
-	workers.Run(worker)
+	workers.Process(worker)
 }
 
 // GetEVar
-func (api *API) GetEVar(w http.ResponseWriter, req *http.Request) {
+func (api *API) GetEVar(res http.ResponseWriter, req *http.Request) {
 	evar := &data.EVar{}
 	evar.Get(req.URL.Query().Get(":slug"), api.Driver)
-	utils.WriteResponse(evar, w, http.StatusOK)
+	utils.WriteResponse(evar, res, http.StatusOK)
 }
 
 // UpdateEVar
-func (api *API) UpdateEVar(w http.ResponseWriter, req *http.Request) {
+func (api *API) UpdateEVar(res http.ResponseWriter, req *http.Request) {
 	evar := &data.EVar{}
 	utils.ParseBody(req, evar)
 	evar.Update(req.URL.Query().Get(":slug"), api.Driver)
-	utils.WriteResponse(evar, w, http.StatusOK)
+	utils.WriteResponse(evar, res, http.StatusOK)
 }
 
 // DeleteEVar
-func (api *API) DeleteEVar(w http.ResponseWriter, req *http.Request) {
+func (api *API) DeleteEVar(res http.ResponseWriter, req *http.Request) {
 	evar := &data.EVar{}
 	evar.Destroy(req.URL.Query().Get(":slug"), api.Driver)
-	utils.WriteResponse(evar, w, http.StatusOK)
+	utils.WriteResponse(evar, res, http.StatusOK)
 }

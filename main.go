@@ -9,6 +9,7 @@ import (
 
 	"github.com/nanobox-core/nanobox-server/api"
 	"github.com/nanobox-core/nanobox-server/db"
+	"github.com/nanobox-core/nanobox-server/mist"
 	"github.com/nanobox-core/nanobox-server/workers"
 )
 
@@ -18,6 +19,7 @@ type (
 	Nanobox struct {
 		api     api.API         //
 		db      db.Driver       //
+		mist 		mist.Adapter 		//
 		workers workers.Factory //
 
 		opts map[string]string //
@@ -31,6 +33,7 @@ func main() {
 	nanobox := &Nanobox{
 		api:     api.API{},
 		db:      db.Driver{},
+		mist: 	 mist.Adapter{},
 		workers: workers.Factory{},
 	}
 
@@ -53,6 +56,12 @@ func main() {
 		fmt.Println("Unable to initialize API. Aborting...")
 		os.Exit(status)
 	}
+
+	// initialize mist
+	// if status := nanobox.mist.Init(nanobox.opts); status != 0 {
+	// 	fmt.Println("Unable to initialize 'Mist'. Aborting...")
+	// 	os.Exit(status)
+	// }
 
 	// initialize workers
 	if status := nanobox.workers.Init(nanobox.opts); status != 0 {
