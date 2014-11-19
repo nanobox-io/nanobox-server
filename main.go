@@ -19,7 +19,7 @@ type (
 	Nanobox struct {
 		api     api.API         //
 		db      db.Driver       //
-		mist 		mist.Adapter 		//
+		mist    mist.Adapter    //
 		workers workers.Factory //
 
 		opts map[string]string //
@@ -33,7 +33,7 @@ func main() {
 	nanobox := &Nanobox{
 		api:     api.API{},
 		db:      db.Driver{},
-		mist: 	 mist.Adapter{},
+		mist:    mist.Adapter{},
 		workers: workers.Factory{},
 	}
 
@@ -58,10 +58,10 @@ func main() {
 	}
 
 	// initialize mist
-	// if status := nanobox.mist.Init(nanobox.opts); status != 0 {
-	// 	fmt.Println("Unable to initialize 'Mist'. Aborting...")
-	// 	os.Exit(status)
-	// }
+	if status := nanobox.mist.Init(nanobox.opts); status != 0 {
+		fmt.Println("Unable to initialize 'Mist'. Aborting...")
+		os.Exit(status)
+	}
 
 	// initialize workers
 	if status := nanobox.workers.Init(nanobox.opts); status != 0 {

@@ -66,7 +66,7 @@ func (e *EVar) Get(resourceID string, driver *db.Driver) {
 
 // Update
 func (e *EVar) Update(resourceID string, driver *db.Driver) {
-	trans := db.Transaction{Action: "read", Collection: "evars", Resource: resourceID, Container: e}
+	trans := db.Transaction{Action: "write", Collection: "evars", Resource: resourceID, Container: e}
 	e.save(trans, driver)
 }
 

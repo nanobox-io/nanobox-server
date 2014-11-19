@@ -1,7 +1,6 @@
 package api
 
 import (
-	// "encoding/JSON"
 	// "fmt"
 	"net/http"
 
@@ -11,47 +10,57 @@ import (
 )
 
 // ListEVars
-func (api *API) ListEVars(res http.ResponseWriter, req *http.Request) {
-	evars := &data.EVars{}
-	evars.List(api.Driver)
-	utils.WriteResponse(evars.EVars, res, http.StatusOK)
+func (api *API) ListEVars(rw http.ResponseWriter, req *http.Request) {
+	go func() {
+		evars := &data.EVars{}
+		evars.List(api.Driver)
+		utils.WriteResponse(evars.EVars, rw, http.StatusOK)
+	}()
+
+	//
+	worker := workers.EVar{
+		Action: "list",
+		ID:     "n",
+	}
+
+	workers.Process(worker)
 }
 
 // CreateEVar
-func (api *API) CreateEVar(res http.ResponseWriter, req *http.Request) {
+func (api *API) CreateEVar(rw http.ResponseWriter, req *http.Request) {
 	evar := &data.EVar{}
 	utils.ParseBody(req, evar)
 	evar.Create(api.Driver)
-	utils.WriteResponse(evar, res, http.StatusCreated)
+	utils.WriteResponse(evar, rw, http.StatusCreated)
 
 	//
 	worker := workers.EVar{
 		Action: "create",
-		ID: evar.ID,
-		Response: res,
+		ID:     evar.ID,
 	}
 
 	workers.Process(worker)
 }
 
 // GetEVar
-func (api *API) GetEVar(res http.ResponseWriter, req *http.Request) {
+func (api *API) GetEVar(rw http.ResponseWriter, req *http.Request) {
 	evar := &data.EVar{}
 	evar.Get(req.URL.Query().Get(":slug"), api.Driver)
-	utils.WriteResponse(evar, res, http.StatusOK)
+	utils.WriteResponse(evar, rw, http.StatusOK)
 }
 
 // UpdateEVar
-func (api *API) UpdateEVar(res http.ResponseWriter, req *http.Request) {
+func (api *API) UpdateEVar(rw http.ResponseWriter, req *http.Request) {
 	evar := &data.EVar{}
+	evar.Get(req.URL.Query().Get(":slug"), api.Driver)
 	utils.ParseBody(req, evar)
 	evar.Update(req.URL.Query().Get(":slug"), api.Driver)
-	utils.WriteResponse(evar, res, http.StatusOK)
+	utils.WriteResponse(evar, rw, http.StatusOK)
 }
 
 // DeleteEVar
-func (api *API) DeleteEVar(res http.ResponseWriter, req *http.Request) {
+func (api *API) DeleteEVar(rw http.ResponseWriter, req *http.Request) {
 	evar := &data.EVar{}
 	evar.Destroy(req.URL.Query().Get(":slug"), api.Driver)
-	utils.WriteResponse(evar, res, http.StatusOK)
+	utils.WriteResponse(evar, rw, http.StatusOK)
 }

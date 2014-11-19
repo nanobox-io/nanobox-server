@@ -106,8 +106,7 @@ func (d *Driver) write(trans Transaction, done chan<- int) {
 	defer file.Close()
 
 	//
-	// b := utils.ToJSONIndent(trans.Container)
-	b := utils.ToJSON(trans.Container)
+	b := utils.ToJSONIndent(trans.Container)
 
 	_, err = file.WriteString(string(b))
 	if err != nil {

@@ -69,11 +69,11 @@ func handle(fn func(http.ResponseWriter, *http.Request), watch bool) http.Handle
 			fmt.Printf(`
 Request:
 --------------------------------------------------------------------------------
-%#v
+%+v
 
 Response:
 --------------------------------------------------------------------------------
-%#v
+%+v
 
 
 `, req, w)
