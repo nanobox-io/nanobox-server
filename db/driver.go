@@ -1,7 +1,6 @@
 package db
 
 import (
-	// "encoding/JSON"
 	"fmt"
 	"io/ioutil"
 	"os"

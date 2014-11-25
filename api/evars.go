@@ -11,11 +11,9 @@ import (
 
 // ListEVars
 func (api *API) ListEVars(rw http.ResponseWriter, req *http.Request) {
-	go func() {
-		evars := &data.EVars{}
-		evars.List(api.Driver)
-		utils.WriteResponse(evars.EVars, rw, http.StatusOK)
-	}()
+	evars := &data.EVars{}
+	evars.List(api.Driver)
+	utils.WriteResponse(evars.EVars, rw, http.StatusOK)
 
 	//
 	worker := workers.EVar{
@@ -23,7 +21,7 @@ func (api *API) ListEVars(rw http.ResponseWriter, req *http.Request) {
 		ID:     "n",
 	}
 
-	workers.Process(worker)
+	go workers.Process(worker, api.Mist)
 }
 
 // CreateEVar
@@ -32,14 +30,6 @@ func (api *API) CreateEVar(rw http.ResponseWriter, req *http.Request) {
 	utils.ParseBody(req, evar)
 	evar.Create(api.Driver)
 	utils.WriteResponse(evar, rw, http.StatusCreated)
-
-	//
-	worker := workers.EVar{
-		Action: "create",
-		ID:     evar.ID,
-	}
-
-	workers.Process(worker)
 }
 
 // GetEVar

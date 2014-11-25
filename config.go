@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	// "sync"
 )
 
 // config parses a provided config file, or uses a default.conf
@@ -89,7 +90,9 @@ func parseLine(line string, m map[string]string) error {
 	}
 
 	// insert key/value pair into map
+	// *sync.Mutex.Lock()
 	m[fields[0]] = fields[1]
+	// *sync.Mutex.Unlock()
 
 	return nil
 }

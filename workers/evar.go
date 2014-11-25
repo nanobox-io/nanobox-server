@@ -2,9 +2,10 @@ package workers
 
 import (
 	"fmt"
+	"time"
 
-	"github.com/nanobox-core/nanobox-server/mist"
-	"github.com/nanobox-core/nanobox-server/util"
+	"github.com/nanobox-core/mist"
+	// "github.com/nanobox-core/nanobox-server/util"
 )
 
 type (
@@ -13,44 +14,68 @@ type (
 	EVar struct {
 		Action string
 		ID     string
+		// Adapter
 	}
 )
 
 // Start
-func (w EVar) Start(done chan<- bool) {
+func (w EVar) Start(done chan<- bool, m *mist.Mist) {
 
 	//
 	if debugging {
 		fmt.Printf("EVar worker '%v' is working job '%v'...\n\n", w.ID, w.Action)
 	}
 
-	// subscribe
-	mist.Subscribe(`{command:"subscribe", filters:["evar"]}`)
-
 	//
 	switch w.Action {
 
 	//
 	case "list":
-		w.list()
+		w.list(m)
 	}
-
-	// unsubscribe
-	mist.Unsubscribe(`{command:"unsubscribe", filters:["evar"]}`)
 
 	// release...
 	done <- true
 }
 
 //
-func (w EVar) list() {
+func (w EVar) list(m *mist.Mist) {
 
-	container := util.Container{}
-	network := util.Network{}
+	m.Publish([]string{"a"}, "A1")
+	time.Sleep(2 * time.Second)
+
+	m.Publish([]string{"a"}, "A2")
+	time.Sleep(2 * time.Second)
+
+	m.Publish([]string{"b"}, "B1")
+	time.Sleep(1 * time.Second)
+
+	m.Publish([]string{"a"}, "A3")
+	time.Sleep(2 * time.Second)
+
+	m.Publish([]string{"a"}, "A4")
+	time.Sleep(2 * time.Second)
+
+	m.Publish([]string{"b"}, "B2")
+	time.Sleep(1 * time.Second)
+
+	m.Publish([]string{"a"}, "done")
+	time.Sleep(1 * time.Second)
+
+	for i := 0; i < 3; i++ {
+		m.Publish([]string{"b"}, "looping...")
+		time.Sleep(1 * time.Second)
+	}
+
+	m.Publish([]string{"b"}, "done")
+	time.Sleep(1 * time.Second)
+
+	// container := util.Container{}
+	// network := util.Network{}
 
 	//
-	container.Install()
+	// container.Install()
 
 	//
-	network.Install()
+	// network.Install()
 }

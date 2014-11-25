@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"encoding/JSON"
+	"encoding/json"
 )
 
 // ToJSON converts an interface (v) into JSON bytecode

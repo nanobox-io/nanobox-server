@@ -2,6 +2,7 @@ package workers
 
 import (
 	"fmt"
+	"github.com/nanobox-core/mist"
 )
 
 //
@@ -12,7 +13,7 @@ type (
 
 	//
 	Worker interface {
-		Start(chan<- bool)
+		Start(chan<- bool, *mist.Mist)
 	}
 )
 
@@ -35,10 +36,12 @@ func (w *Factory) Init(opts map[string]string) int {
 }
 
 // Process
-func Process(v Worker) {
+func Process(v Worker, m *mist.Mist) {
+
+	fmt.Println("Proccessing worker...")
 
 	//
-	go v.Start(done)
+	v.Start(done, m)
 
 	// wait...
 	<-done

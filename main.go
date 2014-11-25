@@ -7,9 +7,9 @@ import (
 
 	"github.com/gorilla/pat"
 
+	"github.com/nanobox-core/mist"
 	"github.com/nanobox-core/nanobox-server/api"
 	"github.com/nanobox-core/nanobox-server/db"
-	"github.com/nanobox-core/nanobox-server/mist"
 	"github.com/nanobox-core/nanobox-server/workers"
 )
 
@@ -19,7 +19,7 @@ type (
 	Nanobox struct {
 		api     api.API         //
 		db      db.Driver       //
-		mist    mist.Adapter    //
+		mist    mist.Mist       //
 		workers workers.Factory //
 
 		opts map[string]string //
@@ -33,11 +33,11 @@ func main() {
 	nanobox := &Nanobox{
 		api:     api.API{},
 		db:      db.Driver{},
-		mist:    mist.Adapter{},
 		workers: workers.Factory{},
 	}
 
 	// boot sequence...
+	// all of these steps should happen exactly once
 
 	// parse the provided config file or use defautls
 	if err := nanobox.config(); err != nil {
@@ -47,25 +47,28 @@ func main() {
 
 	// initialize the database driver
 	if status := nanobox.db.Init(nanobox.opts); status != 0 {
-		fmt.Println("Unable to initialize database driver. Aborting...")
-		os.Exit(status)
-	}
-
-	// initialize the api
-	if status := nanobox.api.Init(nanobox.opts, &nanobox.db); status != 0 {
-		fmt.Println("Unable to initialize API. Aborting...")
-		os.Exit(status)
-	}
-
-	// initialize mist
-	if status := nanobox.mist.Init(nanobox.opts); status != 0 {
-		fmt.Println("Unable to initialize 'Mist'. Aborting...")
+		fmt.Println("Unable to initialize database driver, aborting...")
 		os.Exit(status)
 	}
 
 	// initialize workers
 	if status := nanobox.workers.Init(nanobox.opts); status != 0 {
-		fmt.Println("Unable to initialize workers. Aborting...")
+		fmt.Println("Unable to initialize workers, aborting...")
+		os.Exit(status)
+	}
+
+	// create new mist
+	mist, err := mist.New(nanobox.opts)
+	if err != nil {
+		fmt.Println("Unable to create new Mist, aborting...")
+		os.Exit(1)
+	}
+
+	nanobox.mist = mist
+
+	// initialize the api, providing it with a database driver, and mist adapter
+	if status := nanobox.api.Init(nanobox.opts, &nanobox.db, &nanobox.mist); status != 0 {
+		fmt.Println("Unable to initialize API, aborting...")
 		os.Exit(status)
 	}
 
@@ -88,7 +91,7 @@ func (n *Nanobox) Start() error {
 	api.InitRoutes(p, &n.api)
 
 	fmt.Println("Starting server...")
-	fmt.Printf("\nListening at %v\n", n.api.Server.Addr)
+	fmt.Printf("Nanobox listening at %v\n", n.api.Server.Addr)
 
 	//
 	http.Handle("/", p)
