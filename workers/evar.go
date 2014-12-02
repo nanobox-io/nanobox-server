@@ -2,10 +2,9 @@ package workers
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/nanobox-core/mist"
-	// "github.com/nanobox-core/nanobox-server/util"
+	"github.com/nanobox-core/nanobox-server/adm"
 )
 
 type (
@@ -41,41 +40,16 @@ func (w EVar) Start(done chan<- bool, m *mist.Mist) {
 //
 func (w EVar) list(m *mist.Mist) {
 
-	m.Publish([]string{"a"}, "A1")
-	time.Sleep(2 * time.Second)
-
-	m.Publish([]string{"a"}, "A2")
-	time.Sleep(2 * time.Second)
-
-	m.Publish([]string{"b"}, "B1")
-	time.Sleep(1 * time.Second)
-
-	m.Publish([]string{"a"}, "A3")
-	time.Sleep(2 * time.Second)
-
-	m.Publish([]string{"a"}, "A4")
-	time.Sleep(2 * time.Second)
-
-	m.Publish([]string{"b"}, "B2")
-	time.Sleep(1 * time.Second)
-
-	m.Publish([]string{"a"}, "done")
-	time.Sleep(1 * time.Second)
-
-	for i := 0; i < 3; i++ {
-		m.Publish([]string{"b"}, "looping...")
-		time.Sleep(1 * time.Second)
-	}
-
-	m.Publish([]string{"b"}, "done")
-	time.Sleep(1 * time.Second)
-
-	// container := util.Container{}
-	// network := util.Network{}
+	container := util.Container{}
+	network := util.Network{}
 
 	//
-	// container.Install()
+	m.Publish([]string{"evars"}, "Doing container things...")
+	container.Install(m)
 
 	//
-	// network.Install()
+	m.Publish([]string{"evars"}, "Doing install things...")
+	network.Install(m)
+
+	m.Publish([]string{"evars"}, "\n\r")
 }

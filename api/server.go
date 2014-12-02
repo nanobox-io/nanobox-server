@@ -7,8 +7,8 @@ import (
 	"github.com/gorilla/pat"
 
 	"github.com/nanobox-core/mist"
-	"github.com/nanobox-core/nanobox-server/db"
-	"github.com/nanobox-core/nanobox-server/utils"
+	"github.com/nanobox-core/scribble"
+	"github.com/nanobox-core/utils"
 )
 
 const (
@@ -23,7 +23,7 @@ type (
 	// Server represents
 	API struct {
 		Server *Server
-		Driver *db.Driver
+		DB 		 *scribble.Driver
 		Mist   *mist.Mist
 	}
 
@@ -41,13 +41,13 @@ var (
 )
 
 // Init
-func (api *API) Init(opts map[string]string, driver *db.Driver, mist *mist.Mist) int {
+func (api *API) Init(opts map[string]string, db *scribble.Driver, mist *mist.Mist) int {
 	fmt.Println("Initializing API...")
 
 	debugging = (opts["debugging"] == "true")
 
 	// = nanobox.db
-	api.Driver = driver
+	api.DB = db
 
 	// = nanobox.mist
 	api.Mist = mist
@@ -56,7 +56,7 @@ func (api *API) Init(opts map[string]string, driver *db.Driver, mist *mist.Mist)
 	api.Server = &Server{
 		host: utils.SetOption(opts["host"], DefaultHost),
 		port: utils.SetOption(opts["port"], DefaultHost),
-		Addr: utils.SetOption((opts["host"] + ":" + opts["port"]), DefaultAddr),
+		Addr: utils.SetOption("", DefaultAddr),
 	}
 
 	//

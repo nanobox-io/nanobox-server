@@ -1,17 +1,17 @@
 package util
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
-	"time"
+
+	"github.com/nanobox-core/mist"
 )
 
 type (
 	Network struct{}
 )
 
-func (c *Network) Install() {
+func (c *Network) Install(m *mist.Mist) {
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -19,27 +19,24 @@ func (c *Network) Install() {
 	}
 
 	//
-	time.Sleep(time.Second * 1)
 	if out, err := exec.Command(cwd + "/priv/network/config.sh").Output(); err != nil {
 		panic(err)
 	} else {
-		fmt.Println("OUT: ", string(out))
+		m.Publish([]string{"evars"}, string(out))
 	}
 
 	//
-	time.Sleep(time.Second * 1)
 	if out, err := exec.Command(cwd + "/priv/network/broadcast.sh").Output(); err != nil {
 		panic(err)
 	} else {
-		fmt.Println("OUT: ", string(out))
+		m.Publish([]string{"evars"}, string(out))
 	}
 
 	//
-	time.Sleep(time.Second * 1)
 	if out, err := exec.Command(cwd + "/priv/network/cleanup.sh").Output(); err != nil {
 		panic(err)
 	} else {
-		fmt.Println("OUT: ", string(out))
+		m.Publish([]string{"evars"}, string(out))
 	}
 
 }

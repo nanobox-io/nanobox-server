@@ -9,8 +9,8 @@ import (
 
 	"github.com/nanobox-core/mist"
 	"github.com/nanobox-core/nanobox-server/api"
-	"github.com/nanobox-core/nanobox-server/db"
 	"github.com/nanobox-core/nanobox-server/workers"
+	"github.com/nanobox-core/scribble"
 )
 
 type (
@@ -18,7 +18,7 @@ type (
 	//
 	Nanobox struct {
 		api     api.API         //
-		db      db.Driver       //
+		db      scribble.Driver //
 		mist    mist.Mist       //
 		workers workers.Factory //
 
@@ -32,7 +32,7 @@ func main() {
 	// everything inside of nanobox should only be created once
 	nanobox := &Nanobox{
 		api:     api.API{},
-		db:      db.Driver{},
+		db:      scribble.Driver{},
 		workers: workers.Factory{},
 	}
 

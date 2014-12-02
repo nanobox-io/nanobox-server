@@ -1,17 +1,17 @@
 package util
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
-	"time"
+
+	"github.com/nanobox-core/mist"
 )
 
 type (
 	Container struct{}
 )
 
-func (c *Container) Install() {
+func (c *Container) Install(m *mist.Mist) {
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -19,41 +19,31 @@ func (c *Container) Install() {
 	}
 
 	//
-	time.Sleep(time.Second * 1)
 	if out, err := exec.Command(cwd + "/priv/container/download.sh").Output(); err != nil {
 		panic(err)
 	} else {
-		fmt.Println("OUT: ", string(out))
+		m.Publish([]string{"evars"}, string(out))
 	}
 
 	//
-	time.Sleep(time.Second * 1)
 	if out, err := exec.Command(cwd + "/priv/container/install.sh").Output(); err != nil {
 		panic(err)
 	} else {
-		fmt.Println("OUT: ", string(out))
+		m.Publish([]string{"evars"}, string(out))
 	}
 
 	//
-	time.Sleep(time.Second * 1)
 	if out, err := exec.Command(cwd + "/priv/container/start.sh").Output(); err != nil {
 		panic(err)
 	} else {
-		fmt.Println("OUT: ", string(out))
+		m.Publish([]string{"evars"}, string(out))
 	}
 
 	//
-	time.Sleep(time.Second * 1)
 	if out, err := exec.Command(cwd + "/priv/container/cleanup.sh").Output(); err != nil {
 		panic(err)
 	} else {
-		fmt.Println("OUT: ", string(out))
+		m.Publish([]string{"evars"}, string(out))
 	}
 
 }
-
-// for i := 0; i < len(slice)/2; i++ {
-//  slice[i]
-//  slice[len(slice)-i] = slice[len(slice)-i]
-//  slice[i]
-// }

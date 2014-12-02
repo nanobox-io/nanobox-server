@@ -6,7 +6,7 @@ import (
 
 	"code.google.com/p/go-uuid/uuid"
 
-	"github.com/nanobox-core/nanobox-server/db"
+	"github.com/nanobox-core/scribble"
 )
 
 type (
@@ -43,44 +43,44 @@ type (
 )
 
 // List
-func (e *EVars) List(driver *db.Driver) {
-	trans := db.Transaction{Action: "readall", Collection: "evars", Container: &e.EVars}
-	driver.Transact(trans)
+func (e *EVars) List(db *scribble.Driver) {
+	trans := scribble.Transaction{Action: "readall", Collection: "evars", Container: &e.EVars}
+	db.Transact(trans)
 }
 
 // Create
-func (e *EVar) Create(driver *db.Driver) {
+func (e *EVar) Create(db *scribble.Driver) {
 
 	e.ID = uuid.New()
 	e.CreatedAt = time.Now()
 
-	trans := db.Transaction{Action: "write", Collection: "evars", Resource: e.ID, Container: e}
-	e.save(trans, driver)
+	trans := scribble.Transaction{Action: "write", Collection: "evars", Resource: e.ID, Container: e}
+	e.save(trans, db)
 }
 
 // Get
-func (e *EVar) Get(resourceID string, driver *db.Driver) {
-	trans := db.Transaction{Action: "read", Collection: "evars", Resource: resourceID, Container: e}
-	driver.Transact(trans)
+func (e *EVar) Get(resourceID string, db *scribble.Driver) {
+	trans := scribble.Transaction{Action: "read", Collection: "evars", Resource: resourceID, Container: e}
+	db.Transact(trans)
 }
 
 // Update
-func (e *EVar) Update(resourceID string, driver *db.Driver) {
-	trans := db.Transaction{Action: "write", Collection: "evars", Resource: resourceID, Container: e}
-	e.save(trans, driver)
+func (e *EVar) Update(resourceID string, db *scribble.Driver) {
+	trans := scribble.Transaction{Action: "write", Collection: "evars", Resource: resourceID, Container: e}
+	e.save(trans, db)
 }
 
 // Destroy
-func (e *EVar) Destroy(resourceID string, driver *db.Driver) {
-	trans := db.Transaction{Action: "delete", Collection: "evars", Resource: resourceID}
-	driver.Transact(trans)
+func (e *EVar) Destroy(resourceID string, db *scribble.Driver) {
+	trans := scribble.Transaction{Action: "delete", Collection: "evars", Resource: resourceID}
+	db.Transact(trans)
 }
 
 // private
 
 // save
-func (e *EVar) save(trans db.Transaction, driver *db.Driver) {
+func (e *EVar) save(trans scribble.Transaction, db *scribble.Driver) {
 	e.UpdatedAt = time.Now()
 
-	driver.Transact(trans)
+	db.Transact(trans)
 }
