@@ -2,4 +2,4 @@
 set -e
 
 # build cli
-echo "Starting stuff..."
+echo "CONT Starting stuff..."

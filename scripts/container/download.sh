@@ -2,4 +2,4 @@
 set -e
 
 # build cli
-echo "Downloading things..."
+echo "CONT Downloading things..."

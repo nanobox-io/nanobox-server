@@ -2,4 +2,4 @@
 set -e
 
 # build cli
-echo "Broadcast..."
+echo "NET Broadcast..."

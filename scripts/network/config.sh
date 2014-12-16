@@ -2,4 +2,4 @@
 set -e
 
 # build cli
-echo "Run configs..."
+echo "NET Run configs..."

@@ -1,86 +1,25 @@
 package data
 
-import (
-	// "fmt"
-	"time"
+import "time"
 
-	"code.google.com/p/go-uuid/uuid"
-
-	"github.com/nanobox-core/scribble"
-)
-
-type (
-
-	//
-	EVars struct {
-		EVars []EVar
-	}
-
-	//
-	EVar struct {
-		AppID     string    `json:"app_id"`     //
-		CreatedAt time.Time `json:"created_at"` //
-		ID        string    `json:"id"`         //
-		Internal  bool      `json:"internal"`   //
-		ServiceID string    `json:"service_id"` //
-		Title     string    `json:"title"`      //
-		UpdatedAt time.Time `json:"updated_at"` //
-		Value     string    `json:"value"`      //
-	}
-
-	//
-	EVarCreateOptions struct {
-		AppID string `json:"app_id,omitempty"`
-		Title string `json:"title,omitempty"`
-		Value string `json:"value,omitempty"`
-	}
-
-	//
-	EVarUpdateOptions struct {
-		Title string `json:"title,omitempty"`
-		Value string `json:"value,omitempty"`
-	}
-)
-
-// List
-func (e *EVars) List(db *scribble.Driver) {
-	trans := scribble.Transaction{Action: "readall", Collection: "evars", Container: &e.EVars}
-	db.Transact(trans)
+//
+type EVar struct {
+	AppID     string    `json:"app_id"`     //
+	CreatedAt time.Time `json:"created_at"` //
+	ID        string    `json:"id"`         //
+	Internal  bool      `json:"internal"`   //
+	ServiceID string    `json:"service_id"` //
+	Title     string    `json:"title"`      //
+	UpdatedAt time.Time `json:"updated_at"` //
+	Value     string    `json:"value"`      //
 }
 
-// Create
-func (e *EVar) Create(db *scribble.Driver) {
-
-	e.ID = uuid.New()
-	e.CreatedAt = time.Now()
-
-	trans := scribble.Transaction{Action: "write", Collection: "evars", Resource: e.ID, Container: e}
-	e.save(trans, db)
+//
+func (e *EVar) Collection() string {
+	return "evars"
 }
 
-// Get
-func (e *EVar) Get(resourceID string, db *scribble.Driver) {
-	trans := scribble.Transaction{Action: "read", Collection: "evars", Resource: resourceID, Container: e}
-	db.Transact(trans)
-}
-
-// Update
-func (e *EVar) Update(resourceID string, db *scribble.Driver) {
-	trans := scribble.Transaction{Action: "write", Collection: "evars", Resource: resourceID, Container: e}
-	e.save(trans, db)
-}
-
-// Destroy
-func (e *EVar) Destroy(resourceID string, db *scribble.Driver) {
-	trans := scribble.Transaction{Action: "delete", Collection: "evars", Resource: resourceID}
-	db.Transact(trans)
-}
-
-// private
-
-// save
-func (e *EVar) save(trans scribble.Transaction, db *scribble.Driver) {
-	e.UpdatedAt = time.Now()
-
-	db.Transact(trans)
+//
+func (e *EVar) Id() string {
+	return e.ID
 }

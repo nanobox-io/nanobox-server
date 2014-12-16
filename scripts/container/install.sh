@@ -2,4 +2,4 @@
 set -e
 
 # build cli
-echo "Installing things..."
+echo "CONT Installing things..."

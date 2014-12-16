@@ -2,4 +2,4 @@
 set -e
 
 # build cli
-echo "Clean up, clean up..."
+echo "CONT Clean up, clean up..."

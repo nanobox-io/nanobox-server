@@ -9,8 +9,32 @@ import (
 	// "sync"
 )
 
+type (
+
+	//
+	Config struct {
+		host        string //
+		port        string //
+		logtapPort  string //
+		routerPort  string //
+		mistPort    string //
+		scribbleDir string //
+		logtapDir   string //
+	}
+)
+
 // config parses a provided config file, or uses a default.conf
-func (n *Nanobox) config() error {
+func ParseConfig() (*Config, error) {
+
+	config := &Config{}
+
+	config.host = DefaultAPIHost
+	config.port = DefaultAPIPort
+	config.logtapPort = DefaultLogTapPort
+	config.routerPort = DefaultRouterPort
+	config.mistPort = DefaultMistPort
+	config.scribbleDir = DefaultScribbleDir
+	config.logtapDir = DefaultLogtapDir
 
 	// set default config file
 	conf := "default.conf"
@@ -28,12 +52,12 @@ func (n *Nanobox) config() error {
 	// parse config file
 	opts, err := parseConfig(conf)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	n.opts = opts
+	fmt.Println("do something with these", opts)
 
-	return nil
+	return config, nil
 }
 
 // parseConfig will parse a config file, returning a 'opts' map of the resulting

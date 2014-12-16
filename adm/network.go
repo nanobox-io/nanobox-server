@@ -11,32 +11,34 @@ type (
 	Network struct{}
 )
 
-func (c *Network) Install(m *mist.Mist) {
+func (c *Network) Install(m *mist.Mist) error {
 
 	cwd, err := os.Getwd()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	//
-	if out, err := exec.Command(cwd + "/priv/network/config.sh").Output(); err != nil {
-		panic(err)
+	if out, err := exec.Command(cwd + "/scripts/network/config.sh").Output(); err != nil {
+		return err
 	} else {
 		m.Publish([]string{"evars"}, string(out))
 	}
 
 	//
-	if out, err := exec.Command(cwd + "/priv/network/broadcast.sh").Output(); err != nil {
-		panic(err)
+	if out, err := exec.Command(cwd + "/scripts/network/broadcast.sh").Output(); err != nil {
+		return err
 	} else {
 		m.Publish([]string{"evars"}, string(out))
 	}
 
 	//
-	if out, err := exec.Command(cwd + "/priv/network/cleanup.sh").Output(); err != nil {
-		panic(err)
+	if out, err := exec.Command(cwd + "/scripts/network/cleanup.sh").Output(); err != nil {
+		return err
 	} else {
 		m.Publish([]string{"evars"}, string(out))
 	}
+
+	return nil
 
 }

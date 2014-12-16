@@ -2,4 +2,4 @@
 set -e
 
 # build cli
-echo "Clean up, clean up..."
+echo "NET Clean up, clean up..."

@@ -11,39 +11,41 @@ type (
 	Container struct{}
 )
 
-func (c *Container) Install(m *mist.Mist) {
+func (c *Container) Install(m *mist.Mist) error {
 
 	cwd, err := os.Getwd()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	//
-	if out, err := exec.Command(cwd + "/priv/container/download.sh").Output(); err != nil {
-		panic(err)
+	if out, err := exec.Command(cwd + "/scripts/container/download.sh").Output(); err != nil {
+		return err
 	} else {
 		m.Publish([]string{"evars"}, string(out))
 	}
 
 	//
-	if out, err := exec.Command(cwd + "/priv/container/install.sh").Output(); err != nil {
-		panic(err)
+	if out, err := exec.Command(cwd + "/scripts/container/install.sh").Output(); err != nil {
+		return err
 	} else {
 		m.Publish([]string{"evars"}, string(out))
 	}
 
 	//
-	if out, err := exec.Command(cwd + "/priv/container/start.sh").Output(); err != nil {
-		panic(err)
+	if out, err := exec.Command(cwd + "/scripts/container/start.sh").Output(); err != nil {
+		return err
 	} else {
 		m.Publish([]string{"evars"}, string(out))
 	}
 
 	//
-	if out, err := exec.Command(cwd + "/priv/container/cleanup.sh").Output(); err != nil {
-		panic(err)
+	if out, err := exec.Command(cwd + "/scripts/container/cleanup.sh").Output(); err != nil {
+		return err
 	} else {
 		m.Publish([]string{"evars"}, string(out))
 	}
+
+	return nil
 
 }
