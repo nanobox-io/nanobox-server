@@ -1,17 +1,15 @@
-package util
+package adm
 
 import (
 	"os"
 	"os/exec"
-
-	"github.com/nanobox-core/mist"
 )
 
 type (
 	Container struct{}
 )
 
-func (c *Container) Install(m *mist.Mist) error {
+func (c *Container) Install(mist chan<- string) error {
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -22,28 +20,28 @@ func (c *Container) Install(m *mist.Mist) error {
 	if out, err := exec.Command(cwd + "/scripts/container/download.sh").Output(); err != nil {
 		return err
 	} else {
-		m.Publish([]string{"evars"}, string(out))
+		mist<- string(out)
 	}
 
 	//
 	if out, err := exec.Command(cwd + "/scripts/container/install.sh").Output(); err != nil {
 		return err
 	} else {
-		m.Publish([]string{"evars"}, string(out))
+		mist<- string(out)
 	}
 
 	//
 	if out, err := exec.Command(cwd + "/scripts/container/start.sh").Output(); err != nil {
 		return err
 	} else {
-		m.Publish([]string{"evars"}, string(out))
+		mist<- string(out)
 	}
 
 	//
 	if out, err := exec.Command(cwd + "/scripts/container/cleanup.sh").Output(); err != nil {
 		return err
 	} else {
-		m.Publish([]string{"evars"}, string(out))
+		mist<- string(out)
 	}
 
 	return nil

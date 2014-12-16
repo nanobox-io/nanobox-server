@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/nanobox-core/hatchet"
+	"github.com/nanobox-core/mist"
 )
 
 // structs
@@ -15,9 +16,9 @@ type (
 		sync.Mutex
 		sync.WaitGroup
 
-		queue     []Job
-		publisher Publisher
-		log       hatchet.Logger
+		queue []Job
+		mist 	*mist.Mist
+		log   hatchet.Logger
 	}
 )
 
@@ -26,31 +27,28 @@ type (
 
 	//
 	Job interface {
-		Start(Publisher)
-	}
-
-	//
-	Publisher interface {
-		Publish([]string, string)
+		Start(chan<- string)
+		Collection() string
 	}
 )
 
 //
-func New(publisher Publisher, logger hatchet.Logger) *Worker {
-
-	if publisher == nil {
-		logger.Error("bonk")
-	}
+func New(mist *mist.Mist, logger hatchet.Logger) *Worker {
 
 	//
   if logger == nil {
     logger = hatchet.DevNullLogger{}
   }
 
+  //
+	if mist == nil {
+		logger.Error("bonk")
+	}
+
 	worker := &Worker{
-		queue: 		 []Job{},
-		publisher: publisher,
-		log: 			 logger,
+		queue: []Job{},
+		mist:  mist,
+		log: 	 logger,
 	}
 
 	return worker
@@ -126,5 +124,15 @@ func (w *Worker) processJob(job Job) {
 		}
 	}()
 
-	job.Start(w.publisher)
+	mist := make(chan string)
+
+	go func() {
+		job.Start(mist)
+		close(mist)
+	}()
+
+	for data := range mist {
+		w.mist.Publish([]string{job.Collection()}, data)
+	}
+
 }

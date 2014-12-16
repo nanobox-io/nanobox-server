@@ -47,6 +47,8 @@ func (api *API) CreateEVar(rw http.ResponseWriter, req *http.Request) {
 
 	//
 	writeBody(evar, rw, http.StatusCreated)
+
+	api.Worker.QueueAndProcess(evar)
 }
 
 // GetEVar
