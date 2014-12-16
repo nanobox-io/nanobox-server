@@ -28,13 +28,13 @@ func ParseConfig() (*Config, error) {
 
 	config := &Config{}
 
-	config.host = DefaultAPIHost
-	config.port = DefaultAPIPort
-	config.logtapPort = DefaultLogTapPort
-	config.routerPort = DefaultRouterPort
-	config.mistPort = DefaultMistPort
+	config.host 			 = DefaultAPIHost
+	config.port 			 = DefaultAPIPort
+	config.logtapPort  = DefaultLogTapPort
+	config.routerPort  = DefaultRouterPort
+	config.mistPort 	 = DefaultMistPort
 	config.scribbleDir = DefaultScribbleDir
-	config.logtapDir = DefaultLogtapDir
+	config.logtapDir 	 = DefaultLogtapDir
 
 	// set default config file
 	conf := "default.conf"

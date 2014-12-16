@@ -18,30 +18,25 @@ var Driver *scribble.Driver
 
 // List
 func List(collection string, v interface{}) error {
-	Driver.Transact(scribble.Transaction{Action: "readall", Collection: collection, Container: &v})
-	return nil
+	return Driver.Transact(scribble.Transaction{Action: "readall", Collection: collection, Container: &v})
 }
 
 // Save
 func Save(v Model) error {
-	Driver.Transact(scribble.Transaction{Action: "write", Collection: v.Collection(), Resource: v.Id(), Container: &v})
-	return nil
+	return Driver.Transact(scribble.Transaction{Action: "write", Collection: v.Collection(), ResourceID: v.Id(), Container: &v})
 }
 
 // Get
 func Get(v Model) error {
-	Driver.Transact(scribble.Transaction{Action: "read", Collection: v.Collection(), Resource: v.Id(), Container: &v})
-	return nil
+	return Driver.Transact(scribble.Transaction{Action: "read", Collection: v.Collection(), ResourceID: v.Id(), Container: &v})
 }
 
 // Update
 func Update(v Model) error {
-	Save(v)
-	return nil
+	return Save(v)
 }
 
 // Destroy
 func Destroy(v Model) error {
-	Driver.Transact(scribble.Transaction{Action: "delete", Collection: v.Collection(), Resource: v.Id(), Container: &v})
-	return nil
+	return Driver.Transact(scribble.Transaction{Action: "delete", Collection: v.Collection(), ResourceID: v.Id(), Container: &v})
 }

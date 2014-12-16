@@ -1,7 +1,6 @@
 package worker
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 
@@ -37,22 +36,24 @@ type (
 )
 
 //
-func New(publisher Publisher, logger hatchet.Logger) (*Worker, error) {
+func New(publisher Publisher, logger hatchet.Logger) *Worker {
 
 	if publisher == nil {
-		return nil, errors.New("missing publisher")
+		logger.Error("bonk")
 	}
 
-	if logger == nil {
-		return nil, errors.New("missing logger")
+	//
+  if logger == nil {
+    logger = hatchet.DevNullLogger{}
+  }
+
+	worker := &Worker{
+		queue: 		 []Job{},
+		publisher: publisher,
+		log: 			 logger,
 	}
 
-	worker := &Worker{}
-	worker.queue = []Job{}
-	worker.publisher = publisher
-	worker.log = logger
-
-	return worker, nil
+	return worker
 }
 
 //

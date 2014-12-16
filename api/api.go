@@ -15,7 +15,7 @@ import (
 	"github.com/nanobox-core/mist"
 	"github.com/nanobox-core/nanobox-server/data"
 	"github.com/nanobox-core/nanobox-server/worker"
-	// "github.com/nanobox-core/router"
+	"github.com/nanobox-core/router"
 	"github.com/nanobox-core/scribble"
 )
 
@@ -26,8 +26,8 @@ type (
 	API struct {
 		Log hatchet.Logger
 		// logtap *logtap.Logtap  //
-		Mist *mist.Mist //
-		// router *router.Router  //
+		Mist 	 *mist.Mist //
+		Router *router.Router  //
 		Driver *scribble.Driver //
 		Worker *worker.Worker   //
 	}
@@ -93,6 +93,8 @@ Response:
 		fn(w, req)
 	}
 }
+
+// helpers
 
 // newUUID
 func newUUID() string {
