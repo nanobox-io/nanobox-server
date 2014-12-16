@@ -39,6 +39,7 @@ func (api *API) Start(port string) error {
 
 	//
 	data.Driver = api.Driver
+	data.Log = api.Log
 
 	//
 	routes, err := api.RegisterRoutes()

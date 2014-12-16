@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/nanobox-core/hatchet"
-	"github.com/nanobox-core/mist"
 )
 
 // structs
@@ -17,8 +16,13 @@ type (
 		sync.WaitGroup
 
 		queue []Job
-		mist 	*mist.Mist
+		publisher 	Publisher
 		log   hatchet.Logger
+	}
+
+// maybe?
+	channelPublisher struct {
+		ch chan string
 	}
 )
 
@@ -30,10 +34,15 @@ type (
 		Start(chan<- string)
 		Collection() string
 	}
+
+	Publisher interface {
+		Publish(tags []string, data string)
+	}
+
 )
 
 //
-func New(mist *mist.Mist, logger hatchet.Logger) *Worker {
+func New(publisher Publisher, logger hatchet.Logger) *Worker {
 
 	//
   if logger == nil {
@@ -41,17 +50,23 @@ func New(mist *mist.Mist, logger hatchet.Logger) *Worker {
   }
 
   //
-	if mist == nil {
+	if publisher == nil {
 		logger.Error("bonk")
 	}
 
 	worker := &Worker{
 		queue: []Job{},
-		mist:  mist,
+		publisher:  publisher,
 		log: 	 logger,
 	}
 
 	return worker
+}
+
+// maybe?
+func NewSub(ch chan string, logger hatchet.Logger) *Worker {
+	cPub := channelPublisher{ch}
+	return New(cPub, logger)
 }
 
 //
@@ -124,15 +139,20 @@ func (w *Worker) processJob(job Job) {
 		}
 	}()
 
-	mist := make(chan string)
+	publisher := make(chan string)
 
 	go func() {
-		job.Start(mist)
-		close(mist)
+		job.Start(publisher)
+		close(publisher)
 	}()
 
-	for data := range mist {
-		w.mist.Publish([]string{job.Collection()}, data)
+	for data := range publisher {
+		w.publisher.Publish([]string{job.Collection()}, data)
 	}
 
 }
+
+func (c *channelPublisher) Publish(tags []string, data string) {
+	c.ch <- fmt.Sprintf("%v %d", tags, data)
+}
+

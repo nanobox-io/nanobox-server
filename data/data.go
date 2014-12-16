@@ -2,6 +2,7 @@ package data
 
 import (
 	"github.com/nanobox-core/scribble"
+	"github.com/nanobox-core/hatchet"
 )
 
 type (
@@ -15,6 +16,7 @@ type (
 
 //
 var Driver *scribble.Driver
+var Log hatchet.Logger
 
 // List
 func List(collection string, v interface{}) error {
