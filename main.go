@@ -15,14 +15,14 @@ const Version = "0.0.1"
 func main() {
 
 	//
-	config := config.Init()
+	config.Init()
 
 	//
 	api := api.Init()
 
 	//
 	// start nanobox
-	if err := api.Start(config.Port); err != nil {
+	if err := api.Start(config.APIPort); err != nil {
 		fmt.Printf("Unable to start API: %v", err)
 		os.Exit(1)
 	}

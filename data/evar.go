@@ -33,12 +33,13 @@ func (e *EVar) Id() string {
 func (e *EVar) Process() {
 
 	ch := make(chan string)
-
-	for data := range ch {
-		config.Mist.Publish([]string{e.Collection()}, data)
-	}
-
 	defer close(ch)
+
+	go func() {
+		for data := range ch {
+			config.Mist.Publish([]string{e.Collection()}, data)
+		}
+	}()
 
 	container := adm.Container{}
 	network := adm.Network{}

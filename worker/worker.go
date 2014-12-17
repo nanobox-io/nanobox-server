@@ -104,5 +104,5 @@ func (w *Worker) processJob(job Job) {
 	}()
 
 	//
-	go func() { job.Process() }()
+	job.Process()
 }
