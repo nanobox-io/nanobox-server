@@ -3,8 +3,8 @@ package data
 import (
 	"time"
 
-	"github.com/nanobox-core/nanobox-server/adm"
 	"github.com/nanobox-core/nanobox-server/config"
+	"github.com/nanobox-core/nanobox-server/tasks"
 )
 
 //
@@ -41,8 +41,8 @@ func (e *EVar) Process() {
 		}
 	}()
 
-	container := adm.Container{}
-	network := adm.Network{}
+	container := tasks.Container{}
+	network := tasks.Network{}
 
 	//
 	ch <- "Doing container things...\n"
