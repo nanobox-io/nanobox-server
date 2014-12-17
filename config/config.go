@@ -3,7 +3,6 @@ package config
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"os"
 	"strings"
 
@@ -60,7 +59,7 @@ func Init() error {
 	if len(args) >= 1 {
 		conf := args[0]
 
-		Log.Info("Configuring nanobox using '%v'...\n", conf)
+		Log.Info("[NANOBOX :: CONFIG] Parsing config at: %v\n", conf)
 
 		// parse config file
 		opts, err := parseFile(conf)
@@ -92,6 +91,8 @@ func Init() error {
 			}
 		}
 	}
+
+	Log.Debug("[NANOBOX :: CONFIG] Nanobox configuration: %+v\n", config)
 
 	//
 	APIPort = config.port
@@ -145,7 +146,7 @@ func parseFile(file string) (map[string]string, error) {
 	// Read line by line, sending lines to parseLine
 	for scanner.Scan() {
 		if err := parseLine(scanner.Text(), opts); err != nil {
-			fmt.Println("Error reading line ", startLine)
+			Log.Error("[NANOBOX :: CONFIG] Error reading line: %v\n", startLine)
 			return nil, err
 		}
 

@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -33,7 +32,7 @@ func Init() *API {
 
 // Start
 func (api *API) Start(port string) error {
-	fmt.Println("Starting server...")
+	config.Log.Info("[NANOBOX :: API] Starting server...\n")
 
 	//
 	routes, err := api.registerRoutes()
@@ -42,7 +41,7 @@ func (api *API) Start(port string) error {
 	}
 
 	//
-	fmt.Printf("Nanobox listening at %v\n", port)
+	config.Log.Info("[NANOBOX :: API] Listening on port %v\n", port)
 
 	// blocking...
 	http.Handle("/", routes)
@@ -55,7 +54,7 @@ func (api *API) Start(port string) error {
 
 // registerRoutes
 func (api *API) registerRoutes() (*pat.Router, error) {
-	fmt.Println("Registering routes...")
+	config.Log.Debug("[NANOBOX :: API] Registering routes...\n")
 
 	//
 	router := pat.New()

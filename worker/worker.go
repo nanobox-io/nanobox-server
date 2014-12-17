@@ -1,7 +1,6 @@
 package worker
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/nanobox-core/nanobox-server/config"
@@ -59,7 +58,7 @@ func (w *Worker) Process() {
 
 //
 func (w *Worker) ProcessNow() {
-	fmt.Println("Proccessing...")
+	config.Log.Debug("[NANOBOX :: WORKER] Proccessing job...\n")
 
 	//
 	w.Wait()
@@ -99,7 +98,7 @@ func (w *Worker) processJob(job Job) {
 	//
 	defer func() {
 		if err := recover(); err != nil {
-			config.Log.Error("work failed: %+v", err)
+			config.Log.Error("[NANOBOX :: WORKER] Job failed: %+v\n", err)
 		}
 	}()
 

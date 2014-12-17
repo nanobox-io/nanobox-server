@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/nanobox-core/nanobox-server/api"
@@ -23,7 +22,7 @@ func main() {
 	//
 	// start nanobox
 	if err := api.Start(config.APIPort); err != nil {
-		fmt.Printf("Unable to start API: %v", err)
+		config.Log.Fatal("[NANOBOX] Unable to start API, aborting...\n%v\n", err)
 		os.Exit(1)
 	}
 }
