@@ -38,7 +38,6 @@ const (
 	DefaultPort       = "1757"
 	DefaultLogTapPort = "514"
 	DefaultLogtapDir  = "./tmp/logs"
-	DefaultRouterPort = "80"
 )
 
 //
@@ -60,7 +59,7 @@ func Init() *Config {
 		logtapPort:  DefaultLogTapPort,
 		logtapDir:   DefaultLogtapDir,
 		mistPort:    mist.DefaultPort,
-		routerPort:  DefaultRouterPort,
+		routerPort:  router.DefaultPort,
 		scribbleDir: scribble.DefaultDir,
 	}
 
