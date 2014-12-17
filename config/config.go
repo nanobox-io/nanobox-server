@@ -9,8 +9,8 @@ import (
 
 	"github.com/jcelliott/lumber"
 
-	// "github.com/nanobox-core/logtap"
 	"github.com/nanobox-core/hatchet"
+	"github.com/nanobox-core/logtap"
 	"github.com/nanobox-core/mist"
 	"github.com/nanobox-core/router"
 	"github.com/nanobox-core/scribble"
@@ -19,8 +19,8 @@ import (
 //
 var (
 	APIPort  string
-	Log 		 hatchet.Logger
-	// Logtap 	 logtap.Logtag
+	Log      hatchet.Logger
+	Logtap   *logtap.Logtap
 	Mist     *mist.Mist
 	Router   *router.Router
 	Scribble *scribble.Driver
@@ -34,21 +34,23 @@ func Init() error {
 
 	//
 	config := struct {
-		host        string
-		port        string
-		// logtapPort  string
-		// logtapDir   string
-		mistPort    string
-		routerPort  string
-		scribbleDir string
+		host                 string
+		port                 string
+		logtapSyslogPort     string
+		logtapHistoricalPort string
+		logtapHistoricalFile string
+		mistPort             string
+		routerPort           string
+		scribbleDir          string
 	}{
-		host:        "0.0.0.0",
-		port:        "1757",
-		// logtapPort:  "514",
-		// logtapDir:   "./tmp/logs",
-		mistPort:    "1445",
-		routerPort:  "80",
-		scribbleDir: "./tmp/db",
+		host:                 "0.0.0.0",
+		port:                 "1757",
+		logtapSyslogPort:     "514",
+		logtapHistoricalPort: "8080",
+		logtapHistoricalFile: "./tmp/bolt.db",
+		mistPort:             "1445",
+		routerPort:           "80",
+		scribbleDir:          "./tmp/db",
 	}
 
 	// command line args w/o program
@@ -69,18 +71,24 @@ func Init() error {
 		//
 		for key, value := range opts {
 			switch key {
-				case "host":
-					config.host = value
-				case "port":
-					config.port = value
-				case "mist_port":
-					config.mistPort = value
-				case "router_port":
-					config.routerPort = value
-				case "scribble_dir":
-					config.scribbleDir = value
-				default:
-					Log.Info("No option: %v", value)
+			case "host":
+				config.host = value
+			case "port":
+				config.port = value
+			case "mist_port":
+				config.mistPort = value
+			case "router_port":
+				config.routerPort = value
+			case "logtap_port":
+				config.logtapSyslogPort = value
+			case "logtap_historical_port":
+				config.logtapHistoricalPort = value
+			case "logtap_historical_file":
+				config.logtapHistoricalFile = value
+			case "scribble_dir":
+				config.scribbleDir = value
+			default:
+				Log.Info("No option: %v", value)
 			}
 		}
 	}
@@ -99,6 +107,21 @@ func Init() error {
 
 	// create new scribble
 	Scribble = scribble.New(config.scribbleDir, Log)
+
+	// create new logtap
+	Logtap = logtap.New(Log)
+	Logtap.Start()
+
+	sysc := logtap.NewSyslogCollector(config.logtapSyslogPort)
+	Logtap.AddCollector("syslog", sysc)
+	sysc.Start()
+
+	hist := logtap.NewHistoricalDrain(config.logtapHistoricalPort, config.logtapHistoricalFile, 1000)
+	Logtap.AddDrain("history", hist)
+	hist.Start()
+
+	pub := logtap.NewPublishDrain(Mist)
+	Logtap.AddDrain("mist", pub)
 
 	return nil
 }
