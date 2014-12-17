@@ -9,7 +9,7 @@ type (
 	Container struct{}
 )
 
-func (c *Container) Install(mist chan<- string) error {
+func (c *Container) Install(ch chan<- string) error {
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -20,28 +20,28 @@ func (c *Container) Install(mist chan<- string) error {
 	if out, err := exec.Command(cwd + "/scripts/container/download.sh").Output(); err != nil {
 		return err
 	} else {
-		mist<- string(out)
+		ch <- string(out)
 	}
 
 	//
 	if out, err := exec.Command(cwd + "/scripts/container/install.sh").Output(); err != nil {
 		return err
 	} else {
-		mist<- string(out)
+		ch <- string(out)
 	}
 
 	//
 	if out, err := exec.Command(cwd + "/scripts/container/start.sh").Output(); err != nil {
 		return err
 	} else {
-		mist<- string(out)
+		ch <- string(out)
 	}
 
 	//
 	if out, err := exec.Command(cwd + "/scripts/container/cleanup.sh").Output(); err != nil {
 		return err
 	} else {
-		mist<- string(out)
+		ch <- string(out)
 	}
 
 	return nil

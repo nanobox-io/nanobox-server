@@ -6,17 +6,11 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"code.google.com/p/go-uuid/uuid"
 	"github.com/gorilla/pat"
 
-	"code.google.com/p/go-uuid/uuid"
-
-	"github.com/nanobox-core/hatchet"
-	// "github.com/nanobox-core/logtap"
-	"github.com/nanobox-core/mist"
-	"github.com/nanobox-core/nanobox-server/data"
+	"github.com/nanobox-core/nanobox-server/config"
 	"github.com/nanobox-core/nanobox-server/worker"
-	"github.com/nanobox-core/router"
-	"github.com/nanobox-core/scribble"
 )
 
 // structs
@@ -24,12 +18,7 @@ type (
 
 	//
 	API struct {
-		Log hatchet.Logger
-		// logtap *logtap.Logtap  //
-		Mist 	 *mist.Mist //
-		Router *router.Router  //
-		Driver *scribble.Driver //
-		Worker *worker.Worker   //
+		Worker *worker.Worker
 	}
 )
 
@@ -38,11 +27,7 @@ func (api *API) Start(port string) error {
 	fmt.Println("Starting server...")
 
 	//
-	data.Driver = api.Driver
-	data.Log = api.Log
-
-	//
-	routes, err := api.RegisterRoutes()
+	routes, err := api.registerRoutes()
 	if err != nil {
 		return err
 	}
@@ -59,8 +44,8 @@ func (api *API) Start(port string) error {
 	return nil
 }
 
-// RegisterRoutes
-func (api *API) RegisterRoutes() (*pat.Router, error) {
+// registerRoutes
+func (api *API) registerRoutes() (*pat.Router, error) {
 	fmt.Println("Registering routes...")
 
 	//
@@ -80,7 +65,7 @@ func (api *API) RegisterRoutes() (*pat.Router, error) {
 func (api *API) handleRequest(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 
-		api.Log.Info(`
+		config.Log.Info(`
 Request:
 --------------------------------------------------------------------------------
 %+v

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/nanobox-core/hatchet"
+	"github.com/nanobox-core/nanobox-server/config"
 )
 
 // structs
@@ -16,13 +16,6 @@ type (
 		sync.WaitGroup
 
 		queue []Job
-		publisher 	Publisher
-		log   hatchet.Logger
-	}
-
-// maybe?
-	channelPublisher struct {
-		ch chan string
 	}
 )
 
@@ -31,42 +24,13 @@ type (
 
 	//
 	Job interface {
-		Start(chan<- string)
-		Collection() string
+		Process()
 	}
-
-	Publisher interface {
-		Publish(tags []string, data string)
-	}
-
 )
 
 //
-func New(publisher Publisher, logger hatchet.Logger) *Worker {
-
-	//
-  if logger == nil {
-    logger = hatchet.DevNullLogger{}
-  }
-
-  //
-	if publisher == nil {
-		logger.Error("bonk")
-	}
-
-	worker := &Worker{
-		queue: []Job{},
-		publisher:  publisher,
-		log: 	 logger,
-	}
-
-	return worker
-}
-
-// maybe?
-func NewSub(ch chan string, logger hatchet.Logger) *Worker {
-	cPub := channelPublisher{ch}
-	return New(cPub, logger)
+func New() *Worker {
+	return &Worker{queue: []Job{}}
 }
 
 //
@@ -135,24 +99,10 @@ func (w *Worker) processJob(job Job) {
 	//
 	defer func() {
 		if err := recover(); err != nil {
-			// log.Println("work failed:", err)
+			config.Log.Error("work failed: %+v", err)
 		}
 	}()
 
-	publisher := make(chan string)
-
-	go func() {
-		job.Start(publisher)
-		close(publisher)
-	}()
-
-	for data := range publisher {
-		w.publisher.Publish([]string{job.Collection()}, data)
-	}
-
+	//
+	go func() { job.Process() }()
 }
-
-func (c *channelPublisher) Publish(tags []string, data string) {
-	c.ch <- fmt.Sprintf("%v %d", tags, data)
-}
-

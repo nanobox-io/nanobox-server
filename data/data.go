@@ -1,8 +1,8 @@
 package data
 
 import (
+	"github.com/nanobox-core/nanobox-server/config"
 	"github.com/nanobox-core/scribble"
-	"github.com/nanobox-core/hatchet"
 )
 
 type (
@@ -14,23 +14,22 @@ type (
 	}
 )
 
-//
-var Driver *scribble.Driver
-var Log hatchet.Logger
-
 // List
 func List(collection string, v interface{}) error {
-	return Driver.Transact(scribble.Transaction{Action: "readall", Collection: collection, Container: &v})
+	t := scribble.Transaction{Action: "readall", Collection: collection, Container: &v}
+	return config.Scribble.Transact(t)
 }
 
 // Save
 func Save(v Model) error {
-	return Driver.Transact(scribble.Transaction{Action: "write", Collection: v.Collection(), ResourceID: v.Id(), Container: &v})
+	t := scribble.Transaction{Action: "write", Collection: v.Collection(), ResourceID: v.Id(), Container: &v}
+	return config.Scribble.Transact(t)
 }
 
 // Get
 func Get(v Model) error {
-	return Driver.Transact(scribble.Transaction{Action: "read", Collection: v.Collection(), ResourceID: v.Id(), Container: &v})
+	t := scribble.Transaction{Action: "read", Collection: v.Collection(), ResourceID: v.Id(), Container: &v}
+	return config.Scribble.Transact(t)
 }
 
 // Update
@@ -40,5 +39,6 @@ func Update(v Model) error {
 
 // Destroy
 func Destroy(v Model) error {
-	return Driver.Transact(scribble.Transaction{Action: "delete", Collection: v.Collection(), ResourceID: v.Id(), Container: &v})
+	t := scribble.Transaction{Action: "delete", Collection: v.Collection(), ResourceID: v.Id(), Container: &v}
+	return config.Scribble.Transact(t)
 }

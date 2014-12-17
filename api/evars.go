@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	// "github.com/nanobox-core/nanobox-server/config"
 	"github.com/nanobox-core/nanobox-server/data"
-	// "github.com/nanobox-core/nanobox-server/worker"
 )
 
 // ListEVars
@@ -48,6 +48,7 @@ func (api *API) CreateEVar(rw http.ResponseWriter, req *http.Request) {
 	//
 	writeBody(evar, rw, http.StatusCreated)
 
+	//
 	api.Worker.QueueAndProcess(evar)
 }
 

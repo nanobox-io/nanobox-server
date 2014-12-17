@@ -9,7 +9,7 @@ type (
 	Network struct{}
 )
 
-func (c *Network) Install(mist chan<- string) error {
+func (c *Network) Install(ch chan<- string) error {
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -20,21 +20,21 @@ func (c *Network) Install(mist chan<- string) error {
 	if out, err := exec.Command(cwd + "/scripts/network/config.sh").Output(); err != nil {
 		return err
 	} else {
-		mist<- string(out)
+		ch <- string(out)
 	}
 
 	//
 	if out, err := exec.Command(cwd + "/scripts/network/broadcast.sh").Output(); err != nil {
 		return err
 	} else {
-		mist<- string(out)
+		ch <- string(out)
 	}
 
 	//
 	if out, err := exec.Command(cwd + "/scripts/network/cleanup.sh").Output(); err != nil {
 		return err
 	} else {
-		mist<- string(out)
+		ch <- string(out)
 	}
 
 	return nil
