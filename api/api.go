@@ -22,6 +22,15 @@ type (
 	}
 )
 
+func Init() *API {
+	//
+	api := &API{
+		Worker: worker.New(),
+	}
+
+	return api
+}
+
 // Start
 func (api *API) Start(port string) error {
 	fmt.Println("Starting server...")

@@ -6,7 +6,6 @@ import (
 
 	"github.com/nanobox-core/nanobox-server/api"
 	"github.com/nanobox-core/nanobox-server/config"
-	"github.com/nanobox-core/nanobox-server/worker"
 )
 
 //
@@ -19,14 +18,12 @@ func main() {
 	config := config.Init()
 
 	//
-	nanobox := &api.API{
-		Worker: worker.New(),
-	}
+	api := api.Init()
 
 	//
 	// start nanobox
-	if err := nanobox.Start(config.Port); err != nil {
-		fmt.Printf("Unable to start nanobox: %v", err)
+	if err := api.Start(config.Port); err != nil {
+		fmt.Printf("Unable to start API: %v", err)
 		os.Exit(1)
 	}
 }
