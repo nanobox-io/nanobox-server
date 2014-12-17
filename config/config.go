@@ -18,9 +18,9 @@ import (
 
 //
 var (
-	APIPort string
-	Log hatchet.Logger
-	// Logtap 		 logtap.Logtag
+	APIPort  string
+	Log 		 hatchet.Logger
+	// Logtap 	 logtap.Logtag
 	Mist     *mist.Mist
 	Router   *router.Router
 	Scribble *scribble.Driver
@@ -45,10 +45,10 @@ func Init() error {
 		host:        "0.0.0.0",
 		port:        "1757",
 		// logtapPort:  "514",
-		// logtapDir:   "./tmp/logtap",
+		// logtapDir:   "./tmp/logs",
 		mistPort:    "1445",
 		routerPort:  "80",
-		scribbleDir: "./tmp/scribble",
+		scribbleDir: "./tmp/db",
 	}
 
 	// command line args w/o program
