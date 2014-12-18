@@ -67,6 +67,7 @@ func (w *Worker) ProcessNow() {
 	//
 	for {
 		if job, ok := w.nextJob(); ok {
+			w.Add(1)
 			w.processJob(job)
 		} else {
 			break
@@ -74,6 +75,7 @@ func (w *Worker) ProcessNow() {
 	}
 
 	w.Done()
+	w.Wait()
 }
 
 // private
@@ -94,7 +96,7 @@ func (w *Worker) nextJob() (Job, bool) {
 
 //
 func (w *Worker) processJob(job Job) {
-
+	defer w.Done()
 	//
 	defer func() {
 		if err := recover(); err != nil {
