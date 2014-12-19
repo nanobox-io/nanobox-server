@@ -11,12 +11,11 @@ type (
 
 	//
 	Worker struct {
-		queueTex sync.Mutex
-		workTex sync.Mutex
 		sync.WaitGroup
 
 		Concurrent bool
-
+		doTex sync.Mutex
+		queueTex sync.Mutex
 		queue []Job
 	}
 )
@@ -33,10 +32,10 @@ type (
 //
 func New() *Worker {
 	return &Worker{
-		queue: []Job{},
-		queueTex: sync.Mutex{},
-		workTex: sync.Mutex{},
 		Concurrent: false,
+		doTex: sync.Mutex{},
+		queueTex: sync.Mutex{},
+		queue: []Job{},
 	}
 }
 
@@ -46,7 +45,6 @@ func (w *Worker) Queue(job Job) {
 	defer w.queueTex.Unlock()
 
 	w.queue = append(w.queue, job)
-	
 }
 
 //
@@ -68,10 +66,9 @@ func (w *Worker) Process() {
 
 //
 func (w *Worker) ProcessNow() {
-	config.Log.Debug("[NANOBOX :: WORKER] Proccessing job...\n")
 
-	w.workTex.Lock()
-	defer w.workTex.Unlock()
+	w.doTex.Lock()
+	defer w.doTex.Unlock()
 	//
 	w.Add(1)
 

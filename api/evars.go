@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/nanobox-core/nanobox-server/config"
 	"github.com/nanobox-core/nanobox-server/data"
 )
 
@@ -24,6 +25,8 @@ func (api *API) ListEVars(rw http.ResponseWriter, req *http.Request) {
 
 // CreateEVar
 func (api *API) CreateEVar(rw http.ResponseWriter, req *http.Request) {
+
+	config.Log.Debug("[NANOBOX :: API] Evars create\n")
 
 	//
 	evar := &data.EVar{

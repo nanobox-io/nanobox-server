@@ -71,20 +71,24 @@ func (api *API) registerRoutes() (*pat.Router, error) {
 
 // handleRequest
 func (api *API) handleRequest(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
-	return func(w http.ResponseWriter, req *http.Request) {
+	return func(rw http.ResponseWriter, req *http.Request) {
 
 		config.Log.Info(`
 Request:
 --------------------------------------------------------------------------------
 %+v
 
+`, req)
+
+		//
+		fn(rw, req)
+
+		config.Log.Info(`
 Response:
 --------------------------------------------------------------------------------
 %+v
 
-`, req, w)
-
-		fn(w, req)
+`, rw)
 	}
 }
 
