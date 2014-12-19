@@ -13,10 +13,11 @@ type (
 	Worker struct {
 		sync.WaitGroup
 
+		Blocking   bool
 		Concurrent bool
-		doTex sync.Mutex
-		queueTex sync.Mutex
-		queue []Job
+		doTex      sync.Mutex
+		queueTex   sync.Mutex
+		queue      []Job
 	}
 )
 
@@ -32,10 +33,11 @@ type (
 //
 func New() *Worker {
 	return &Worker{
+		Blocking:   false,
 		Concurrent: false,
-		doTex: sync.Mutex{},
-		queueTex: sync.Mutex{},
-		queue: []Job{},
+		doTex:      sync.Mutex{},
+		queueTex:   sync.Mutex{},
+		queue:      []Job{},
 	}
 }
 
@@ -54,18 +56,18 @@ func (w *Worker) QueueAndProcess(job Job) {
 }
 
 //
-func (w *Worker) QueueAndProcessNow(job Job) {
-	w.Queue(job)
-	w.ProcessNow()
-}
-
-//
 func (w *Worker) Process() {
-	go w.ProcessNow()
+	if w.Blocking {
+		w.execute()
+	} else {
+		go w.execute()
+	}
 }
 
+// private
+
 //
-func (w *Worker) ProcessNow() {
+func (w *Worker) execute() {
 
 	w.doTex.Lock()
 	defer w.doTex.Unlock()
@@ -86,8 +88,6 @@ func (w *Worker) ProcessNow() {
 
 	w.Wait()
 }
-
-// private
 
 //
 func (w *Worker) nextJob() (Job, bool) {
