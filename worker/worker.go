@@ -69,20 +69,21 @@ func (w *Worker) ProcessNow() {
 
 	w.doTex.Lock()
 	defer w.doTex.Unlock()
-	//
-	w.Add(1)
 
 	//
 	for {
 		if job, ok := w.nextJob(); ok {
 			w.Add(1)
-			w.processJob(job)
+			if w.Concurrent {
+				go w.processJob(job)
+			} else {
+				w.processJob(job)
+			}
 		} else {
 			break
 		}
 	}
 
-	w.Done()
 	w.Wait()
 }
 
