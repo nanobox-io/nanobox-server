@@ -1,3 +1,12 @@
+// Copyright (c) 2014 Pagoda Box Inc.
+// Copyright (c) 2014 Steven K. Domino
+//
+// This Source Code Form is subject to the terms of the Mozilla Public License,
+// v. 2.0. If a copy of the MPL was not distributed with this file, You can
+// obtain one at http://mozilla.org/MPL/2.0/.
+
+
+//
 package config
 
 import (
@@ -141,19 +150,19 @@ func parseFile(file string) (map[string]string, error) {
 
 	opts := make(map[string]string)
 	scanner := bufio.NewScanner(f)
-	startLine := 1
+	readLine := 1
 
 	// Read line by line, sending lines to parseLine
 	for scanner.Scan() {
 		if err := parseLine(scanner.Text(), opts); err != nil {
-			Log.Error("[NANOBOX :: CONFIG] Error reading line: %v\n", startLine)
+			Log.Error("[NANOBOX :: CONFIG] Error reading line: %v\n", readLine)
 			return nil, err
 		}
 
-		startLine++
+		readLine++
 	}
 
-	return opts, err
+	return opts, nil
 }
 
 // parseLine reads each line of the config file, extracting a key/value pair to

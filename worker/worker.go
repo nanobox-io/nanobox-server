@@ -1,3 +1,12 @@
+// Copyright (c) 2014 Pagoda Box Inc.
+// Copyright (c) 2014 Steven K. Domino
+//
+// This Source Code Form is subject to the terms of the Mozilla Public License,
+// v. 2.0. If a copy of the MPL was not distributed with this file, You can
+// obtain one at http://mozilla.org/MPL/2.0/.
+
+
+//
 package worker
 
 import (
