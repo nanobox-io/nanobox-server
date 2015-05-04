@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/nanobox-core/nanobox-server/config"
-	"github.com/nanobox-core/nanobox-server/data"
+	"github.com/pagodabox/nanobox-server/config"
+	"github.com/pagodabox/nanobox-server/data"
 )
 
 // ListEVars

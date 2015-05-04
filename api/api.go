@@ -17,8 +17,8 @@ import (
 	"code.google.com/p/go-uuid/uuid"
 	"github.com/gorilla/pat"
 
-	"github.com/nanobox-core/nanobox-server/config"
-	"github.com/nanobox-core/nanobox-server/worker"
+	"github.com/pagodabox/nanobox-server/config"
+	"github.com/pagodabox/nanobox-server/worker"
 )
 
 // structs

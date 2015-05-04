@@ -12,7 +12,7 @@ package worker
 import (
 	"sync"
 
-	"github.com/nanobox-core/nanobox-server/config"
+	"github.com/pagodabox/nanobox-server/config"
 )
 
 // structs

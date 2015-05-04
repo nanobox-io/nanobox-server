@@ -10,8 +10,8 @@
 package data
 
 import (
-	"github.com/nanobox-core/nanobox-server/config"
-	"github.com/nanobox-core/scribble"
+	"github.com/pagodabox/nanobox-server/config"
+	"github.com/pagodabox/golang-scribble"
 )
 
 type (
@@ -25,7 +25,7 @@ type (
 
 // List
 func List(collection string, v interface{}) error {
-	t := scribble.Transaction{Operation: "readall", Collection: collection, Container: &v}
+	t := scribble.Transaction{Action: "readall", Collection: collection, Container: &v}
 	return config.Scribble.Transact(t)
 }
 
@@ -33,13 +33,13 @@ func List(collection string, v interface{}) error {
 func Save(v Model) error {
 	config.Log.Debug("[NANOBOX :: DATA] Save resource: %+v\n", v)
 
-	t := scribble.Transaction{Operation: "write", Collection: v.Collection(), RecordID: v.Id(), Container: &v}
+	t := scribble.Transaction{Action: "write", Collection: v.Collection(), ResourceID: v.Id(), Container: &v}
 	return config.Scribble.Transact(t)
 }
 
 // Get
 func Get(v Model) error {
-	t := scribble.Transaction{Operation: "read", Collection: v.Collection(), RecordID: v.Id(), Container: &v}
+	t := scribble.Transaction{Action: "read", Collection: v.Collection(), ResourceID: v.Id(), Container: &v}
 	return config.Scribble.Transact(t)
 }
 
@@ -50,6 +50,6 @@ func Update(v Model) error {
 
 // Destroy
 func Destroy(v Model) error {
-	t := scribble.Transaction{Operation: "delete", Collection: v.Collection(), RecordID: v.Id(), Container: &v}
+	t := scribble.Transaction{Action: "delete", Collection: v.Collection(), ResourceID: v.Id(), Container: &v}
 	return config.Scribble.Transact(t)
 }

@@ -12,8 +12,8 @@ package main
 import (
 	"os"
 
-	"github.com/nanobox-core/nanobox-server/api"
-	"github.com/nanobox-core/nanobox-server/config"
+	"github.com/pagodabox/nanobox-server/api"
+	"github.com/pagodabox/nanobox-server/config"
 )
 
 //

@@ -17,11 +17,11 @@ import (
 
 	"github.com/jcelliott/lumber"
 
-	"github.com/nanobox-core/hatchet"
-	"github.com/nanobox-core/logtap"
-	"github.com/nanobox-core/mist"
-	"github.com/nanobox-core/router"
-	"github.com/nanobox-core/scribble"
+	"github.com/pagodabox/golang-hatchet"
+	"github.com/pagodabox/nanobox-logtap"
+	"github.com/pagodabox/nanobox-mist"
+	"github.com/pagodabox/nanobox-router"
+	"github.com/pagodabox/golang-scribble"
 )
 
 //
@@ -116,7 +116,12 @@ func Init() error {
 	Router = router.New(config.routerPort, Log)
 
 	// create new scribble
-	Scribble = scribble.New(config.scribbleDir, Log)
+	var err error
+
+	Scribble, err = scribble.New(config.scribbleDir, Log)
+	if err != nil {
+		return err
+	}
 
 	// create new logtap
 	Logtap = logtap.New(Log)
