@@ -68,7 +68,7 @@ func Init() error {
 	if len(args) >= 1 {
 		conf := args[0]
 
-		Log.Info("[NANOBOX :: CONFIG] Parsing config at: %v\n", conf)
+		Log.Info("[NANOBOX :: CONFIG] Parsing config at: %#v\n", conf)
 
 		// parse config file
 		opts, err := parseFile(conf)

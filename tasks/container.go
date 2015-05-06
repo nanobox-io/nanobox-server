@@ -1,49 +1,16 @@
 package tasks
 
 import (
-	"os"
-	"os/exec"
+	// "os"
+	// "os/exec"
+	"github.com/samalba/dockerclient"
 )
 
-type (
-	Container struct{}
-)
+func ListContainers() []dockerclient.Container, error {
+	dockerclient,ListContainers(true, false, "") (, error)
+}
 
-func (c *Container) Install(ch chan<- string) error {
 
-	cwd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-
-	//
-	if out, err := exec.Command(cwd + "/scripts/container/download.sh").Output(); err != nil {
-		return err
-	} else {
-		ch <- string(out)
-	}
-
-	//
-	if out, err := exec.Command(cwd + "/scripts/container/install.sh").Output(); err != nil {
-		return err
-	} else {
-		ch <- string(out)
-	}
-
-	//
-	if out, err := exec.Command(cwd + "/scripts/container/start.sh").Output(); err != nil {
-		return err
-	} else {
-		ch <- string(out)
-	}
-
-	//
-	if out, err := exec.Command(cwd + "/scripts/container/cleanup.sh").Output(); err != nil {
-		return err
-	} else {
-		ch <- string(out)
-	}
-
-	return nil
-
+func dockerClient() *dockerclient.DockerClient, err{
+	 dockerclient.NewDockerClient("unix:///var/run/docker.sock", nil)
 }
