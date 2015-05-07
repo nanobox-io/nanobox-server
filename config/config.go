@@ -5,7 +5,6 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at http://mozilla.org/MPL/2.0/.
 
-
 //
 package config
 
@@ -18,10 +17,10 @@ import (
 	"github.com/jcelliott/lumber"
 
 	"github.com/pagodabox/golang-hatchet"
+	"github.com/pagodabox/golang-scribble"
 	"github.com/pagodabox/nanobox-logtap"
 	"github.com/pagodabox/nanobox-mist"
 	"github.com/pagodabox/nanobox-router"
-	"github.com/pagodabox/golang-scribble"
 )
 
 //

@@ -1,8 +1,6 @@
 package data
 
-import (
-
-)
+import ()
 
 type Service struct {
 	Category    string
@@ -10,4 +8,3 @@ type Service struct {
 	Uid         string
 	containerID string // from docker
 }
-
