@@ -1,58 +1,131 @@
 package tasks
 
 import (
+	"errors"
+	"strconv"
+
 	"github.com/pagodabox/nanobox-server/config"
-	// "os/exec"
 	"github.com/samalba/dockerclient"
 )
 
-func CreateContainer(image string) (*dockerClient.ContainerInfo, err) {
-	err := docker.PullImage(image, nil)
+func CreateContainer(image string, labels map[string]string) (*dockerclient.ContainerInfo, error) {
+	config.Log.Debug("[Task::Container] Create %s, %#v\n", image, labels)
+	err := dockerClient().PullImage(image, nil)
 	if err != nil {
+		config.Log.Error("[Task::Container] pull %s, \n", err.Error())
 		return nil, err
 	}
 
-	// Create a container
 	containerConfig := &dockerclient.ContainerConfig{
-		Image:       image,
-		Cmd:         []string{"bash"},
-		Tty:         true,
+		Cmd: []string{"bash"},
+		// Cmd:         []string{"nanobox/base"},
+		Tty:             true,
+		Labels:          labels,
+		NetworkDisabled: false,
+		Image:           image,
 	}
-	if image == "engine-something" {
-		containerConfig.Volumes = map[string]string{"/src":"/src"}
+
+	val := labels["uid"]
+	if val == "" {
+		containers, _ := ListContainers()
+		val = "unknown" + strconv.Itoa(len(containers)+1)
 	}
-	containerId, err := docker.CreateContainer(containerConfig, "foobar")
+
+	containerId, err := dockerClient().CreateContainer(containerConfig, val)
 	if err != nil {
+		config.Log.Error("[Task::Container] create %s, \n", err.Error())
 		return nil, err
 	}
 
+	config.Log.Debug("[Task::Container] containerid %#v\n", containerId)
 	// Start the container
 	hostConfig := &dockerclient.HostConfig{}
-	err = docker.StartContainer(containerId, hostConfig)
-	if err != nil {
-		return nil, err
+	if labels["build"] == "true" {
+		hostConfig.Binds = []string{
+			"/var/nanobox/deploy/:/data/",
+			"/var/nanobox/engines/:/var/nanobox/engines/",
+			"/var/nanobox/plugins/:/var/nanobox/plugins/",
+			"/var/nanobox/services/:/var/nanobox/services/",
+			"/var/nanobox/cache/:/var/nanobox/cache/",
+		}
 	}
 
-	return docker.InspectContainer(id), nil
+	if labels["code"] == "true" {
+		hostConfig.Binds = []string{
+			"/var/nanobox/deploy/:/data/code/",
+		}
+	}
+	err = dockerClient().StartContainer(containerId, hostConfig)
+	if err != nil {
+		config.Log.Error("[Task::Container] start %s, \n", err.Error())
+		return nil, err
+	}
+	container, err := dockerClient().InspectContainer(containerId)
+	config.Router.AddForward(container.NetworkSettings.IPAddress+":22")
+	return container, err
 }
 
 func RemoveContainer(id string) error {
-  err := docker.StopContainer(id, 0)
-  if err != nil {
-  	return err
-  }
+	container, err := dockerClient().InspectContainer(id)
+	if err != nil {
+		return err
+	}
+	config.Router.RemoveForward(container.NetworkSettings.IPAddress+":22")
 
-  return docker.RemoveContainer(id, false, true)
+	err = dockerClient().StopContainer(id, 0)
+	if err != nil {
+		// return err
+	}
+
+	return dockerClient().RemoveContainer(id, false, true)
 }
 
-func ListContainers() ([]dockerclient.Container, error) {
-	return dockerclient.ListContainers(true, false, "")
+func GetDetailedContainer(id string) (*dockerclient.ContainerInfo, error) {
+	return dockerClient().InspectContainer(id)
+}
+
+func GetContainer(name string) (dockerclient.Container, error) {
+	containers, err := ListContainers()
+	if err != nil {
+		return dockerclient.Container{}, err
+	}
+
+	for _, container := range containers {
+		for _, n := range container.Names {
+			if n == name || n == ("/"+name) {
+				return container, nil
+			}
+		}
+		if container.Id == name {
+			return container, nil
+		}
+	}
+	return dockerclient.Container{}, errors.New("not found")
+}
+
+func ListContainers(labels ...string) ([]dockerclient.Container, error) {
+	containers, err := dockerClient().ListContainers(true, false, "")
+	if len(labels) == 0 || err != nil {
+		return containers, err
+	}
+
+	rtn := []dockerclient.Container{}
+
+	for _, label := range labels {
+		for _, container := range containers {
+			if container.Labels[label] == "true" {
+				rtn = append(rtn, container)
+			}
+		}
+	}
+	return rtn, nil
+	
 }
 
 func dockerClient() *dockerclient.DockerClient {
 	d, err := dockerclient.NewDockerClient("unix:///var/run/docker.sock", nil)
 	if err != nil {
-		config.Log.Error(err)
+		config.Log.Error(err.Error())
 	}
 	return d
 }

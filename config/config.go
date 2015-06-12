@@ -12,6 +12,8 @@ import (
 	"bufio"
 	"errors"
 	"os"
+	"net"
+	"io/ioutil"
 	"strings"
 
 	"github.com/jcelliott/lumber"
@@ -25,12 +27,15 @@ import (
 
 //
 var (
-	APIPort  string
-	Log      hatchet.Logger
-	Logtap   *logtap.Logtap
-	Mist     *mist.Mist
-	Router   *router.Router
-	Scribble *scribble.Driver
+	App       string
+	LogtapURI string
+	APIPort   string
+	Host      string
+	Log       hatchet.Logger
+	Logtap    *logtap.Logtap
+	Mist      *mist.Mist
+	Router    *router.Router
+	Scribble  *scribble.Driver
 )
 
 //
@@ -43,7 +48,7 @@ func Init() error {
 	config := struct {
 		host                 string
 		port                 string
-		logtapSyslogPort     string
+		logtapPort           string
 		logtapHistoricalPort string
 		logtapHistoricalFile string
 		mistPort             string
@@ -52,7 +57,7 @@ func Init() error {
 	}{
 		host:                 "0.0.0.0",
 		port:                 "1757",
-		logtapSyslogPort:     "514",
+		logtapPort:           "6361",
 		logtapHistoricalPort: "8080",
 		logtapHistoricalFile: "./tmp/bolt.db",
 		mistPort:             "1445",
@@ -87,7 +92,7 @@ func Init() error {
 			case "router_port":
 				config.routerPort = value
 			case "logtap_port":
-				config.logtapSyslogPort = value
+				config.logtapPort = value
 			case "logtap_historical_port":
 				config.logtapHistoricalPort = value
 			case "logtap_historical_file":
@@ -102,9 +107,27 @@ func Init() error {
 
 	Log.Debug("[NANOBOX :: CONFIG] Nanobox configuration: %+v\n", config)
 
-	//
+	// create an error object
+	var err error
+
+
 	APIPort = config.port
 
+	ip, err := externalIP()
+	if err != nil {
+		Log.Error("error: %s\n", err.Error())
+		return err
+	}
+
+	LogtapURI = ip+":"+config.logtapPort
+
+	App, err = appName()
+	if err != nil {
+		Log.Error("error: %s\n", err.Error())
+		return err
+	}
+
+	Log.Info("app: %s, LogtapURI: %s\n", App, LogtapURI)
 	// create new logtap
 	// Logtap = logtap.New(config.logtapPort, Log)
 
@@ -115,7 +138,6 @@ func Init() error {
 	Router = router.New(config.routerPort, Log)
 
 	// create new scribble
-	var err error
 
 	Scribble, err = scribble.New(config.scribbleDir, Log)
 	if err != nil {
@@ -126,9 +148,13 @@ func Init() error {
 	Logtap = logtap.New(Log)
 	Logtap.Start()
 
-	sysc := logtap.NewSyslogCollector(config.logtapSyslogPort)
+	sysc := logtap.NewSyslogCollector(config.logtapPort)
 	Logtap.AddCollector("syslog", sysc)
 	sysc.Start()
+
+	post := logtap.NewHttpCollector(config.logtapPort)
+	Logtap.AddCollector("post", post)
+	post.Start()
 
 	hist := logtap.NewHistoricalDrain(config.logtapHistoricalPort, config.logtapHistoricalFile, 1000)
 	Logtap.AddDrain("history", hist)
@@ -197,4 +223,57 @@ func parseLine(line string, m map[string]string) error {
 	m[fields[0]] = fields[1]
 
 	return nil
+}
+
+
+func externalIP() (string, error) {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return "", err
+	}
+	for _, iface := range ifaces {
+		if iface.Flags&net.FlagUp == 0 {
+			continue // interface down
+		}
+		if iface.Flags&net.FlagLoopback != 0 {
+			continue // loopback interface
+		}
+		addrs, err := iface.Addrs()
+		if err != nil {
+			return "", err
+		}
+		for _, addr := range addrs {
+			var ip net.IP
+			switch v := addr.(type) {
+			case *net.IPNet:
+				ip = v.IP
+			case *net.IPAddr:
+				ip = v.IP
+			}
+			if ip == nil || ip.IsLoopback() {
+				continue
+			}
+			ip = ip.To4()
+			if ip == nil {
+				continue // not an ipv4 address
+			}
+			return ip.String(), nil
+		}
+	}
+	return "", errors.New("are you connected to the network?")
+}
+
+func appName() (string, error) {
+	files, err := ioutil.ReadDir("/vagrant/code/")
+	if err != nil {
+		return "", err
+	}
+	// for _, file := range files {
+	// 	Log.Info("%s: %s\n\n", file.Name(), file.IsDir())
+	// }
+	
+	if len(files) < 1 || !files[0].IsDir() {
+		return "", errors.New("There is no code in your /vagrant/code/ folder")
+	}
+	return files[0].Name(), nil
 }
