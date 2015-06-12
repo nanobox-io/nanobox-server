@@ -1,0 +1,102 @@
+package tasks
+
+import (
+	"os/exec"
+	"os"
+	"io"
+
+	"github.com/pagodabox/nanobox-server/config"	
+)
+
+func Clean(ch chan<- string) error {
+	err := os.MkdirAll("/var/nanobox/deploy/", 0755)
+	if err != nil {
+		return err
+	}
+	if out, err := exec.Command("rm", "-rf", "/var/nanobox/deploy/*").Output(); err != nil {
+
+		return err
+	} else {
+		ch <- string(out)
+	}
+	return nil
+}
+
+func Copy(ch chan<- string) error {
+	// err := os.Mkdir("/var/nanobox/deploy/", 0755)
+	// if err != nil {
+	// 	return err
+	// }
+
+	if err := copyFolder("/vagrant/code/"+config.App+"/", "/var/nanobox/deploy/"); err != nil {
+		return err
+	} 
+	return nil
+}
+
+
+
+func copyFolder(source string, dest string) (err error) {
+ 
+	sourceinfo, err := os.Stat(source)
+	if err != nil {
+		return err
+	}
+ 
+	err = os.MkdirAll(dest, sourceinfo.Mode())
+	if err != nil {
+		return err
+	}
+ 
+	directory, _ := os.Open(source)
+ 
+	objects, err := directory.Readdir(-1)
+ 
+	for _, obj := range objects {
+ 
+		sourcefilepointer := source + "/" + obj.Name()
+ 
+		destinationfilepointer := dest + "/" + obj.Name()
+ 
+		if obj.IsDir() {
+			err = copyFolder(sourcefilepointer, destinationfilepointer)
+			if err != nil {
+				return err
+			}
+		} else {
+			err = copyFile(sourcefilepointer, destinationfilepointer)
+			if err != nil {
+				return err
+			}
+		}
+ 
+	}
+	return
+}
+ 
+func copyFile(source string, dest string) (err error) {
+	sourcefile, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+ 
+	defer sourcefile.Close()
+ 
+	destfile, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+ 
+	defer destfile.Close()
+ 
+	_, err = io.Copy(destfile, sourcefile)
+	if err == nil {
+		sourceinfo, err := os.Stat(source)
+		if err != nil {
+			err = os.Chmod(dest, sourceinfo.Mode())
+		}
+ 
+	}
+ 
+	return
+}
