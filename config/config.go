@@ -110,7 +110,6 @@ func Init() error {
 	// create an error object
 	var err error
 
-
 	APIPort = config.port
 
 	ip, err := externalIP()
