@@ -39,15 +39,19 @@ func (s *Sync) Process() {
 		}
 	}()
 
+	ch <- "Starting A new deploy"
+
 	// clear the deploy log
 	config.Logtap.Drains["history"].(*logtap.HistoricalDrain).ClearDeploy()
 
 
 	// set routing to watch logs
+	ch <- "[NANOBOX :: SYNC] setting routes"
 	config.Log.Debug("[NANOBOX :: SYNC] setting routes\n")
 	config.Router.Handler = router.DeployInProgress{}
 
 	// remove all code containers
+	ch <- "[NANOBOX :: SYNC] clearing old containers"
 	config.Log.Debug("[NANOBOX :: SYNC] clearing old containers")
 
 	containers, _ := tasks.ListContainers("code", "build")
@@ -86,6 +90,7 @@ func (s *Sync) Process() {
 		return
 	}
 
+	ch <- "[NANOBOX :: SYNC] container created"
 	config.Log.Debug("[NANOBOX :: SYNC] container created %#v", con)
 
 	addr := con.NetworkSettings.IPAddress
@@ -102,6 +107,7 @@ func (s *Sync) Process() {
 		"logtap_uri": config.LogtapURI,
 	}
 
+	ch <- "[NANOBOX :: SYNC] running sniff hook"
 	config.Log.Debug("[NANOBOX :: SYNC] running sniff hook")
 
 	cPayload, _ := json.Marshal(payload)
@@ -181,6 +187,8 @@ func (s *Sync) Process() {
 	}
 
 	// remove build
+	ch <- "[NANOBOX :: SYNC] remove build container"
+
 	config.Log.Debug("[NANOBOX :: SYNC] remove build container")
 	tasks.RemoveContainer(con.Id)
 
@@ -246,6 +254,7 @@ func (s *Sync) Process() {
 
 
 	// set routing to web components
+	ch <- "[NANOBOX :: SYNC] set routing"
 	config.Log.Debug("[NANOBOX :: SYNC] set routing")
 	if container, err := tasks.GetContainer("web1"); err == nil {
 		dc, _ := tasks.GetDetailedContainer(container.Id)
@@ -281,6 +290,7 @@ func (s *Sync) Process() {
 		}
 	}
 
+	ch <- "[NANOBOX :: SYNC] sync complete"
 	config.Log.Debug("[NANOBOX :: SYNC] sync complete")
 
 }

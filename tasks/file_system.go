@@ -23,7 +23,7 @@ func Clean(ch chan<- string) error {
 
 		return err
 	} else {
-		ch <- string(out)
+		if string(out) != "" {ch <- string(out)}
 	}
 	return nil
 }
