@@ -23,7 +23,7 @@ func CreateContainer(image string, labels map[string]string) (*dockerclient.Cont
 	}
 
 	containerConfig := &dockerclient.ContainerConfig{
-		Cmd: []string{"bash"},
+		// Cmd: []string{"bash"},
 		// Cmd:         []string{"nanobox/base"},
 		Tty:             true,
 		Labels:          labels,
@@ -49,9 +49,9 @@ func CreateContainer(image string, labels map[string]string) (*dockerclient.Cont
 	if labels["build"] == "true" {
 		hostConfig.Binds = []string{
 			"/var/nanobox/deploy/:/data/",
-			"/var/nanobox/engines/:/var/nanobox/engines/",
-			"/var/nanobox/plugins/:/var/nanobox/plugins/",
-			"/var/nanobox/services/:/var/nanobox/services/",
+			"/vagrant/engines/:/var/nanobox/engines/",
+			"/vagrant/plugins/:/var/nanobox/plugins/",
+			"/vagrant/services/:/var/nanobox/services/",
 			"/var/nanobox/cache/:/var/nanobox/cache/",
 		}
 	}

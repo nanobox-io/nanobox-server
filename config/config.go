@@ -41,7 +41,7 @@ var (
 func Init() error {
 
 	//
-	Log = lumber.NewConsoleLogger(lumber.DEBUG)
+	Log = lumber.NewConsoleLogger(lumber.INFO)
 
 	//
 	config := struct {
@@ -58,7 +58,7 @@ func Init() error {
 		port:                 "1757",
 		logtapPort:           "6361",
 		logtapHistoricalPort: "8080",
-		logtapHistoricalFile: "./tmp/bolt.db",
+		logtapHistoricalFile: "/tmp/bolt.db",
 		mistPort:             "1445",
 		routerPort:           "80",
 		scribbleDir:          "./tmp/db",

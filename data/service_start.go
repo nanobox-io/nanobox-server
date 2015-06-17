@@ -7,6 +7,7 @@
 package data
 
 import (
+	"fmt"
 	"regexp"
 	"encoding/json"
 
@@ -23,21 +24,17 @@ type ServiceStart struct {
 	EnvVars map[string]string
 }
 
-// hooks
-	// configure
-	// start
-	// environment
+func (s *ServiceStart) deployLog(message string) {
+	config.Logtap.Publish("deploy", message)
+}
+
+func (s *ServiceStart) handleError(message string, err error) {
+	s.deployLog(message)
+	config.Log.Error("%s (%s)\n", message, err.Error())
+}
 
 func (s *ServiceStart) Process() {
 	config.Log.Debug("[NANOBOX :: SYNC :: SERVICE] Started\n")
-	ch := make(chan string)
-	defer close(ch)
-
-	go func() {
-		for data := range ch {
-			config.Mist.Publish([]string{"sync"}, data)
-		}
-	}()
 
 	s.Success = false
 	// start the container
@@ -52,7 +49,7 @@ func (s *ServiceStart) Process() {
 	config.Log.Debug("%#v %#v\n\n\n", image, m)
 	container, err := tasks.CreateContainer("nanobox/"+image, m)
 	if err != nil {
-		config.Log.Error("[NANOBOX :: SYNC :: SERVICE] container create failed:%s", err.Error())
+		s.handleError("[NANOBOX :: SYNC :: SERVICE] container create failed", err)
 		return
 	}
 
@@ -73,24 +70,24 @@ func (s *ServiceStart) Process() {
 
 	response, err := h.Run("configure", pString, "1")
 	if err != nil {
-		config.Log.Error("[NANOBOX :: SYNC :: SERVICE] hook response(%#v) err(%#v)", response, err)
+		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC :: SERVICE] hook problem(%#v)", response), err)
 		// return
 	}
 
 	response, err = h.Run("start", "{}", "2")
 	if err != nil {
-		config.Log.Error("[NANOBOX :: SYNC :: SERVICE] hook response(%#v) err(%#v)", response, err)
+		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC :: SERVICE] hook problem(%#v)", response), err)
 		// return
 	}
 
 	if m["service"] == "true" {
 		response, err = h.Run("environment", "{}", "3")
 		if err != nil {
-			config.Log.Error("[NANOBOX :: SYNC :: SERVICE] hook response(%#v) err(%#v)", response, err)
+			s.handleError(fmt.Sprintf("[NANOBOX :: SYNC :: SERVICE] hook problem(%#v)", response), err)
 			// return
 		}
 		if err := json.Unmarshal([]byte(response.Out), &s.EnvVars); err != nil {
-			ch <- "couldnt un marshel evars from server"
+			s.handleError("[NANOBOX :: SYNC :: SERVICE] couldnt unmarshel evars from server", err)
 			// return
 		}
 	}

@@ -8,8 +8,10 @@ package data
 
 import (
 	// "time"
+	"fmt"
 	"strings"
 	"regexp"
+	"time"
 	"encoding/json"
 
 	"github.com/hookyd/go-client"
@@ -23,35 +25,42 @@ import (
 
 //
 type Sync struct {
+	Id string
+}
+
+func (s *Sync) deployLog(message string) {
+	config.Logtap.Publish("deploy", message)
+}
+
+func (s *Sync) handleError(message string, err error) {
+	s.deployLog(message)
+	config.Log.Error("%s (%s)\n", message, err.Error())
+	config.Router.Handler = router.FailedDeploy{}
+	time.Sleep(1 * time.Second)
+	s.updateStatus("complete")
+}
+
+func (s *Sync) updateStatus(status string) {
+	config.Mist.Publish([]string{"sync"}, fmt.Sprintf(`{"model":"Sync", "action":"update", "document":"{\"id\":\"%s\", \"status\":\"%s\"}"}`, s.Id, status))
 }
 
 // this method syncronies your docker containers
 // with the boxfile specification
 func (s *Sync) Process() {
-
-	config.Log.Debug("[NANOBOX :: SYNC] Started\n")
-	ch := make(chan string)
-	defer close(ch)
-
-	go func() {
-		for data := range ch {
-			config.Logtap.Publish("deploy", data)
-		}
-	}()
-
-	ch <- "Starting A new deploy"
-
 	// clear the deploy log
 	config.Logtap.Drains["history"].(*logtap.HistoricalDrain).ClearDeploy()
 
+	config.Log.Debug("[NANOBOX :: SYNC] Started\n")
+
+	s.deployLog("Starting A new deploy")
 
 	// set routing to watch logs
-	ch <- "[NANOBOX :: SYNC] setting routes"
+	s.deployLog("[NANOBOX :: SYNC] setting routes")
 	config.Log.Debug("[NANOBOX :: SYNC] setting routes\n")
 	config.Router.Handler = router.DeployInProgress{}
 
 	// remove all code containers
-	ch <- "[NANOBOX :: SYNC] clearing old containers"
+	s.deployLog("[NANOBOX :: SYNC] clearing old containers")
 	config.Log.Debug("[NANOBOX :: SYNC] clearing old containers")
 
 	containers, _ := tasks.ListContainers("code", "build")
@@ -60,23 +69,20 @@ func (s *Sync) Process() {
 		config.Log.Debug("[NANOBOX :: SYNC] clean container %#v\n", container)
 		err := tasks.RemoveContainer(container.Id)
 		if err != nil {
-			config.Log.Error("[NANOBOX :: SYNC] clean error %s\n", err.Error())
+			s.handleError("[NANOBOX :: SYNC] There is a problem removing old docker containers", err)
+			return
 		}
 	}
 
 	// wipe the data dir /var/nanobox/deploy/
-	if err := tasks.Clean(ch); err != nil {
-		ch <- "could not clean directories"
-		config.Log.Error("could not clean directories(%s)", err.Error())
-		config.Router.Handler = router.FailedDeploy{}
+	if err := tasks.Clean(); err != nil {
+		s.handleError("[NANOBOX :: SYNC] Could not clean code directories", err)
 		return
 	}
 
 	config.Log.Debug("[NANOBOX :: SYNC] copying code from /vagrant/code/%s/* to /var/nanobox/deploy/", config.App)
-	if err := tasks.Copy(ch); err != nil {
-		ch <- "could not copy build image container"
-		config.Log.Error("could not copy build stuff(%s)", err.Error())
-		config.Router.Handler = router.FailedDeploy{}
+	if err := tasks.Copy(); err != nil {
+		s.handleError("[NANOBOX :: SYNC] could not copy build image container", err)
 		return
 	}
 
@@ -84,13 +90,11 @@ func (s *Sync) Process() {
 	config.Log.Debug("[NANOBOX :: SYNC] creating container")
 	con, err := tasks.CreateContainer("nanobox/base", map[string]string{"build": "true", "uid": "build"})
 	if err != nil {
-		ch <- "could not create build image container"
-		config.Log.Error("could not create build image container(%s)", err.Error())
-		config.Router.Handler = router.FailedDeploy{}
+		s.handleError("[NANOBOX :: SYNC] could not create build image container", err)
 		return
 	}
 
-	ch <- "[NANOBOX :: SYNC] container created"
+	s.deployLog("[NANOBOX :: SYNC] container created")
 	config.Log.Debug("[NANOBOX :: SYNC] container created %#v", con)
 
 	addr := con.NetworkSettings.IPAddress
@@ -107,22 +111,20 @@ func (s *Sync) Process() {
 		"logtap_uri": config.LogtapURI,
 	}
 
-	ch <- "[NANOBOX :: SYNC] running sniff hook"
+	s.deployLog("[NANOBOX :: SYNC] running sniff hook")
 	config.Log.Debug("[NANOBOX :: SYNC] running sniff hook")
 
 	cPayload, _ := json.Marshal(payload)
 
 	if response, err := h.Run("configure", cPayload, "0"); err != nil {
-		config.Log.Debug("[NANOBOX :: SYNC] hook response(%#v) err(%#v)", response, err)
-		config.Router.Handler = router.FailedDeploy{}
-		// return
+		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook problem(%#v)", response), err)
+		return
 	}
 
 	response, err := h.Run("boxfile", "{}", "1")
 	if err != nil {
-		config.Log.Debug("[NANOBOX :: SYNC] hook response(%#v) err(%#v)", response, err)
-		config.Router.Handler = router.FailedDeploy{}
-		// return
+		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook problem(%#v)", response), err)
+		return
 	} else {
 		// combine boxfiles
 		hookBox := boxfile.New([]byte(response.Out))
@@ -163,16 +165,14 @@ func (s *Sync) Process() {
 
 	evars := map[string]string{}
 
-	for _, s := range serviceStarts {
-		if !s.Success {
-			ch <- "A Service was not started correctly ("+s.Uid+")"
-			config.Log.Error("[NANOBOX :: SYNC] A service failed to start correctly (%s)", s.Uid)
-			config.Router.Handler = router.FailedDeploy{}
+	for _, serv := range serviceStarts {
+		if !serv.Success {
+			s.handleError("[NANOBOX :: SYNC] A Service was not started correctly ("+serv.Uid+")", err)			
 			return
 		}
 
-		for key, val := range s.EnvVars {
-			evars[strings.ToUpper(s.Uid+"_"+key)] = val
+		for key, val := range serv.EnvVars {
+			evars[strings.ToUpper(serv.Uid+"_"+key)] = val
 		}
 	}
 
@@ -181,13 +181,12 @@ func (s *Sync) Process() {
 	pload, _ := json.Marshal(payload)
 	response, err = h.Run("build", string(pload), "2")
 	if err != nil {
-		config.Log.Debug("[NANOBOX :: SYNC] hook response(%#v) err(%#v)", response, err)
-		config.Router.Handler = router.FailedDeploy{}
-		// return
+		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook problem(%#v)", response), err)
+		return
 	}
 
 	// remove build
-	ch <- "[NANOBOX :: SYNC] remove build container"
+	s.deployLog("[NANOBOX :: SYNC] remove build container")
 
 	config.Log.Debug("[NANOBOX :: SYNC] remove build container")
 	tasks.RemoveContainer(con.Id)
@@ -207,7 +206,6 @@ func (s *Sync) Process() {
 					Uid:     node.(string),
 				}
 				codeServices = append(codeServices, &s)
-
 				codeWorker.Queue(&s)
 			}
 		}
@@ -215,11 +213,9 @@ func (s *Sync) Process() {
 
 	codeWorker.Process()
 
-	for _, s := range codeServices {
-		if !s.Success {
-			ch <- "A Service was not started correctly ("+s.Uid+")"
-			config.Log.Error("[NANOBOX :: SYNC] A service failed to start correctly (%s)", s.Uid)
-			config.Router.Handler = router.FailedDeploy{}
+	for _, serv := range codeServices {
+		if !serv.Success {
+			s.handleError("A Service was not started correctly ("+serv.Uid+")", err)
 			return
 		}
 	}
@@ -243,9 +239,7 @@ func (s *Sync) Process() {
 				pload, _ := json.Marshal(map[string]interface{}{"before_deploy": bd, "before_deploy_all": bda})
 
 				if response, err := h.Run("before_deploy", pload, "0"); err != nil {
-					config.Log.Debug("[NANOBOX :: SYNC] hook response(%#v) err(%#v)", response, err)
-					config.Router.Handler = router.FailedDeploy{}
-					// return
+					s.deployLog(fmt.Sprintf("[NANOBOX :: SYNC] hook problem(%#v) err(%#v)", response, err))
 				}
 
 			}
@@ -254,7 +248,7 @@ func (s *Sync) Process() {
 
 
 	// set routing to web components
-	ch <- "[NANOBOX :: SYNC] set routing"
+	s.deployLog("[NANOBOX :: SYNC] set routing")
 	config.Log.Debug("[NANOBOX :: SYNC] set routing")
 	if container, err := tasks.GetContainer("web1"); err == nil {
 		dc, _ := tasks.GetDetailedContainer(container.Id)
@@ -281,16 +275,15 @@ func (s *Sync) Process() {
 				pload, _ := json.Marshal(map[string]interface{}{"before_deploy": ad, "before_deploy_all": ada})
 
 				if response, err := h.Run("before_deploy", pload, "0"); err != nil {
-					config.Log.Debug("[NANOBOX :: SYNC] hook response(%#v) err(%#v)", response, err)
-					config.Router.Handler = router.FailedDeploy{}
-					// return
+					s.deployLog(fmt.Sprintf("[NANOBOX :: SYNC] hook problem(%#v) err(%#v)", response, err))
 				}
 
 			}
 		}
 	}
 
-	ch <- "[NANOBOX :: SYNC] sync complete"
+	s.deployLog("[NANOBOX :: SYNC] sync complete")
 	config.Log.Debug("[NANOBOX :: SYNC] sync complete")
+	s.updateStatus("complete")
 
 }

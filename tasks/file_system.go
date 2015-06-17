@@ -14,26 +14,19 @@ import (
 	"github.com/pagodabox/nanobox-server/config"	
 )
 
-func Clean(ch chan<- string) error {
+func Clean() error {
 	err := os.MkdirAll("/var/nanobox/deploy/", 0755)
 	if err != nil {
 		return err
 	}
-	if out, err := exec.Command("rm", "-rf", "/var/nanobox/deploy/*").Output(); err != nil {
+	if _, err := exec.Command("rm", "-rf", "/var/nanobox/deploy/*").Output(); err != nil {
 
 		return err
-	} else {
-		if string(out) != "" {ch <- string(out)}
 	}
 	return nil
 }
 
-func Copy(ch chan<- string) error {
-	// err := os.Mkdir("/var/nanobox/deploy/", 0755)
-	// if err != nil {
-	// 	return err
-	// }
-
+func Copy() error {
 	if err := copyFolder("/vagrant/code/"+config.App+"/", "/var/nanobox/deploy/"); err != nil {
 		return err
 	} 

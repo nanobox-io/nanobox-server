@@ -26,4 +26,13 @@ func (s *Startup) Process() {
 	} else {
 		config.Router.Handler = router.NoDeploy{}
 	}
+
+	// we also need to set up a tunnel for each running docker container
+	containers, _ := tasks.ListContainers()
+	for _, container := range containers {
+		dc, err := tasks.GetDetailedContainer(container.Id)
+		if err == nil {
+			config.Router.AddForward(dc.NetworkSettings.IPAddress+":22")
+		}
+	}
 }
