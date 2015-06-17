@@ -48,7 +48,8 @@ func CreateContainer(image string, labels map[string]string) (*dockerclient.Cont
 	hostConfig := &dockerclient.HostConfig{}
 	if labels["build"] == "true" {
 		hostConfig.Binds = []string{
-			"/var/nanobox/deploy/:/data/",
+			"/var/nanobox/deploy/:/var/nanobox/deploy/",
+			"/var/nanobox/deploy/code/:/data/code/",
 			"/vagrant/engines/:/var/nanobox/engines/",
 			"/vagrant/plugins/:/var/nanobox/plugins/",
 			"/vagrant/services/:/var/nanobox/services/",
@@ -58,7 +59,7 @@ func CreateContainer(image string, labels map[string]string) (*dockerclient.Cont
 
 	if labels["code"] == "true" {
 		hostConfig.Binds = []string{
-			"/var/nanobox/deploy/:/data/code/",
+			"/var/nanobox/deploy/:/data/",
 		}
 	}
 	err = dockerClient().StartContainer(containerId, hostConfig)

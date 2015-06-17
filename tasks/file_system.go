@@ -15,7 +15,7 @@ import (
 )
 
 func Clean() error {
-	err := os.MkdirAll("/var/nanobox/deploy/", 0755)
+	err := os.MkdirAll("/var/nanobox/deploy/code/", 0755)
 	if err != nil {
 		return err
 	}
@@ -27,7 +27,7 @@ func Clean() error {
 }
 
 func Copy() error {
-	if err := copyFolder("/vagrant/code/"+config.App+"/", "/var/nanobox/deploy/"); err != nil {
+	if err := copyFolder("/vagrant/code/"+config.App+"/", "/var/nanobox/deploy/code/"); err != nil {
 		return err
 	} 
 	return nil
