@@ -41,7 +41,7 @@ func (s *ServiceStart) Process() {
 	image := regexp.MustCompile(`\d+`).ReplaceAllString(s.Uid, "")
 	m := map[string]string{"uid": s.Uid}
 	if image == "web" || image == "worker" || image == "tcp" {
-		image = "base"
+		image = "code"
 		m["code"] = "true"
 	} else {
 		m["service"] = "true"
@@ -71,24 +71,24 @@ func (s *ServiceStart) Process() {
 	response, err := h.Run("configure", pString, "1")
 	if err != nil {
 		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC :: SERVICE] hook problem(%#v)", response), err)
-		// return
+		return
 	}
 
 	response, err = h.Run("start", "{}", "2")
 	if err != nil {
 		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC :: SERVICE] hook problem(%#v)", response), err)
-		// return
+		return
 	}
 
 	if m["service"] == "true" {
 		response, err = h.Run("environment", "{}", "3")
 		if err != nil {
 			s.handleError(fmt.Sprintf("[NANOBOX :: SYNC :: SERVICE] hook problem(%#v)", response), err)
-			// return
+			return
 		}
 		if err := json.Unmarshal([]byte(response.Out), &s.EnvVars); err != nil {
 			s.handleError("[NANOBOX :: SYNC :: SERVICE] couldnt unmarshel evars from server", err)
-			// return
+			return
 		}
 	}
 

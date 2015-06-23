@@ -9,13 +9,14 @@ package tasks
 import (
 	"os/exec"
 	"os"
-	"io"
-
-	"github.com/pagodabox/nanobox-server/config"	
 )
 
 func Clean() error {
-	err := os.MkdirAll("/var/nanobox/deploy/code/", 0755)
+	err := os.MkdirAll("/var/nanobox/cache/", 0755)
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll("/var/nanobox/deploy/", 0755)
 	if err != nil {
 		return err
 	}
@@ -26,76 +27,76 @@ func Clean() error {
 	return nil
 }
 
-func Copy() error {
-	if err := copyFolder("/vagrant/code/"+config.App+"/", "/var/nanobox/deploy/code/"); err != nil {
-		return err
-	} 
-	return nil
-}
+// func Copy() error {
+// 	if err := copyFolder("/vagrant/code/"+config.App+"/", "/var/nanobox/code/"); err != nil {
+// 		return err
+// 	} 
+// 	return nil
+// }
 
 
 
-func copyFolder(source string, dest string) (err error) {
+// func copyFolder(source string, dest string) (err error) {
  
-	sourceinfo, err := os.Stat(source)
-	if err != nil {
-		return err
-	}
+// 	sourceinfo, err := os.Stat(source)
+// 	if err != nil {
+// 		return err
+// 	}
  
-	err = os.MkdirAll(dest, sourceinfo.Mode())
-	if err != nil {
-		return err
-	}
+// 	err = os.MkdirAll(dest, sourceinfo.Mode())
+// 	if err != nil {
+// 		return err
+// 	}
  
-	directory, _ := os.Open(source)
+// 	directory, _ := os.Open(source)
  
-	objects, err := directory.Readdir(-1)
+// 	objects, err := directory.Readdir(-1)
  
-	for _, obj := range objects {
+// 	for _, obj := range objects {
  
-		sourcefilepointer := source + "/" + obj.Name()
+// 		sourcefilepointer := source + "/" + obj.Name()
  
-		destinationfilepointer := dest + "/" + obj.Name()
+// 		destinationfilepointer := dest + "/" + obj.Name()
  
-		if obj.IsDir() {
-			err = copyFolder(sourcefilepointer, destinationfilepointer)
-			if err != nil {
-				return err
-			}
-		} else {
-			err = copyFile(sourcefilepointer, destinationfilepointer)
-			if err != nil {
-				return err
-			}
-		}
+// 		if obj.IsDir() {
+// 			err = copyFolder(sourcefilepointer, destinationfilepointer)
+// 			if err != nil {
+// 				return err
+// 			}
+// 		} else {
+// 			err = copyFile(sourcefilepointer, destinationfilepointer)
+// 			if err != nil {
+// 				return err
+// 			}
+// 		}
  
-	}
-	return
-}
+// 	}
+// 	return
+// }
  
-func copyFile(source string, dest string) (err error) {
-	sourcefile, err := os.Open(source)
-	if err != nil {
-		return err
-	}
+// func copyFile(source string, dest string) (err error) {
+// 	sourcefile, err := os.Open(source)
+// 	if err != nil {
+// 		return err
+// 	}
  
-	defer sourcefile.Close()
+// 	defer sourcefile.Close()
  
-	destfile, err := os.Create(dest)
-	if err != nil {
-		return err
-	}
+// 	destfile, err := os.Create(dest)
+// 	if err != nil {
+// 		return err
+// 	}
  
-	defer destfile.Close()
+// 	defer destfile.Close()
  
-	_, err = io.Copy(destfile, sourcefile)
-	if err == nil {
-		sourceinfo, err := os.Stat(source)
-		if err != nil {
-			err = os.Chmod(dest, sourceinfo.Mode())
-		}
+// 	_, err = io.Copy(destfile, sourcefile)
+// 	if err == nil {
+// 		sourceinfo, err := os.Stat(source)
+// 		if err != nil {
+// 			err = os.Chmod(dest, sourceinfo.Mode())
+// 		}
  
-	}
+// 	}
  
-	return
-}
+// 	return
+// }
