@@ -49,10 +49,10 @@ func CreateContainer(image string, labels map[string]string) (*dockerclient.Cont
 		hostConfig.Binds = []string{
 			"/var/nanobox/cache/:/mnt/cache/",
 			"/var/nanobox/deploy/:/mnt/deploy/",
-			"/vagrant/code/"+config.App+"/:/mnt/code/:ro",
 
-			"/vagrant/engines/:/share/engines/",
-			"/vagrant/services/:/share/services/",
+			"/vagrant/code/"+config.App+"/:/share/code/:ro",
+			"/vagrant/engines/:/share/engines/:ro",
+			"/vagrant/services/:/share/services/:ro",
 		}
 	}
 
@@ -134,4 +134,19 @@ func dockerClient() *dockerclient.DockerClient {
 		config.Log.Error(err.Error())
 	}
 	return d
+}
+
+func ImageExists(name string) bool {
+	images, err := dockerClient().ListImages()
+	if err != nil {
+		return false
+	}
+	for _, image := range images {
+		for _, tag := range image.RepoTags {
+			if tag == name+":latest" {
+				return true
+			}
+		}
+	}
+	return false
 }

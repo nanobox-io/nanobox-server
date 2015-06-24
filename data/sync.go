@@ -83,6 +83,10 @@ func (s *Sync) Process() {
 
 	// create a build container
 	config.Log.Debug("[NANOBOX :: SYNC] creating container")
+	if !tasks.ImageExists("nanobox/build") {
+		s.deployLog("Pulling the latest build image... This could take a while.")
+	}
+	
 	con, err := tasks.CreateContainer("nanobox/build", map[string]string{"build": "true", "uid": "build"})
 	if err != nil {
 		s.handleError("[NANOBOX :: SYNC] could not create build image container", err)
