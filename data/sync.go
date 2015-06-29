@@ -34,14 +34,21 @@ func (s *Sync) deployLog(message string) {
 
 func (s *Sync) handleError(message string, err error) {
 	s.deployLog(message)
-	config.Log.Error("%s (%s)\n", message, err.Error())
+	errMessage := ""
+	if err == nil {
+		errMessage = "noerror"
+	} else {
+		errMessage = err.Error()
+	}
+
+	config.Log.Error("%s (%s)\n", message, errMessage)
 	config.Router.Handler = router.FailedDeploy{}
-	time.Sleep(1 * time.Second)
+	time.Sleep(10 * time.Second)
 	s.updateStatus("complete")
 }
 
 func (s *Sync) updateStatus(status string) {
-	config.Mist.Publish([]string{"sync"}, fmt.Sprintf(`{"model":"Sync", "action":"update", "document":"{\"id\":\"%s\", \"status\":\"%s\"}"}`, s.Id, status))
+	config.Mist.Publish([]string{"sync"}, fmt.Sprintf(`bu, "action":"update", "document":"{\"id\":\"%s\", \"status\":\"%s\"}"}`, s.Id, status))
 }
 
 // this method syncronies your docker containers
@@ -51,7 +58,6 @@ func (s *Sync) Process() {
 	config.Logtap.Drains["history"].(*logtap.HistoricalDrain).ClearDeploy()
 
 	config.Log.Debug("[NANOBOX :: SYNC] Started\n")
-
 	s.deployLog("Starting A new deploy")
 
 	// set routing to watch logs
@@ -100,11 +106,12 @@ func (s *Sync) Process() {
 
 	h := hooky.Hooky{
 		Host: addr,
-		Port: "1234", // dont know the port
+		Port: "5540",
 	}
 
 	box := boxfile.NewFromPath("/vagrant/code/"+config.App+"/Boxfile")
 
+	config.Log.Info("boxfile after parsing!! %#v\n", box)
 	payload := map[string]interface{}{
 		"app": config.App,
 		"dns": []string{config.App+".gonano.io"},
@@ -115,26 +122,34 @@ func (s *Sync) Process() {
 	}
 
 	s.deployLog("[NANOBOX :: SYNC] running sniff hook")
-	config.Log.Debug("[NANOBOX :: SYNC] running sniff hook")
+	config.Log.Info("[NANOBOX :: SYNC] running sniff hook")
 
-	cPayload, _ := json.Marshal(payload)
+	config.Log.Info("[NANOBOX :: SYNC] pload: %#v", payload)
+	cPayload, err := json.Marshal(payload)
+	config.Log.Info("[NANOBOX :: SYNC] json: %s, %#v", cPayload, err)
 
-	if response, err := h.Run("build-configure", cPayload, s.Id); err != nil {
-		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook problem(%#v)", response), err)
+	s.deployLog("[NANOBOX :: SYNC] running configure hook")
+	time.Sleep(10 * time.Second)
+	if response, err := h.Run("build-configure", cPayload, s.Id); err != nil || response.Exit != 0 {
+		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook(build-configure) problem(%#v)", response), err)
 		return
 	}
 
-	if response, err := h.Run("build-prepare", cPayload, s.Id); err != nil {
-		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook problem(%#v)", response), err)
+	s.deployLog("[NANOBOX :: SYNC] running prepare hook")
+	if response, err := h.Run("build-prepare", cPayload, s.Id); err != nil || response.Exit != 0 {
+		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook(build-prepare) problem(%#v)", response), err)
 		return
 	}
 
-	response, err := h.Run("boxfile", cPayload, s.Id)
-	if err != nil {
-		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook problem(%#v)", response), err)
+	s.deployLog("[NANOBOX :: SYNC] running boxfile hook")
+	response, err := h.Run("build-boxfile", cPayload, s.Id)
+	if err != nil || response.Exit != 0 {
+		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook(build-boxfile) problem(%#v)", response), err)
 		return
 	} else {
 		// combine boxfiles
+		s.deployLog(fmt.Sprintf("boxfile hook response: %#v\n", response))
+		config.Log.Debug("boxfile %s\n", response.Out)
 		hookBox := boxfile.New([]byte(response.Out))
 		box.Merge(hookBox)
 	}
@@ -148,7 +163,7 @@ func (s *Sync) Process() {
 	// build containers according to boxfile
 	// run hooks in new containers (services)
 	for _, node := range box.Nodes() {
-		name := regexp.MustCompile(`\d+`).ReplaceAllString(node.(string), "")
+		name := regexp.MustCompile(`\d+`).ReplaceAllString(node, "")
 		config.Log.Debug("[NANOBOX :: SYNC] looking at node (%s)", node)
 		if node != "nanobox" &&
 			node != "global" &&
@@ -156,10 +171,10 @@ func (s *Sync) Process() {
 			name != "web" &&
 			name != "worker" {
 				config.Log.Debug("[NANOBOX :: SYNC] looks good making sure we dont have one already")
-			if _, err := tasks.GetContainer("nanobox/"+node.(string)); err != nil {
+			if _, err := tasks.GetContainer("nanobox/"+node); err != nil {
 				s := ServiceStart{
 					Boxfile: box.Node(node),
-					Uid:     node.(string),
+					Uid:     node,
 				}
 				config.Log.Debug("[NANOBOX :: SYNC] sure didnt (%#v)", s)
 				serviceStarts = append(serviceStarts, &s)
@@ -186,15 +201,17 @@ func (s *Sync) Process() {
 
 	payload["env"] = evars
 
+	s.deployLog("[NANOBOX :: SYNC] running build hook")
 	pload, _ := json.Marshal(payload)
-	response, err = h.Run("build", pload, "3")
-	if err != nil {
-		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook problem(%#v)", response), err)
+	response, err = h.Run("build-build", pload, "3")
+	if err != nil || response.Exit != 0 {
+		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook(build-build) problem(%#v)", response), err)
 		return
 	}
 
-	if response, err := h.Run("build-prepare", pload, "4"); err != nil {
-		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook problem(%#v)", response), err)
+	s.deployLog("[NANOBOX :: SYNC] running cleanup hook")
+	if response, err := h.Run("build-cleanup", pload, "4"); err != nil || response.Exit != 0 {
+		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook(build-cleanup) problem(%#v)", response), err)
 		return
 	}
 
@@ -211,12 +228,12 @@ func (s *Sync) Process() {
 
 	codeServices := []*ServiceStart{}
 	for _, node := range box.Nodes() {
-		name := regexp.MustCompile(`\d+`).ReplaceAllString(node.(string), "")
+		name := regexp.MustCompile(`\d+`).ReplaceAllString(node, "")
 		if name == "web" || name == "worker" {
-			if _, err := tasks.GetContainer(node.(string)); err != nil {
+			if _, err := tasks.GetContainer(node); err != nil {
 				s := ServiceStart{
 					Boxfile: box.Node(node),
-					Uid:     node.(string),
+					Uid:     node,
 				}
 				codeServices = append(codeServices, &s)
 				codeWorker.Queue(&s)
@@ -235,7 +252,7 @@ func (s *Sync) Process() {
 
 	// before deploy hooks
 	for _, node := range box.Nodes() {
-		n := node.(string)
+		n := node
 		bd  := box.Node(n).Value("before_deploy")
 		bda := box.Node(n).Value("before_deploy_all")
 		if bd != nil || bda != nil {
@@ -250,14 +267,13 @@ func (s *Sync) Process() {
 
 				pload, _ := json.Marshal(map[string]interface{}{"before_deploy": bd, "before_deploy_all": bda})
 
-				if response, err := h.Run("before_deploy", pload, "0"); err != nil {
-					s.deployLog(fmt.Sprintf("[NANOBOX :: SYNC] hook problem(%#v) err(%#v)", response, err))
+				if response, err := h.Run("code-before_deploy", pload, "0"); err != nil || response.Exit != 0 {
+					s.deployLog(fmt.Sprintf("[NANOBOX :: SYNC] hook(code-before_deploy) problem(%#v) err(%#v)", response, err))
 				}
 
 			}
 		}
 	}
-
 
 	// set routing to web components
 	s.deployLog("[NANOBOX :: SYNC] set routing")
@@ -271,7 +287,7 @@ func (s *Sync) Process() {
 	
 	// after deploy hooks
 	for _, node := range box.Nodes() {
-		n := node.(string)
+		n := node
 		ad  := box.Node(n).Value("after_deploy")
 		ada := box.Node(n).Value("after_deploy_all")
 		if ad != nil || ada != nil {
@@ -284,10 +300,10 @@ func (s *Sync) Process() {
 					Port: "1234", // dont know the port
 				}
 
-				pload, _ := json.Marshal(map[string]interface{}{"before_deploy": ad, "before_deploy_all": ada})
+				pload, _ := json.Marshal(map[string]interface{}{"after_deploy": ad, "after_deploy_all": ada})
 
-				if response, err := h.Run("before_deploy", pload, "0"); err != nil {
-					s.deployLog(fmt.Sprintf("[NANOBOX :: SYNC] hook problem(%#v) err(%#v)", response, err))
+				if response, err := h.Run("code-after_deploy", pload, "0"); err != nil || response.Exit != 0 {
+					s.deployLog(fmt.Sprintf("[NANOBOX :: SYNC] hook(code-after_deploy) problem(%#v) err(%#v)", response, err))
 				}
 
 			}

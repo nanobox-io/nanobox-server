@@ -14,6 +14,7 @@ import (
 	"net"
 	"io/ioutil"
 	"strings"
+	"time"
 
 	"github.com/jcelliott/lumber"
 
@@ -41,7 +42,7 @@ var (
 func Init() error {
 
 	//
-	Log = lumber.NewConsoleLogger(lumber.INFO)
+	Log = lumber.NewConsoleLogger(lumber.DEBUG)
 
 	//
 	config := struct {
@@ -120,9 +121,10 @@ func Init() error {
 	LogtapURI = ip+":"+config.logtapPort
 
 	App, err = appName()
-	if err != nil {
+	for err != nil {
 		Log.Error("error: %s\n", err.Error())
-		return err
+		time.Sleep(time.Second)
+		App, err = appName()
 	}
 
 	Log.Info("app: %s, LogtapURI: %s\n", App, LogtapURI)

@@ -30,7 +30,13 @@ func (s *ServiceStart) deployLog(message string) {
 
 func (s *ServiceStart) handleError(message string, err error) {
 	s.deployLog(message)
-	config.Log.Error("%s (%s)\n", message, err.Error())
+	errMessage := ""
+	if err == nil {
+		errMessage = "noerror"
+	} else {
+		errMessage = err.Error()
+	}
+ 	config.Log.Error("%s (%s)\n", message, errMessage)
 }
 
 func (s *ServiceStart) Process() {
@@ -57,7 +63,7 @@ func (s *ServiceStart) Process() {
 
 	h := hooky.Hooky{
 		Host: addr,
-		Port: "1234", // dont know the port
+		Port: "5540",
 	}
 
 	payload := map[string]interface{}{
@@ -68,21 +74,21 @@ func (s *ServiceStart) Process() {
 
 	pString, _ := json.Marshal(payload)
 
-	response, err := h.Run("configure", pString, "1")
+	response, err := h.Run("code-configure", pString, "1")
 	if err != nil {
 		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC :: SERVICE] hook problem(%#v)", response), err)
 		return
 	}
 
-	response, err = h.Run("start", "{}", "2")
+	response, err = h.Run("code-start", "{}", "2")
 	if err != nil {
 		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC :: SERVICE] hook problem(%#v)", response), err)
 		return
 	}
 
 	if m["service"] == "true" {
-		response, err = h.Run("environment", "{}", "3")
-		if err != nil {
+		response, err = h.Run("code-environment", "{}", "3")
+		if err != nil || response.Exit != 0 {
 			s.handleError(fmt.Sprintf("[NANOBOX :: SYNC :: SERVICE] hook problem(%#v)", response), err)
 			return
 		}

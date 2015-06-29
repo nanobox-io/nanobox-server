@@ -47,18 +47,17 @@ func CreateContainer(image string, labels map[string]string) (*dockerclient.Cont
 	hostConfig := &dockerclient.HostConfig{}
 	if labels["build"] == "true" {
 		hostConfig.Binds = []string{
-			"/var/nanobox/cache/:/mnt/cache/",
-			"/var/nanobox/deploy/:/mnt/deploy/",
+			"/mnt/sda/var/nanobox/cache/:/mnt/cache/",
+			"/mnt/sda/var/nanobox/deploy/:/mnt/deploy/",
 
 			"/vagrant/code/"+config.App+"/:/share/code/:ro",
 			"/vagrant/engines/:/share/engines/:ro",
-			"/vagrant/services/:/share/services/:ro",
 		}
 	}
 
 	if labels["code"] == "true" {
 		hostConfig.Binds = []string{
-			"/var/nanobox/deploy/:/data/",
+			"/var/sda/var/nanobox/deploy/:/data/",
 		}
 	}
 	err = dockerClient().StartContainer(containerId, hostConfig)

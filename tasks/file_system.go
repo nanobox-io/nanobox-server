@@ -12,15 +12,15 @@ import (
 )
 
 func Clean() error {
-	err := os.MkdirAll("/var/nanobox/cache/", 0755)
+	err := os.MkdirAll("/mnt/sda/var/nanobox/cache/", 0755)
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll("/var/nanobox/deploy/", 0755)
+	err = os.MkdirAll("/mnt/sda/var/nanobox/deploy/", 0755)
 	if err != nil {
 		return err
 	}
-	if _, err := exec.Command("rm", "-rf", "/var/nanobox/deploy/*").Output(); err != nil {
+	if _, err := exec.Command("rm", "-rf", "/mnt/sda/var/nanobox/deploy/*").Output(); err != nil {
 
 		return err
 	}
