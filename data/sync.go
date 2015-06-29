@@ -48,7 +48,7 @@ func (s *Sync) handleError(message string, err error) {
 }
 
 func (s *Sync) updateStatus(status string) {
-	config.Mist.Publish([]string{"sync"}, fmt.Sprintf(`bu, "action":"update", "document":"{\"id\":\"%s\", \"status\":\"%s\"}"}`, s.Id, status))
+	config.Mist.Publish([]string{"sync"}, fmt.Sprintf(`"action":"update", "document":"{\"id\":\"%s\", \"status\":\"%s\"}"}`, s.Id, status))
 }
 
 // this method syncronies your docker containers
@@ -131,26 +131,27 @@ func (s *Sync) Process() {
 	s.deployLog("[NANOBOX :: SYNC] running configure hook")
 	time.Sleep(10 * time.Second)
 	if response, err := h.Run("build-configure", cPayload, s.Id); err != nil || response.Exit != 0 {
-		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook(build-configure) problem(%#v)", response), err)
+		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook(build-configure) problem(exit: %d, out: %s)", response.Exit, response.Out), err)
 		return
 	}
 
 	s.deployLog("[NANOBOX :: SYNC] running prepare hook")
 	if response, err := h.Run("build-prepare", cPayload, s.Id); err != nil || response.Exit != 0 {
-		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook(build-prepare) problem(%#v)", response), err)
+		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook(build-prepare) problem(exit: %d, out: %s)", response.Exit, response.Out), err)
 		return
 	}
 
 	s.deployLog("[NANOBOX :: SYNC] running boxfile hook")
 	response, err := h.Run("build-boxfile", cPayload, s.Id)
 	if err != nil || response.Exit != 0 {
-		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook(build-boxfile) problem(%#v)", response), err)
+		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook(build-boxfile) problem(exit: %d, out: %s)", response.Exit, response.Out), err)
 		return
 	} else {
 		// combine boxfiles
 		s.deployLog(fmt.Sprintf("boxfile hook response: %#v\n", response))
 		config.Log.Debug("boxfile %s\n", response.Out)
 		hookBox := boxfile.New([]byte(response.Out))
+		config.Log.Debug("hookbox: %#v", hookBox)
 		box.Merge(hookBox)
 	}
 
@@ -205,13 +206,13 @@ func (s *Sync) Process() {
 	pload, _ := json.Marshal(payload)
 	response, err = h.Run("build-build", pload, "3")
 	if err != nil || response.Exit != 0 {
-		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook(build-build) problem(%#v)", response), err)
+		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook(build-build) problem(exit: %d, out: %s)", response.Exit, response.Out), err)
 		return
 	}
 
 	s.deployLog("[NANOBOX :: SYNC] running cleanup hook")
 	if response, err := h.Run("build-cleanup", pload, "4"); err != nil || response.Exit != 0 {
-		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook(build-cleanup) problem(%#v)", response), err)
+		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook(build-cleanup) problem(exit: %d, out: %s)", response.Exit, response.Out), err)
 		return
 	}
 
@@ -268,7 +269,7 @@ func (s *Sync) Process() {
 				pload, _ := json.Marshal(map[string]interface{}{"before_deploy": bd, "before_deploy_all": bda})
 
 				if response, err := h.Run("code-before_deploy", pload, "0"); err != nil || response.Exit != 0 {
-					s.deployLog(fmt.Sprintf("[NANOBOX :: SYNC] hook(code-before_deploy) problem(%#v) err(%#v)", response, err))
+					s.deployLog(fmt.Sprintf("[NANOBOX :: SYNC] hook(code-before_deploy) problem(exit: %d, out: %s) err(%#v)", response.Exit, response.Out, err))
 				}
 
 			}
@@ -303,7 +304,7 @@ func (s *Sync) Process() {
 				pload, _ := json.Marshal(map[string]interface{}{"after_deploy": ad, "after_deploy_all": ada})
 
 				if response, err := h.Run("code-after_deploy", pload, "0"); err != nil || response.Exit != 0 {
-					s.deployLog(fmt.Sprintf("[NANOBOX :: SYNC] hook(code-after_deploy) problem(%#v) err(%#v)", response, err))
+					s.deployLog(fmt.Sprintf("[NANOBOX :: SYNC] hook(code-after_deploy) problem(exit: %d, out: %s) err(%#v)", response.Exit, response.Out, err))
 				}
 
 			}

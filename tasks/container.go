@@ -57,7 +57,7 @@ func CreateContainer(image string, labels map[string]string) (*dockerclient.Cont
 
 	if labels["code"] == "true" {
 		hostConfig.Binds = []string{
-			"/var/sda/var/nanobox/deploy/:/data/",
+			"/mnt/sda/var/nanobox/deploy/:/data/",
 		}
 	}
 	err = dockerClient().StartContainer(containerId, hostConfig)

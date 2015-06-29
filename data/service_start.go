@@ -9,6 +9,7 @@ package data
 import (
 	"fmt"
 	"regexp"
+	"time"
 	"encoding/json"
 
 	"github.com/hookyd/go-client"
@@ -73,9 +74,10 @@ func (s *ServiceStart) Process() {
 	}
 
 	pString, _ := json.Marshal(payload)
+	time.Sleep(10 * time.Second)
 
 	response, err := h.Run("code-configure", pString, "1")
-	if err != nil {
+	if err != nil || response.Exit != 0 {
 		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC :: SERVICE] hook problem(%#v)", response), err)
 		return
 	}
