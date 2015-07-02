@@ -9,7 +9,6 @@ package data
 import (
 	"fmt"
 	"regexp"
-	"time"
 	"encoding/json"
 
 	"github.com/hookyd/go-client"
@@ -25,23 +24,8 @@ type ServiceStart struct {
 	EnvVars map[string]string
 }
 
-func (s *ServiceStart) deployLog(message string) {
-	config.Logtap.Publish("deploy", message)
-}
-
-func (s *ServiceStart) handleError(message string, err error) {
-	s.deployLog(message)
-	errMessage := ""
-	if err == nil {
-		errMessage = "noerror"
-	} else {
-		errMessage = err.Error()
-	}
- 	config.Log.Error("%s (%s)\n", message, errMessage)
-}
-
 func (s *ServiceStart) Process() {
-	config.Log.Debug("[NANOBOX :: SYNC :: SERVICE] Started\n")
+	logInfo("[NANOBOX :: SYNC :: %s] Started", s.Uid)
 
 	s.Success = false
 	// start the container
@@ -53,53 +37,57 @@ func (s *ServiceStart) Process() {
 	} else {
 		m["service"] = "true"
 	}
-	config.Log.Debug("%#v %#v\n\n\n", image, m)
 	container, err := tasks.CreateContainer("nanobox/"+image, m)
 	if err != nil {
-		s.handleError("[NANOBOX :: SYNC :: SERVICE] container create failed", err)
+		handleError("[NANOBOX :: SYNC :: "+s.Uid+"] container create failed", err)
 		return
 	}
 
 	addr := container.NetworkSettings.IPAddress
 
-	h := hooky.Hooky{
-		Host: addr,
-		Port: "5540",
+	h, err := hooky.New(addr, "5540")
+	if err != nil {
+		handleError("[NANOBOX :: SYNC :: "+s.Uid+"] hooky connection failed", err)
 	}
 
 	payload := map[string]interface{}{
 		"boxfile": s.Boxfile.Parsed,
-		"logvac_uri": config.LogtapURI,
+		"logtap_uri": config.LogtapURI,
 		"uid": s.Uid,
 	}
 
 	pString, _ := json.Marshal(payload)
-	time.Sleep(10 * time.Second)
 
-	response, err := h.Run("code-configure", pString, "1")
+	logInfo("[NANOBOX :: SYNC :: %s] running configure hook", s.Uid)
+	response, err := h.Run("configure", pString, "1")
 	if err != nil || response.Exit != 0 {
-		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC :: SERVICE] hook problem(%#v)", response), err)
+		handleError(fmt.Sprintf("[NANOBOX :: SYNC :: SERVICE] hook problem(%#v)", response), err)
 		return
 	}
+	logDebug("[NANOBOX :: SYNC :: %s] Hook Response (configure): %+v\n", s.Uid, response)
 
-	response, err = h.Run("code-start", "{}", "2")
+	logInfo("[NANOBOX :: SYNC :: %s] running start hook", s.Uid)
+	response, err = h.Run("start", "{}", "2")
 	if err != nil {
-		s.handleError(fmt.Sprintf("[NANOBOX :: SYNC :: SERVICE] hook problem(%#v)", response), err)
+		handleError(fmt.Sprintf("[NANOBOX :: SYNC :: %s] hook problem(%#v)", s.Uid, response), err)
 		return
 	}
+	logDebug("[NANOBOX :: SYNC :: %s] Hook Response (start): %+v\n", response)
 
 	if m["service"] == "true" {
-		response, err = h.Run("code-environment", "{}", "3")
+		logInfo("[NANOBOX :: SYNC :: %s] running environment hook", s.Uid)
+		response, err = h.Run("environment", "{}", "3")
 		if err != nil || response.Exit != 0 {
-			s.handleError(fmt.Sprintf("[NANOBOX :: SYNC :: SERVICE] hook problem(%#v)", response), err)
+			handleError(fmt.Sprintf("[NANOBOX :: SYNC :: %s] hook problem(%#v)", s.Uid, response), err)
 			return
 		}
+		logDebug("[NANOBOX :: SYNC :: %s] Hook Response (environment): %+v\n", s.Uid, response)
 		if err := json.Unmarshal([]byte(response.Out), &s.EnvVars); err != nil {
-			s.handleError("[NANOBOX :: SYNC :: SERVICE] couldnt unmarshel evars from server", err)
+			handleError("[NANOBOX :: SYNC :: SERVICE] couldnt unmarshel evars from server", err)
 			return
 		}
 	}
 
 	s.Success = true
-	config.Log.Debug("[NANOBOX :: SYNC :: SERVICE] service started perfectly(%#v)", s)
+	logDebug("[NANOBOX :: SYNC :: SERVICE] service started perfectly(%#v)", s)
 }

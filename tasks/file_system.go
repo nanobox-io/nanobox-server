@@ -11,7 +11,7 @@ import (
 	"os"
 )
 
-func Clean() error {
+func CreateDirs() error {
 	err := os.MkdirAll("/mnt/sda/var/nanobox/cache/", 0755)
 	if err != nil {
 		return err
@@ -20,11 +20,34 @@ func Clean() error {
 	if err != nil {
 		return err
 	}
-	if _, err := exec.Command("rm", "-rf", "/mnt/sda/var/nanobox/deploy/*").Output(); err != nil {
+	return nil
+}
 
+func Clean() error {
+	// if _, err := exec.Command("rm", "-rf", "/mnt/sda/var/nanobox/cache/*").Output(); err != nil {
+	// 	return err
+	// }
+
+	// if _, err := exec.Command("rm", "-rf", "/mnt/sda/var/nanobox/deploy/*").Output(); err != nil {
+	// 	return err
+	// }
+	err := os.RemoveAll("/mnt/sda/var/nanobox/cache/")
+	if err != nil {
 		return err
 	}
-	return nil
+	err = os.RemoveAll("/mnt/sda/var/nanobox/deploy/")
+	if err != nil {
+		return err
+	}
+
+	return CreateDirs()
+}
+
+func runCmd(name string, arg ...string) error {
+	cmd := exec.Command(name, arg...)
+	cmd.Stdout = os.Stdout
+  cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 // func Copy() error {

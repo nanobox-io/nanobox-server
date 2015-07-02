@@ -42,7 +42,7 @@ var (
 func Init() error {
 
 	//
-	Log = lumber.NewConsoleLogger(lumber.DEBUG)
+	Log = lumber.NewConsoleLogger(lumber.INFO)
 
 	//
 	config := struct {

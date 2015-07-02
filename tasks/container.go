@@ -9,17 +9,36 @@ package tasks
 import (
 	"errors"
 	"strconv"
+	"fmt"
 
 	"github.com/pagodabox/nanobox-server/config"
 	"github.com/samalba/dockerclient"
 )
 
+func PullImages() error {
+	images, err := dockerClient().ListImages()
+	if err != nil {
+		return err
+	}
+	for _, image := range images {
+		fmt.Printf("%#v\n", image)
+		for _, tag := range image.RepoTags {
+			err := dockerClient().PullImage(tag, nil)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 func CreateContainer(image string, labels map[string]string) (*dockerclient.ContainerInfo, error) {
 	config.Log.Debug("[Task::Container] Create %s, %#v\n", image, labels)
-	err := dockerClient().PullImage(image, nil)
-	if err != nil {
-		config.Log.Error("[Task::Container] pull %s, \n", err.Error())
-		return nil, err
+	if !ImageExists(image) {
+		err := dockerClient().PullImage(image, nil)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	containerConfig := &dockerclient.ContainerConfig{
@@ -57,7 +76,7 @@ func CreateContainer(image string, labels map[string]string) (*dockerclient.Cont
 
 	if labels["code"] == "true" {
 		hostConfig.Binds = []string{
-			"/mnt/sda/var/nanobox/deploy/:/data/",
+			"/mnt/sda/var/nanobox/deploy/:/data/:ro",
 		}
 	}
 	err = dockerClient().StartContainer(containerId, hostConfig)

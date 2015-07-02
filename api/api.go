@@ -71,6 +71,7 @@ func (api *API) registerRoutes() (*pat.Router, error) {
 
 	// will need a /services/ and /services/name
 	router.Post("/deploys", api.handleRequest(api.CreateDeploy))
+	router.Post("/update", api.handleRequest(api.UpdateImages))
 	router.Get("/services", api.handleRequest(api.ListServices))
 	return router, nil
 }
@@ -79,7 +80,7 @@ func (api *API) registerRoutes() (*pat.Router, error) {
 func (api *API) handleRequest(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return func(rw http.ResponseWriter, req *http.Request) {
 
-		config.Log.Info(`
+		config.Log.Debug(`
 Request:
 --------------------------------------------------------------------------------
 %+v
@@ -89,7 +90,7 @@ Request:
 		//
 		fn(rw, req)
 
-		config.Log.Info(`
+		config.Log.Debug(`
 Response:
 --------------------------------------------------------------------------------
 %+v
