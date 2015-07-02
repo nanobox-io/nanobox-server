@@ -4,7 +4,6 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at http://mozilla.org/MPL/2.0/.
 
-
 //
 package api
 
@@ -16,6 +15,7 @@ import (
 	"code.google.com/p/go-uuid/uuid"
 	"github.com/gorilla/pat"
 
+	"github.com/pagodabox/nanobox-server/data"
 	"github.com/pagodabox/nanobox-server/config"
 	"github.com/pagodabox/nanobox-server/worker"
 )
@@ -42,6 +42,9 @@ func Init() *API {
 func (api *API) Start(port string) error {
 	config.Log.Info("[NANOBOX :: API] Starting server...\n")
 
+	startup := data.Startup{}
+	api.Worker.QueueAndProcess(&startup)
+
 	//
 	routes, err := api.registerRoutes()
 	if err != nil {
@@ -52,8 +55,7 @@ func (api *API) Start(port string) error {
 	config.Log.Info("[NANOBOX :: API] Listening on port %v\n", port)
 
 	// blocking...
-	http.Handle("/", routes)
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
+	if err := http.ListenAndServe(":"+port, routes); err != nil {
 		return err
 	}
 
@@ -67,13 +69,10 @@ func (api *API) registerRoutes() (*pat.Router, error) {
 	//
 	router := pat.New()
 
-	// evars
-	router.Delete("/evars/{slug}", api.handleRequest(api.DeleteEVar))
-	router.Put("/evars/{slug}", api.handleRequest(api.UpdateEVar))
-	router.Get("/evars/{slug}", api.handleRequest(api.GetEVar))
-	router.Post("/evars", api.handleRequest(api.CreateEVar))
-	router.Get("/evars", api.handleRequest(api.ListEVars))
-
+	// will need a /services/ and /services/name
+	router.Post("/deploys", api.handleRequest(api.CreateDeploy))
+	router.Post("/update", api.handleRequest(api.UpdateImages))
+	router.Get("/services", api.handleRequest(api.ListServices))
 	return router, nil
 }
 
@@ -81,7 +80,7 @@ func (api *API) registerRoutes() (*pat.Router, error) {
 func (api *API) handleRequest(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return func(rw http.ResponseWriter, req *http.Request) {
 
-		config.Log.Info(`
+		config.Log.Debug(`
 Request:
 --------------------------------------------------------------------------------
 %+v
@@ -91,7 +90,7 @@ Request:
 		//
 		fn(rw, req)
 
-		config.Log.Info(`
+		config.Log.Debug(`
 Response:
 --------------------------------------------------------------------------------
 %+v
