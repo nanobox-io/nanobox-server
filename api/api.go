@@ -15,8 +15,8 @@ import (
 	"code.google.com/p/go-uuid/uuid"
 	"github.com/gorilla/pat"
 
-	"github.com/pagodabox/nanobox-server/data"
 	"github.com/pagodabox/nanobox-server/config"
+	"github.com/pagodabox/nanobox-server/data"
 	"github.com/pagodabox/nanobox-server/worker"
 )
 
@@ -71,7 +71,7 @@ func (api *API) registerRoutes() (*pat.Router, error) {
 
 	// will need a /services/ and /services/name
 	router.Post("/deploys", api.handleRequest(api.CreateDeploy))
-	router.Post("/update", api.handleRequest(api.UpdateImages))
+	router.Post("/image-update", api.handleRequest(api.UpdateImages))
 	router.Get("/services", api.handleRequest(api.ListServices))
 	return router, nil
 }

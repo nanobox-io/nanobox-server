@@ -19,10 +19,10 @@ func (api *API) CreateDeploy(rw http.ResponseWriter, req *http.Request) {
 	config.Log.Debug("[NANOBOX :: API] Deploy create\n")
 
 	sync := data.Sync{
-		Id: uuid.New(),
+		Id:    uuid.New(),
 		Reset: req.FormValue("reset") == "true",
 	}
 	api.Worker.QueueAndProcess(&sync)
 
-	rw.Write([]byte("{\"id\":\""+sync.Id+"\", \"status\":\"created\"}"))
+	rw.Write([]byte("{\"id\":\"" + sync.Id + "\", \"status\":\"created\"}"))
 }

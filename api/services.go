@@ -7,9 +7,9 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
-	"encoding/json"
 
 	"github.com/pagodabox/nanobox-server/config"
 	"github.com/pagodabox/nanobox-server/tasks"
@@ -26,7 +26,7 @@ func (api *API) ListServices(rw http.ResponseWriter, req *http.Request) {
 
 		c := container.Labels
 		c["ip"] = dc.NetworkSettings.IPAddress
-		tunnelPort := config.Router.GetLocalPort(c["ip"]+":22")
+		tunnelPort := config.Router.GetLocalPort(c["ip"] + ":22")
 		c["tunnel_port"] = strconv.Itoa(tunnelPort)
 		data = append(data, c)
 	}

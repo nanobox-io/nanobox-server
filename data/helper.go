@@ -32,7 +32,7 @@ func logWarn(f string, v ...interface{}) {
 
 func logInfo(f string, v ...interface{}) {
 	s := fmt.Sprintf(f, v...)
-	config.Logtap.Publish("deploy", logtap.INFORMATIONAL, s)
+	config.Logtap.Publish("deploy", logtap.INFO, s)
 }
 
 func logDebug(f string, v ...interface{}) {

@@ -9,17 +9,16 @@ package api
 import (
 	"net/http"
 
-	"github.com/pagodabox/nanobox-server/data"
 	"github.com/pagodabox/nanobox-server/config"
+	"github.com/pagodabox/nanobox-server/data"
 )
 
 // CreateEVar
 func (api *API) UpdateImages(rw http.ResponseWriter, req *http.Request) {
 	config.Log.Debug("[NANOBOX :: API] Deploy create\n")
 
-	imageUpdate := data.ImageUpdate{
-	}
+	imageUpdate := data.ImageUpdate{}
 	api.Worker.QueueAndProcess(&imageUpdate)
 
-	rw.Write([]byte("{\"id\"':\"1\"}"))
+	rw.Write([]byte("{\"id\":\"1\"}"))
 }

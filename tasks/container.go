@@ -8,8 +8,8 @@ package tasks
 
 import (
 	"errors"
-	"strconv"
 	"fmt"
+	"strconv"
 
 	"github.com/pagodabox/nanobox-server/config"
 	"github.com/samalba/dockerclient"
@@ -21,14 +21,15 @@ func PullImages() error {
 		return err
 	}
 	for _, image := range images {
-		fmt.Printf("%#v\n", image)
 		for _, tag := range image.RepoTags {
+			config.Mist.Publish([]string{"update"}, fmt.Sprintf(`{"model":"Update", "action":"update", "document":"{\"id\":\"1\", \"status\":\"pulling image for %s\"}"}`, tag))
 			err := dockerClient().PullImage(tag, nil)
 			if err != nil {
 				return err
 			}
 		}
 	}
+	config.Mist.Publish([]string{"update"}, `{"model":"Update", "action":"update", "document":"{\"id\":\"1\", \"status\":\"complete\"}"}`)
 	return nil
 }
 
@@ -63,20 +64,22 @@ func CreateContainer(image string, labels map[string]string) (*dockerclient.Cont
 
 	config.Log.Debug("[Task::Container] containerid %#v\n", containerId)
 	// Start the container
-	hostConfig := &dockerclient.HostConfig{}
+	hostConfig := &dockerclient.HostConfig{
+		Privileged: true,
+	}
 	if labels["build"] == "true" {
 		hostConfig.Binds = []string{
 			"/mnt/sda/var/nanobox/cache/:/mnt/cache/",
 			"/mnt/sda/var/nanobox/deploy/:/mnt/deploy/",
 
-			"/vagrant/code/"+config.App+"/:/share/code/:ro",
+			"/vagrant/code/" + config.App + "/:/share/code/:ro",
 			"/vagrant/engines/:/share/engines/:ro",
 		}
 	}
 
 	if labels["code"] == "true" {
 		hostConfig.Binds = []string{
-			"/mnt/sda/var/nanobox/deploy/:/data/:ro",
+			"/mnt/sda/var/nanobox/deploy/:/data/",
 		}
 	}
 	err = dockerClient().StartContainer(containerId, hostConfig)
@@ -85,8 +88,34 @@ func CreateContainer(image string, labels map[string]string) (*dockerclient.Cont
 		return nil, err
 	}
 	container, err := dockerClient().InspectContainer(containerId)
-	config.Router.AddForward(container.NetworkSettings.IPAddress+":22")
+	config.Router.AddForward(container.NetworkSettings.IPAddress + ":22")
 	return container, err
+}
+
+func StartContainer(id string) error {
+	c, err := GetContainer(id)
+	if err != nil {
+		return err
+	}
+	hostConfig := &dockerclient.HostConfig{
+		Privileged: true,
+	}
+	if c.Labels["build"] == "true" {
+		hostConfig.Binds = []string{
+			"/mnt/sda/var/nanobox/cache/:/mnt/cache/",
+			"/mnt/sda/var/nanobox/deploy/:/mnt/deploy/",
+
+			"/vagrant/code/" + config.App + "/:/share/code/:ro",
+			"/vagrant/engines/:/share/engines/:ro",
+		}
+	}
+
+	if c.Labels["code"] == "true" {
+		hostConfig.Binds = []string{
+			"/mnt/sda/var/nanobox/deploy/:/data/:ro",
+		}
+	}
+	return dockerClient().StartContainer(id, hostConfig)
 }
 
 func RemoveContainer(id string) error {
@@ -94,7 +123,7 @@ func RemoveContainer(id string) error {
 	if err != nil {
 		return err
 	}
-	config.Router.RemoveForward(container.NetworkSettings.IPAddress+":22")
+	config.Router.RemoveForward(container.NetworkSettings.IPAddress + ":22")
 
 	err = dockerClient().StopContainer(id, 0)
 	if err != nil {
@@ -143,7 +172,7 @@ func ListContainers(labels ...string) ([]dockerclient.Container, error) {
 		}
 	}
 	return rtn, nil
-	
+
 }
 
 func dockerClient() *dockerclient.DockerClient {

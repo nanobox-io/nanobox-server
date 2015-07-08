@@ -10,9 +10,9 @@ package config
 import (
 	"bufio"
 	"errors"
-	"os"
-	"net"
 	"io/ioutil"
+	"net"
+	"os"
 	"strings"
 	"time"
 
@@ -118,7 +118,7 @@ func Init() error {
 		return err
 	}
 
-	LogtapURI = ip+":"+config.logtapPort
+	LogtapURI = ip + ":" + config.logtapPort
 
 	App, err = appName()
 	for err != nil {
@@ -225,7 +225,6 @@ func parseLine(line string, m map[string]string) error {
 	return nil
 }
 
-
 func externalIP() (string, error) {
 	ifaces, err := net.Interfaces()
 	if err != nil {
@@ -271,7 +270,7 @@ func appName() (string, error) {
 	// for _, file := range files {
 	// 	Log.Info("%s: %s\n\n", file.Name(), file.IsDir())
 	// }
-	
+
 	if len(files) < 1 || !files[0].IsDir() {
 		return "", errors.New("There is no code in your /vagrant/code/ folder")
 	}

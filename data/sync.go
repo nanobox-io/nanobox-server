@@ -7,15 +7,15 @@
 package data
 
 import (
-	"fmt"
-	"strings"
-	"regexp"
 	"encoding/json"
+	"fmt"
+	"regexp"
+	"strings"
 
 	"github.com/hookyd/go-client"
-	"github.com/pagodabox/nanobox-router"
-	"github.com/pagodabox/nanobox-logtap"
 	"github.com/pagodabox/nanobox-boxfile"
+	"github.com/pagodabox/nanobox-logtap"
+	"github.com/pagodabox/nanobox-router"
 	"github.com/pagodabox/nanobox-server/config"
 	"github.com/pagodabox/nanobox-server/tasks"
 	"github.com/pagodabox/nanobox-server/worker"
@@ -23,7 +23,7 @@ import (
 
 //
 type Sync struct {
-	Id string
+	Id    string
 	Reset bool
 }
 
@@ -65,8 +65,7 @@ func (s *Sync) Process() {
 		return
 	}
 
-	// make sure we have the directories and wipe the deploy from the previous
-	// deploy
+	// wipe the previous deploy data if reset == true
 	if s.Reset {
 		logInfo("[NANOBOX :: SYNC] Resetting cache and code directories")
 		if err := tasks.Clean(); err != nil {
@@ -82,7 +81,7 @@ func (s *Sync) Process() {
 	if !tasks.ImageExists("nanobox/build") {
 		logInfo("[NANOBOX :: SYNC] Pulling the latest build image... This could take a while.")
 	}
-	
+
 	con, err := tasks.CreateContainer("nanobox/build", map[string]string{"build": "true", "uid": "build"})
 	if err != nil {
 		handleError("[NANOBOX :: SYNC] could not create build image container", err)
@@ -95,19 +94,18 @@ func (s *Sync) Process() {
 
 	addr := con.NetworkSettings.IPAddress
 
-	box := boxfile.NewFromPath("/vagrant/code/"+config.App+"/Boxfile")
+	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
 
+	// build the payload and parse boxfile
 	logDebug("[NANOBOX :: SYNC] Parsed Boxfile %+v\n", box.Parsed)
 	payload := map[string]interface{}{
-		"app": config.App,
-		"dns": []string{config.App+".gonano.io"},
-		"env": map[string]string{"APP_NAME":config.App},
-		"port":"8080",
-		"boxfile": box.Node("build").Parsed,
+		"app":        config.App,
+		"dns":        []string{config.App + ".gonano.io"},
+		"env":        map[string]string{"APP_NAME": config.App},
+		"port":       "8080",
+		"boxfile":    box.Node("build").Parsed,
 		"logtap_uri": config.LogtapURI,
 	}
-
-	logInfo("[NANOBOX :: SYNC] running sniff hook")
 
 	logDebug("[NANOBOX :: SYNC] Build Hook Payload: %+v\n", payload)
 	cPayload, err := json.Marshal(payload)
@@ -120,6 +118,7 @@ func (s *Sync) Process() {
 		return
 	}
 
+	// run configure hook
 	logInfo("[NANOBOX :: SYNC] running configure hook")
 	response, err := h.Run("configure", cPayload, s.Id)
 	if err != nil || response.Exit != 0 {
@@ -129,6 +128,7 @@ func (s *Sync) Process() {
 	}
 	logDebug("[NANOBOX :: SYNC] Hook Response (configure): %+v\n", response)
 
+	// run prepare hook
 	logInfo("[NANOBOX :: SYNC] running prepare hook")
 	response, err = h.Run("prepare", cPayload, s.Id)
 	if err != nil || response.Exit != 0 {
@@ -138,6 +138,7 @@ func (s *Sync) Process() {
 	}
 	logDebug("[NANOBOX :: SYNC] Hook Response (prepare): %+v\n", response)
 
+	// run boxfile hook
 	logInfo("[NANOBOX :: SYNC] running boxfile hook")
 	response, err = h.Run("boxfile", cPayload, s.Id)
 	if err != nil || response.Exit != 0 {
@@ -152,16 +153,48 @@ func (s *Sync) Process() {
 		box.Merge(hookBox)
 		logDebug("[NANOBOX :: SYNC] Merged Boxfile: %+v\n", box)
 	}
-	
 
-	serviceWorker := worker.New()
-	serviceWorker.Blocking = true
-	serviceWorker.Concurrent = true
+	// add the misssing storage nodes to the boxfile
+	for _, node := range box.Nodes() {
+		name := regexp.MustCompile(`\d+`).ReplaceAllString(node, "")
+		logDebug("[NANOBOX :: SYNC] looking at node (%s)\n", node)
+		if (name == "web" || name == "worker") && box.Node(node).Value("network_dirs") != nil {
+			found := false
+			for _, storage := range box.Node(node).Node("network_dirs").Nodes() {
+				found = true
+				if !box.Node(storage).Valid {
+					box.Parsed[storage] = map[string]interface{}{
+						"found": true,
+					}
+				}
+			}
+			// if i dont find anything but they did have a network_dirs.. just try adding a new one
+			if !found {
+				if !box.Node("nfs1").Valid {
+					box.Parsed["nfs1"] = map[string]interface{}{
+						"found": true,
+					}
+				}
+			}
+		}
+	}
+
+	// remove any containers no longer in the boxfile
+	serviceContainers, _ := tasks.ListContainers("service")
+	for _, container := range serviceContainers {
+		if !box.Node(container.Labels["uid"]).Valid {
+			logDebug("[NANOBOX :: SYNC] removing service(%s)", container.Labels["uid"])
+			tasks.RemoveContainer(container.Id)
+		}
+	}
+
+	work := worker.New()
+	work.Blocking = true
+	work.Concurrent = true
 
 	serviceStarts := []*ServiceStart{}
 
-	// build containers according to boxfile
-	// run hooks in new containers (services)
+	// build service containers according to boxfile
 	for _, node := range box.Nodes() {
 		name := regexp.MustCompile(`\d+`).ReplaceAllString(node, "")
 		logDebug("[NANOBOX :: SYNC] looking at node (%s)\n", node)
@@ -170,39 +203,67 @@ func (s *Sync) Process() {
 			node != "build" &&
 			name != "web" &&
 			name != "worker" {
-			if _, err := tasks.GetContainer("nanobox/"+node); err != nil {
+			if _, err := tasks.GetContainer(node); err != nil {
 				s := ServiceStart{
 					Boxfile: box.Node(node),
 					Uid:     node,
 				}
-				logDebug("[NANOBOX :: SYNC] sure didnt (%+v)", s)
+				logDebug("[NANOBOX :: SYNC] creating new service (%+v)", s)
 				serviceStarts = append(serviceStarts, &s)
 
-				serviceWorker.Queue(&s)
+				work.Queue(&s)
 			}
 		}
 	}
 
-	serviceWorker.Process()
-
-	evars := payload["env"].(map[string]string)
+	work.Process()
 
 	for _, serv := range serviceStarts {
 		if !serv.Success {
-			handleError("[NANOBOX :: SYNC] A Service was not started correctly ("+serv.Uid+")", err)			
+			handleError("[NANOBOX :: SYNC] A Service was not started correctly ("+serv.Uid+")", err)
+			s.updateStatus("complete")
+			return
+		}
+	}
+
+	// grab the environment data from all service containers
+	evars := payload["env"].(map[string]string)
+
+	serviceEnvs := []*ServiceEnv{}
+	serviceContainers, _ = tasks.ListContainers("service")
+	for _, container := range serviceContainers {
+		dc, _ := tasks.GetDetailedContainer(container.Id)
+		
+		s := ServiceEnv{
+			Uid:  container.Labels["uid"],
+			Addr: dc.NetworkSettings.IPAddress,
+		}
+		logDebug("[NANOBOX :: SYNC] creating new service (%+v)", s)
+		serviceEnvs = append(serviceEnvs, &s)
+
+		work.Queue(&s)
+	}
+
+	work.Process()
+
+	for _, env := range serviceEnvs {
+		if !env.Success {
+			handleError("[NANOBOX :: SYNC] A Service didnt return evars correctly ("+env.Uid+")", err)
 			s.updateStatus("complete")
 			return
 		}
 
-		for key, val := range serv.EnvVars {
-			evars[strings.ToUpper(serv.Uid+"_"+key)] = val
+		for key, val := range env.EnvVars {
+			evars[strings.ToUpper(env.Uid+"_"+key)] = val
 		}
 	}
 
 	payload["env"] = evars
 
+	// run build hook
 	logInfo("[NANOBOX :: SYNC] running build hook")
 	pload, _ := json.Marshal(payload)
+	logDebug("[NANOBOX :: SYNC] revised payload: %s", pload)
 	response, err = h.Run("build", pload, "3")
 	if err != nil || response.Exit != 0 {
 		handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook(build) problem(%+v)", response), err)
@@ -211,6 +272,7 @@ func (s *Sync) Process() {
 	}
 	logDebug("[NANOBOX :: SYNC] Hook Response (build): %+v\n", response)
 
+	// run cleanup hook
 	logInfo("[NANOBOX :: SYNC] running cleanup hook")
 	if response, err := h.Run("cleanup", pload, "4"); err != nil || response.Exit != 0 {
 		handleError(fmt.Sprintf("[NANOBOX :: SYNC] hook(cleanup) problem(%+v)", response), err)
@@ -219,15 +281,12 @@ func (s *Sync) Process() {
 	}
 	logDebug("[NANOBOX :: SYNC] Hook Response (cleanup): %+v\n", response)
 
-	// remove build
+	// remove build container
 	logInfo("[NANOBOX :: SYNC] remove build container")
 
 	tasks.RemoveContainer(con.Id)
 
-	// run hooks in new containers (code)
-	codeWorker := worker.New()
-	codeWorker.Blocking = true
-	codeWorker.Concurrent = true
+	// build new code containers
 
 	codeServices := []*ServiceStart{}
 	for _, node := range box.Nodes() {
@@ -237,14 +296,15 @@ func (s *Sync) Process() {
 				s := ServiceStart{
 					Boxfile: box.Node(node),
 					Uid:     node,
+					EnvVars: evars,
 				}
 				codeServices = append(codeServices, &s)
-				codeWorker.Queue(&s)
+				work.Queue(&s)
 			}
 		}
 	}
 
-	codeWorker.Process()
+	work.Process()
 
 	for _, serv := range codeServices {
 		if !serv.Success {
@@ -254,10 +314,10 @@ func (s *Sync) Process() {
 		}
 	}
 
-	// before deploy hooks
+	// run before deploy hooks
 	for _, node := range box.Nodes() {
 		n := node
-		bd  := box.Node(n).Value("before_deploy")
+		bd := box.Node(n).Value("before_deploy")
 		bda := box.Node(n).Value("before_deploy_all")
 		if bd != nil || bda != nil {
 			if container, err := tasks.GetContainer(n); err == nil {
@@ -288,11 +348,11 @@ func (s *Sync) Process() {
 		config.Router.AddTarget("/", "http://"+dc.NetworkSettings.IPAddress+":8080")
 		config.Router.Handler = nil
 	}
-	
+
 	// after deploy hooks
 	for _, node := range box.Nodes() {
 		n := node
-		ad  := box.Node(n).Value("after_deploy")
+		ad := box.Node(n).Value("after_deploy")
 		ada := box.Node(n).Value("after_deploy_all")
 		if ad != nil || ada != nil {
 			if container, err := tasks.GetContainer(n); err == nil {
