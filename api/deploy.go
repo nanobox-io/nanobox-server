@@ -9,7 +9,6 @@ package api
 import (
 	"net/http"
 
-	"code.google.com/p/go-uuid/uuid"
 	"github.com/pagodabox/nanobox-server/config"
 	"github.com/pagodabox/nanobox-server/data"
 )
@@ -19,7 +18,7 @@ func (api *API) CreateDeploy(rw http.ResponseWriter, req *http.Request) {
 	config.Log.Debug("[NANOBOX :: API] Deploy create\n")
 
 	sync := data.Sync{
-		Id:    uuid.New(),
+		Id:    newUUID(),
 		Reset: req.FormValue("reset") == "true",
 	}
 	api.Worker.QueueAndProcess(&sync)
