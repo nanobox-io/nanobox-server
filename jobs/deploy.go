@@ -10,7 +10,6 @@ package jobs
 //
 import (
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/pagodabox/nanobox-boxfile"
@@ -24,8 +23,9 @@ import (
 //
 type Deploy struct {
 	ID      string
-	Payload map[string]interface{}
 	Reset   bool
+
+	payload map[string]interface{}
 }
 
 // Proccess syncronies your docker containers with the boxfile specification
@@ -44,7 +44,7 @@ func (j *Deploy) Process() {
 	for _, container := range containers {
 		if err := util.RemoveContainer(container.Id); err != nil {
 			util.HandleError(stylish.Error("Failed to remove old containers", err.Error()), "")
-			j.updateStatus("errored")
+			util.UpdateStatus(j, "errored")
 			return
 		}
 	}
@@ -53,7 +53,7 @@ func (j *Deploy) Process() {
 	util.LogDebug(stylish.Bullet("Ensure directories exist on host..."))
 	if err := util.CreateDirs(); err != nil {
 		util.HandleError(stylish.Error("Failed to create dirs", err.Error()), "")
-		j.updateStatus("errored")
+		util.UpdateStatus(j, "errored")
 		return
 	}
 
@@ -76,7 +76,7 @@ func (j *Deploy) Process() {
 	_, err := util.CreateBuildContainer("build1")
 	if err != nil {
 		util.HandleError(stylish.Error("Failed to create build container", err.Error()), "")
-		// j.updateStatus("errored")
+		// util.UpdateStatus(j, "errored")
 		return
 	}
 
@@ -84,9 +84,8 @@ func (j *Deploy) Process() {
 	util.LogDebug(stylish.Bullet("Parsing Boxfile..."))
 	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
 
-	// todo: move this to a function
 	// define the deploy payload
-	j.Payload = map[string]interface{}{
+	j.payload = map[string]interface{}{
 		"app":        config.App,
 		"dns":        []string{config.App + ".nano.dev"},
 		"env":        map[string]string{"APP_NAME": config.App},
@@ -96,37 +95,37 @@ func (j *Deploy) Process() {
 	}
 
 	// run configure hook (blocking)
-	if _, err := util.ExecHook("configure", "build1", j.Payload); err != nil {
+	if _, err := util.ExecHook("configure", "build1", j.payload); err != nil {
 		util.LogInfo("ERROR %v\n", err)
-		// j.updateStatus("errored")
+		// util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run sync hook (blocking)
-	if _, err := util.ExecHook("sync", "build1", j.Payload); err != nil {
+	if _, err := util.ExecHook("sync", "build1", j.payload); err != nil {
 		util.LogInfo("ERROR %v\n", err)
-		// j.updateStatus("errored")
+		// util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run detect hook (blocking)
-	if _, err := util.ExecHook("detect", "build1", j.Payload); err != nil {
+	if _, err := util.ExecHook("detect", "build1", j.payload); err != nil {
 		util.LogInfo("ERROR %v\n", err)
-		// j.updateStatus("errored")
+		// util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run setup hook (blocking)
-	if _, err := util.ExecHook("setup", "build1", j.Payload); err != nil {
+	if _, err := util.ExecHook("setup", "build1", j.payload); err != nil {
 		util.LogInfo("ERROR %v\n", err)
-		// j.updateStatus("errored")
+		// util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run boxfile hook (blocking)
-	if out, err := util.ExecHook("boxfile", "build1", j.Payload); err != nil {
+	if out, err := util.ExecHook("boxfile", "build1", j.payload); err != nil {
 		util.LogInfo("ERROR %v\n", err)
-		// j.updateStatus("errored")
+		// util.UpdateStatus(j, "errored")
 		return
 
 		// if the hook runs succesfully merge the boxfiles
@@ -137,26 +136,7 @@ func (j *Deploy) Process() {
 	}
 
 	// add the missing storage nodes to the boxfile
-	// todo: move this logic into the Boxfile project
-	for _, node := range box.Nodes() {
-		name := regexp.MustCompile(`\d+`).ReplaceAllString(node, "")
-		if (name == "web" || name == "worker") && box.Node(node).Value("network_dirs") != nil {
-			found := false
-			for _, storage := range box.Node(node).Node("network_dirs").Nodes() {
-				found = true
-				if !box.Node(storage).Valid {
-					box.Parsed[storage] = map[string]interface{}{"found": true}
-				}
-			}
-
-			// if i dont find anything but they did have a network_dirs.. just try adding a new one
-			if !found {
-				if !box.Node("nfs1").Valid {
-					box.Parsed["nfs1"] = map[string]interface{}{"found": true}
-				}
-			}
-		}
-	}
+	box.AddStorageNode()
 
 	// remove any containers no longer in the boxfile
 	util.LogDebug(stylish.Bullet("Removing old containers..."))
@@ -175,28 +155,19 @@ func (j *Deploy) Process() {
 	serviceStarts := []*ServiceStart{}
 
 	// build service containers according to boxfile
-	// todo: move this logic into the Boxfile project
 	util.LogInfo(stylish.Bullet("Creating new services..."))
-	for _, node := range box.Nodes() {
-		name := regexp.MustCompile(`\d+`).ReplaceAllString(node, "")
-		if node != "nanobox" &&
-			node != "global" &&
-			node != "build" &&
-			name != "web" &&
-			name != "worker" {
-
+	for _, node := range box.Nodes("service") {
+		if _, err := util.GetContainer(node); err != nil {
 			// container doesn't exist so we need to create it
-			if _, err := util.GetContainer(node); err != nil {
-				s := ServiceStart{
-					Boxfile: box.Node(node),
-					UID:     node,
-					EVars:   map[string]string{},
-				}
-
-				serviceStarts = append(serviceStarts, &s)
-
-				worker.Queue(&s)
+			s := ServiceStart{
+				Boxfile: box.Node(node),
+				UID:     node,
+				EVars:   map[string]string{},
 			}
+
+			serviceStarts = append(serviceStarts, &s)
+
+			worker.Queue(&s)
 		}
 	}
 
@@ -207,14 +178,14 @@ func (j *Deploy) Process() {
 	// ensure all services started correctly before continuing
 	for _, starts := range serviceStarts {
 		if !starts.Success {
-			util.HandleError(stylish.Error(fmt.Sprintf("Failed to start %v", starts.UID), err.Error()), "")
-			// j.updateStatus("errored")
+			util.HandleError(stylish.Error(fmt.Sprintf("Failed to start %v", starts.UID), "unsuccessful start"), "")
+			// util.UpdateStatus(j, "errored")
 			return
 		}
 	}
 
 	// grab the environment data from all service containers
-	evars := j.Payload["env"].(map[string]string)
+	evars := j.payload["env"].(map[string]string)
 
 	//
 	serviceEnvs := []*ServiceEnv{}
@@ -235,7 +206,7 @@ func (j *Deploy) Process() {
 	for _, env := range serviceEnvs {
 		if !env.Success {
 			util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's environment variables", env.UID), err.Error()), "")
-			// j.updateStatus("errored")
+			// util.UpdateStatus(j, "errored")
 			return
 		}
 
@@ -244,53 +215,50 @@ func (j *Deploy) Process() {
 		}
 	}
 
-	j.Payload["env"] = evars
+	j.payload["env"] = evars
 
 	// run prepare hook (blocking)
-	if _, err := util.ExecHook("prepare", "build1", j.Payload); err != nil {
+	if _, err := util.ExecHook("prepare", "build1", j.payload); err != nil {
 		util.LogInfo("ERROR %v\n", err)
-		// j.updateStatus("errored")
+		// util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run build hook (blocking)
-	if _, err := util.ExecHook("build", "build1", j.Payload); err != nil {
+	if _, err := util.ExecHook("build", "build1", j.payload); err != nil {
 		util.LogInfo("ERROR %v\n", err)
-		// j.updateStatus("errored")
+		// util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run publish hook (blocking)
-	if _, err := util.ExecHook("publish", "build1", j.Payload); err != nil {
+	if _, err := util.ExecHook("publish", "build1", j.payload); err != nil {
 		util.LogInfo("ERROR %v\n", err)
-		// j.updateStatus("errored")
+		// util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run cleanup hook (blocking)
-	if _, err := util.ExecHook("cleanup", "build1", j.Payload); err != nil {
+	if _, err := util.ExecHook("cleanup", "build1", j.payload); err != nil {
 		util.LogInfo("ERROR %v\n", err)
-		// j.updateStatus("errored")
+		// util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// build new code containers
-	// todo: move the Boxfile logic into the Boxfile project
 	codeServices := []*ServiceStart{}
-	for _, node := range box.Nodes() {
-		name := regexp.MustCompile(`\d+`).ReplaceAllString(node, "")
-		if name == "web" || name == "worker" {
-			if _, err := util.GetContainer(node); err != nil {
-				s := ServiceStart{
-					Boxfile: box.Node(node),
-					UID:     node,
-					EVars:   evars,
-				}
-
-				codeServices = append(codeServices, &s)
-
-				worker.Queue(&s)
+	for _, node := range box.Nodes("code") {
+		if _, err := util.GetContainer(node); err != nil {
+			// container doesn't exist so we need to create it
+			s := ServiceStart{
+				Boxfile: box.Node(node),
+				UID:     node,
+				EVars:   evars,
 			}
+
+			codeServices = append(codeServices, &s)
+
+			worker.Queue(&s)
 		}
 	}
 
@@ -299,12 +267,11 @@ func (j *Deploy) Process() {
 	for _, serv := range codeServices {
 		if !serv.Success {
 			util.HandleError("A Service was not started correctly ("+serv.UID+")", err.Error())
-			// j.updateStatus("errored")
+			// util.UpdateStatus(j, "errored")
 			return
 		}
 	}
 
-	// todo: we need to launch a new "code" image and run these in there, probably just using a RunHook instead
 	// run before deploy hooks
 	for _, node := range box.Nodes() {
 		bd := box.Node(node).Value("before_deploy")
@@ -312,9 +279,9 @@ func (j *Deploy) Process() {
 		if bd != nil || bda != nil {
 
 			// run before deploy hook (blocking)
-			if _, err := util.ExecHook("before_deploy", "web1", map[string]interface{}{"before_deploy": bd, "before_deploy_all": bda}); err != nil {
+			if _, err := util.ExecHook("before_deploy", node, map[string]interface{}{"before_deploy": bd, "before_deploy_all": bda}); err != nil {
 				util.LogInfo("ERROR %v\n", err)
-				// j.updateStatus("errored")
+				// util.UpdateStatus(j, "errored")
 				return
 			}
 		}
@@ -329,7 +296,6 @@ func (j *Deploy) Process() {
 		config.Router.Handler = nil
 	}
 
-	// todo: we need to launch a new "code" image and run these in there, probably just using a RunHook instead
 	// after deploy hooks
 	for _, node := range box.Nodes() {
 		ad := box.Node(node).Value("after_deploy")
@@ -337,19 +303,14 @@ func (j *Deploy) Process() {
 		if ad != nil || ada != nil {
 
 			// run after deploy hook (blocking)
-			if _, err := util.ExecHook("after_deploy", "web1", map[string]interface{}{"after_deploy": ad, "after_deploy_all": ada}); err != nil {
+			if _, err := util.ExecHook("after_deploy", node, map[string]interface{}{"after_deploy": ad, "after_deploy_all": ada}); err != nil {
 				util.LogInfo("ERROR %v\n", err)
-				// j.updateStatus("errored")
+				// util.UpdateStatus(j, "errored")
 				return
 			}
 		}
 	}
 
-	j.updateStatus("complete")
+	util.UpdateStatus(j, "complete")
 }
 
-// todo: this is used in other places, this should be moved to util
-// updateStatus
-func (j *Deploy) updateStatus(status string) {
-	config.Mist.Publish([]string{"job", "deploy"}, fmt.Sprintf(`{"model":"Deploy", "action":"update", "document":"{\"id\":\"%s\", \"status\":\"%s\"}"}`, j.ID, status))
-}

@@ -48,7 +48,7 @@ func (j *ServiceStart) Process() {
 		ci, err = util.CreateCodeContainer(j.UID)
 		if err != nil {
 			util.HandleError(fmt.Sprintf("Failed to create %v", j.UID), "")
-			// j.deploy.updateStatus("errored")
+			// util.UpdateStatus(j.deploy, "errored")
 			return
 		}
 
@@ -57,14 +57,14 @@ func (j *ServiceStart) Process() {
 		ci, err = util.CreateServiceContainer(j.UID, "nanobox/"+image)
 		if err != nil {
 			util.HandleError(fmt.Sprintf("Failed to create %v", j.UID), "")
-			// j.deploy.updateStatus("errored")
+			// util.UpdateStatus(j.deploy, "errored")
 			return
 		}
 	}
 
 	if err := util.StartContainer(ci.Id); err != nil {
 		util.HandleError(fmt.Sprintf("Failed to create %v", j.UID), "")
-		// j.deploy.updateStatus("errored")
+		// util.UpdateStatus(j.deploy, "errored")
 		return
 	}
 
@@ -95,14 +95,14 @@ func (j *ServiceStart) Process() {
 	// run configure hook (blocking)
 	if _, err := util.ExecHook("configure", j.UID, payload); err != nil {
 		util.LogInfo("ERROR %v\n", err)
-		// j.deploy.updateStatus("errored")
+		// util.UpdateStatus(j.deploy, "errored")
 		return
 	}
 
 	// run start hook (blocking)
 	if _, err := util.ExecHook("start", j.UID, payload); err != nil {
 		util.LogInfo("ERROR %v\n", err)
-		// j.deploy.updateStatus("errored")
+		// util.UpdateStatus(j.deploy, "errored")
 		return
 	}
 

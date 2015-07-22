@@ -19,7 +19,7 @@ import (
 //
 type Build struct {
 	ID      string
-	Payload map[string]interface{}
+	payload map[string]interface{}
 	Reset   bool
 }
 
@@ -31,7 +31,7 @@ func (j *Build) Process() {
 	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
 
 	// define the build payload
-	j.Payload = map[string]interface{}{
+	j.payload = map[string]interface{}{
 		"app":        config.App,
 		"dns":        []string{config.App + ".nano.dev"},
 		"env":        map[string]string{"APP_NAME": config.App},
@@ -41,54 +41,55 @@ func (j *Build) Process() {
 	}
 
 	// run sync hook (blocking)
-	if _, err := util.ExecHook("sync", "build1", j.Payload); err != nil {
+	if _, err := util.ExecHook("sync", "build1", j.payload); err != nil {
 		util.LogInfo("ERROR %v\n", err)
-		// j.updateStatus("errored")
+		// util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run build hook (blocking)
-	if _, err := util.ExecHook("build", "build1", j.Payload); err != nil {
+	if _, err := util.ExecHook("build", "build1", j.payload); err != nil {
 		util.LogInfo("ERROR %v\n", err)
-		// j.updateStatus("errored")
+		// util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run publish hook (blocking)
-	if _, err := util.ExecHook("publish", "build1", j.Payload); err != nil {
+	if _, err := util.ExecHook("publish", "build1", j.payload); err != nil {
 		util.LogInfo("ERROR %v\n", err)
-		// j.updateStatus("errored")
+		// util.UpdateStatus(j, "errored")
 		return
 	}
 
+
+	worker := util.NewWorker()
+	worker.Blocking = true
+	worker.Concurrent = true
+
+	restarts := []*Restart{}
+
 	// find code containers and run the restart hook
-	// todo: maybe move this into it's own job
 	containers, _ := util.ListContainers("code")
 	for _, container := range containers {
+
 		uid := container.Labels["uid"]
 
-		util.LogInfo(stylish.Bullet(fmt.Sprintf("Restarting app in %s container...", uid)))
-
-		// restart payload
-		payload := map[string]interface{}{
-			"boxfile":    box.Node(uid).Parsed,
-			"logtap_uri": config.LogtapURI,
-			"uid":        uid,
-		}
-
-		// run restart hook (blocking)
-		if _, err := util.ExecHook("restart", uid, payload); err != nil {
-			util.LogInfo("ERROR %v\n", err)
-			// j.updateStatus("errored")
-			return
-		}
+		r := Restart{UID: uid}
+		restarts = append(restarts, &r)
+		worker.Queue(&r)
 
 	}
 
-	j.updateStatus("complete")
-}
+	worker.Process()
 
-//
-func (j *Build) updateStatus(status string) {
-	config.Mist.Publish([]string{"job", "deploy"}, fmt.Sprintf(`{"model":"Build", "action":"update", "document":"{\"id\":\"%s\", \"status\":\"%s\"}"}`, j.ID, status))
+	// ensure all services started correctly before continuing
+	for _, restart := range restarts {
+		if !restart.Success {
+			util.HandleError(stylish.Error(fmt.Sprintf("Failed to start %v", restart.UID), "unsuccessful restart"), "")
+			// util.UpdateStatus(j, "errored")
+			return
+		}
+	}
+
+	util.UpdateStatus(j, "complete")
 }
