@@ -18,11 +18,11 @@ data/version1.go.i
 data/uuid/time.go.i
 data/uuid/version1.go.i
 data/util.go.i
-data/uuid/LICENSE.i
+data/uuid/Makefile.i
 data/uuid/json.go.i
 data/uuid/seq_test.go.i
 data/uuid_test.go.i
 data/node.go.i
 data/uuid/uuid_test.go.i
 data/uuid/node.go.i
-data/uuid/Makefile.i
+data/uuid/LICENSE.i
