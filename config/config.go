@@ -20,7 +20,6 @@ import (
 
 	"github.com/pagodabox/golang-hatchet"
 	"github.com/pagodabox/golang-mist"
-	"github.com/pagodabox/golang-scribble"
 	"github.com/pagodabox/nanobox-logtap"
 	"github.com/pagodabox/nanobox-router"
 )
@@ -35,7 +34,6 @@ var (
 	Logtap    *logtap.Logtap
 	Mist      *mist.Mist
 	Router    *router.Router
-	Scribble  *scribble.Driver
 )
 
 //
@@ -136,13 +134,6 @@ func Init() error {
 
 	// create new router
 	Router = router.New(config.routerPort, Log)
-
-	// create new scribble
-
-	Scribble, err = scribble.New(config.scribbleDir, Log)
-	if err != nil {
-		return err
-	}
 
 	// create new logtap
 	Logtap = logtap.New(Log)
