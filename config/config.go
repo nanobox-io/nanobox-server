@@ -19,9 +19,9 @@ import (
 	"github.com/jcelliott/lumber"
 
 	"github.com/pagodabox/golang-hatchet"
+	"github.com/pagodabox/golang-mist"
 	"github.com/pagodabox/golang-scribble"
 	"github.com/pagodabox/nanobox-logtap"
-	"github.com/pagodabox/nanobox-mist"
 	"github.com/pagodabox/nanobox-router"
 )
 

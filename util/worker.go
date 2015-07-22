@@ -5,7 +5,7 @@
 // obtain one at http://mozilla.org/MPL/2.0/.
 
 //
-package worker
+package util
 
 import (
 	"sync"
@@ -38,7 +38,7 @@ type (
 )
 
 //
-func New() *Worker {
+func NewWorker() *Worker {
 	return &Worker{
 		Blocking:   false,
 		Concurrent: false,

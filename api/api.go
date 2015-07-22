@@ -7,6 +7,7 @@
 //
 package api
 
+//
 import (
 	"encoding/json"
 	"io/ioutil"
@@ -16,8 +17,8 @@ import (
 	"github.com/gorilla/pat"
 
 	"github.com/pagodabox/nanobox-server/config"
-	"github.com/pagodabox/nanobox-server/data"
-	"github.com/pagodabox/nanobox-server/worker"
+	"github.com/pagodabox/nanobox-server/jobs"
+	"github.com/pagodabox/nanobox-server/util"
 )
 
 // structs
@@ -25,14 +26,14 @@ type (
 
 	//
 	API struct {
-		Worker *worker.Worker
+		Worker *util.Worker
 	}
 )
 
 func Init() *API {
 	//
 	api := &API{
-		Worker: worker.New(),
+		Worker: util.NewWorker(),
 	}
 
 	return api
@@ -42,8 +43,8 @@ func Init() *API {
 func (api *API) Start(port string) error {
 	config.Log.Info("[NANOBOX :: API] Starting server...\n")
 
-	startup := data.Startup{}
-	api.Worker.QueueAndProcess(&startup)
+	//
+	api.Worker.QueueAndProcess(&jobs.Startup{})
 
 	//
 	routes, err := api.registerRoutes()
@@ -69,7 +70,8 @@ func (api *API) registerRoutes() (*pat.Router, error) {
 	//
 	router := pat.New()
 
-	// will need a /services/ and /services/name
+	//
+	router.Post("/builds", api.handleRequest(api.CreateBuild))
 	router.Post("/deploys", api.handleRequest(api.CreateDeploy))
 	router.Post("/image-update", api.handleRequest(api.UpdateImages))
 	router.Get("/services", api.handleRequest(api.ListServices))

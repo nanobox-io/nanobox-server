@@ -10,18 +10,18 @@ import (
 	"net/http"
 
 	"github.com/pagodabox/nanobox-server/config"
-	"github.com/pagodabox/nanobox-server/data"
+	"github.com/pagodabox/nanobox-server/jobs"
 )
 
-// CreateEVar
+// CreateDeploy
 func (api *API) CreateDeploy(rw http.ResponseWriter, req *http.Request) {
 	config.Log.Debug("[NANOBOX :: API] Deploy create\n")
 
-	sync := data.Sync{
-		Id:    newUUID(),
+	deploy := jobs.Deploy{
+		ID:    newUUID(),
 		Reset: req.FormValue("reset") == "true",
 	}
-	api.Worker.QueueAndProcess(&sync)
+	api.Worker.QueueAndProcess(&deploy)
 
-	rw.Write([]byte("{\"id\":\"" + sync.Id + "\", \"status\":\"created\"}"))
+	rw.Write([]byte("{\"id\":\"" + deploy.ID + "\", \"status\":\"created\"}"))
 }

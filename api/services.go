@@ -12,17 +12,17 @@ import (
 	"strconv"
 
 	"github.com/pagodabox/nanobox-server/config"
-	"github.com/pagodabox/nanobox-server/tasks"
+	"github.com/pagodabox/nanobox-server/util"
 )
 
 // CreateEVar
 func (api *API) ListServices(rw http.ResponseWriter, req *http.Request) {
 	config.Log.Debug("[NANOBOX :: API] List Services\n")
 
-	containers, _ := tasks.ListContainers()
+	containers, _ := util.ListContainers()
 	data := []map[string]string{}
 	for _, container := range containers {
-		dc, _ := tasks.GetDetailedContainer(container.Id)
+		dc, _ := util.InspectContainer(container.Id)
 
 		c := container.Labels
 		c["ip"] = dc.NetworkSettings.IPAddress
@@ -31,9 +31,9 @@ func (api *API) ListServices(rw http.ResponseWriter, req *http.Request) {
 		data = append(data, c)
 	}
 
-	j, err := json.Marshal(data)
+	b, err := json.Marshal(data)
 	if err != nil {
 		config.Log.Error("[NANOBOX :: API] list services (%s)", err.Error())
 	}
-	rw.Write(j)
+	rw.Write(b)
 }
