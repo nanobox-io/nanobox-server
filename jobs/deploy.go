@@ -266,7 +266,7 @@ func (j *Deploy) Process() {
 
 	for _, serv := range codeServices {
 		if !serv.Success {
-			util.HandleError("A Service was not started correctly ("+serv.UID+")", err.Error())
+			util.HandleError("A Service was not started correctly ("+serv.UID+")", "failure")
 			// util.UpdateStatus(j, "errored")
 			return
 		}
