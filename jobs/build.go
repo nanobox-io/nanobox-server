@@ -61,7 +61,6 @@ func (j *Build) Process() {
 		return
 	}
 
-
 	worker := util.NewWorker()
 	worker.Blocking = true
 	worker.Concurrent = true

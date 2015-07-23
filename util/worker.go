@@ -8,8 +8,8 @@
 package util
 
 import (
-	"sync"
 	"runtime/debug"
+	"sync"
 
 	"github.com/pagodabox/nanobox-server/config"
 )

@@ -1,10 +1,10 @@
 package util
 
 import (
-  "reflect"
-  "strings"
-  "fmt"
-  "github.com/pagodabox/nanobox-server/config"
+	"fmt"
+	"github.com/pagodabox/nanobox-server/config"
+	"reflect"
+	"strings"
 )
 
 func UpdateStatus(v interface{}, status string) {

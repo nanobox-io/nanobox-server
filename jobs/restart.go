@@ -24,22 +24,22 @@ type Restart struct {
 
 // Proccess syncronies your docker containers with the boxfile specification
 func (j *Restart) Process() {
-		j.Success = false
+	j.Success = false
 
-		util.LogInfo(stylish.Bullet(fmt.Sprintf("Restarting app in %s container...", j.UID)))
-		box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
-		// restart payload
-		payload := map[string]interface{}{
-			"boxfile":    box.Node(j.UID).Parsed,
-			"logtap_uri": config.LogtapURI,
-			"uid":        j.UID,
-		}
+	util.LogInfo(stylish.Bullet(fmt.Sprintf("Restarting app in %s container...", j.UID)))
+	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
+	// restart payload
+	payload := map[string]interface{}{
+		"boxfile":    box.Node(j.UID).Parsed,
+		"logtap_uri": config.LogtapURI,
+		"uid":        j.UID,
+	}
 
-		// run restart hook (blocking)
-		if _, err := util.ExecHook("restart", j.UID, payload); err != nil {
-			util.LogInfo("ERROR %v\n", err)
-			return
-		}
+	// run restart hook (blocking)
+	if _, err := util.ExecHook("restart", j.UID, payload); err != nil {
+		util.LogInfo("ERROR %v\n", err)
+		return
+	}
 
-		j.Success = true
+	j.Success = true
 }

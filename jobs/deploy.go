@@ -22,8 +22,8 @@ import (
 
 //
 type Deploy struct {
-	ID      string
-	Reset   bool
+	ID    string
+	Reset bool
 
 	payload map[string]interface{}
 }
@@ -315,4 +315,3 @@ func (j *Deploy) Process() {
 
 	util.UpdateStatus(j, "complete")
 }
-

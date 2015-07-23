@@ -8,15 +8,15 @@ package util
 
 //
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os/exec"
-	"bytes"
 
 	// "strconv"
 
-	"github.com/pagodabox/nanobox-server/config"
 	"github.com/fsouza/go-dockerclient"
+	"github.com/pagodabox/nanobox-server/config"
 )
 
 // CreateBuildContainer
@@ -160,7 +160,7 @@ func ListContainers(labels ...string) ([]*docker.Container, error) {
 	apiContainers, err := dockerClient().ListContainers(docker.ListContainersOptions{All: true, Size: false})
 	if len(labels) == 0 || err != nil {
 		for _, apiContainer := range apiContainers {
-			container, _ :=InspectContainer(apiContainer.ID)
+			container, _ := InspectContainer(apiContainer.ID)
 			if container != nil {
 				rtn = append(rtn, container)
 			}
@@ -169,7 +169,7 @@ func ListContainers(labels ...string) ([]*docker.Container, error) {
 	}
 
 	for _, apiContainer := range apiContainers {
-		container, _ :=InspectContainer(apiContainer.ID)
+		container, _ := InspectContainer(apiContainer.ID)
 		if container != nil {
 			for _, label := range labels {
 				if container.Config.Labels[label] == "true" {
@@ -185,10 +185,10 @@ func ListContainers(labels ...string) ([]*docker.Container, error) {
 // Exec
 func ExecInContainer(container string, args ...string) ([]byte, error) {
 	opts := docker.CreateExecOptions{
-    AttachStdout: true,
-    AttachStderr: true,
-    Cmd: args,
-    Container: container,
+		AttachStdout: true,
+		AttachStderr: true,
+		Cmd:          args,
+		Container:    container,
 	}
 	exec, err := dockerClient().CreateExec(opts)
 
