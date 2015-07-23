@@ -61,7 +61,6 @@ func (j *Build) Process() {
 		return
 	}
 
-
 	worker := util.NewWorker()
 	worker.Blocking = true
 	worker.Concurrent = true
@@ -72,7 +71,7 @@ func (j *Build) Process() {
 	containers, _ := util.ListContainers("code")
 	for _, container := range containers {
 
-		uid := container.Labels["uid"]
+		uid := container.Config.Labels["uid"]
 
 		r := Restart{UID: uid}
 		restarts = append(restarts, &r)
@@ -82,6 +81,7 @@ func (j *Build) Process() {
 
 	worker.Process()
 
+	config.Log.Info("work done")
 	// ensure all services started correctly before continuing
 	for _, restart := range restarts {
 		if !restart.Success {

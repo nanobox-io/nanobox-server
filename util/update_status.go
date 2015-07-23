@@ -1,15 +1,15 @@
 package util
 
 import (
-  "reflect"
-  "strings"
-  "fmt"
-  "github.com/pagodabox/nanobox-server/config"
+	"fmt"
+	"github.com/pagodabox/nanobox-server/config"
+	"reflect"
+	"strings"
 )
 
 func UpdateStatus(v interface{}, status string) {
-	t := reflect.TypeOf(v)
-	value := reflect.ValueOf(v)
+	t := reflect.TypeOf(v).Elem()
+	value := reflect.ValueOf(v).Elem()
 	id := "1"
 	if value.FieldByName("ID").Kind() == reflect.String {
 		id = value.FieldByName("ID").String()

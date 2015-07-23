@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/samalba/dockerclient"
+	// "github.com/fsouza/go-dockerclient"
 
 	"github.com/pagodabox/nanobox-boxfile"
 	"github.com/pagodabox/nanobox-golang-stylish"
@@ -31,7 +31,7 @@ type ServiceStart struct {
 //
 func (j *ServiceStart) Process() {
 
-	var ci *dockerclient.ContainerInfo
+	// var ci *docker.Container
 	var err error
 
 	j.Success = false
@@ -45,7 +45,7 @@ func (j *ServiceStart) Process() {
 
 	//
 	case "web", "worker", "tcp":
-		ci, err = util.CreateCodeContainer(j.UID)
+		_, err = util.CreateCodeContainer(j.UID)
 		if err != nil {
 			util.HandleError(fmt.Sprintf("Failed to create %v", j.UID), "")
 			// util.UpdateStatus(j.deploy, "errored")
@@ -54,7 +54,7 @@ func (j *ServiceStart) Process() {
 
 		//
 	default:
-		ci, err = util.CreateServiceContainer(j.UID, "nanobox/"+image)
+		_, err = util.CreateServiceContainer(j.UID, "nanobox/"+image)
 		if err != nil {
 			util.HandleError(fmt.Sprintf("Failed to create %v", j.UID), "")
 			// util.UpdateStatus(j.deploy, "errored")
@@ -62,11 +62,11 @@ func (j *ServiceStart) Process() {
 		}
 	}
 
-	if err := util.StartContainer(ci.Id); err != nil {
-		util.HandleError(fmt.Sprintf("Failed to create %v", j.UID), "")
-		// util.UpdateStatus(j.deploy, "errored")
-		return
-	}
+	// if err := util.StartContainer(ci.ID); err != nil {
+	// 	util.HandleError(fmt.Sprintf("Failed to create %v", j.UID), "")
+	// 	// util.UpdateStatus(j.deploy, "errored")
+	// 	return
+	// }
 
 	// payload
 	payload := map[string]interface{}{
