@@ -22,9 +22,9 @@ func (api *API) ListServices(rw http.ResponseWriter, req *http.Request) {
 	containers, _ := util.ListContainers()
 	data := []map[string]string{}
 	for _, container := range containers {
-		dc, _ := util.InspectContainer(container.Id)
+		dc, _ := util.InspectContainer(container.ID)
 
-		c := container.Labels
+		c := container.Config.Labels
 		c["ip"] = dc.NetworkSettings.IPAddress
 		tunnelPort := config.Router.GetLocalPort(c["ip"] + ":22")
 		c["tunnel_port"] = strconv.Itoa(tunnelPort)

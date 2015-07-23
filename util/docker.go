@@ -11,21 +11,26 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"bytes"
+
 	// "strconv"
 
 	"github.com/pagodabox/nanobox-server/config"
-	"github.com/samalba/dockerclient"
+	"github.com/fsouza/go-dockerclient"
 )
 
 // CreateBuildContainer
-func CreateBuildContainer(name string) (*dockerclient.ContainerInfo, error) {
-	cConfig := &dockerclient.ContainerConfig{
-		Tty:             true,
-		Labels:          map[string]string{"build": "true", "uid": name},
-		NetworkDisabled: false,
-		Image:           "nanobox/build",
-		Cmd:             []string{"/bin/sleep", "365d"},
-		HostConfig: dockerclient.HostConfig{
+func CreateBuildContainer(name string) (*docker.Container, error) {
+	cConfig := docker.CreateContainerOptions{
+		Name: name,
+		Config: &docker.Config{
+			Tty:             true,
+			Labels:          map[string]string{"build": "true", "uid": name},
+			NetworkDisabled: false,
+			Image:           "nanobox/build",
+			Cmd:             []string{"/bin/sleep", "365d"},
+		},
+		HostConfig: &docker.HostConfig{
 			Binds: []string{
 				"/mnt/sda/var/nanobox/cache/:/mnt/cache/",
 				"/mnt/sda/var/nanobox/deploy/:/mnt/deploy/",
@@ -42,13 +47,16 @@ func CreateBuildContainer(name string) (*dockerclient.ContainerInfo, error) {
 }
 
 // CreateCodeContainer
-func CreateCodeContainer(name string) (*dockerclient.ContainerInfo, error) {
-	cConfig := &dockerclient.ContainerConfig{
-		Tty:             true,
-		Labels:          map[string]string{"code": "true", "uid": name},
-		NetworkDisabled: false,
-		Image:           "nanobox/code",
-		HostConfig: dockerclient.HostConfig{
+func CreateCodeContainer(name string) (*docker.Container, error) {
+	cConfig := docker.CreateContainerOptions{
+		Name: name,
+		Config: &docker.Config{
+			Tty:             true,
+			Labels:          map[string]string{"code": "true", "uid": name},
+			NetworkDisabled: false,
+			Image:           "nanobox/code",
+		},
+		HostConfig: &docker.HostConfig{
 			Binds: []string{
 				"/mnt/sda/var/nanobox/deploy/:/data/",
 				"/mnt/sda/var/nanobox/build/:/code/:ro",
@@ -61,13 +69,16 @@ func CreateCodeContainer(name string) (*dockerclient.ContainerInfo, error) {
 }
 
 // CreateServiceContainer
-func CreateServiceContainer(name, image string) (*dockerclient.ContainerInfo, error) {
-	cConfig := &dockerclient.ContainerConfig{
-		Tty:             true,
-		Labels:          map[string]string{"service": "true", "uid": name},
-		NetworkDisabled: false,
-		Image:           image,
-		HostConfig: dockerclient.HostConfig{
+func CreateServiceContainer(name, image string) (*docker.Container, error) {
+	cConfig := docker.CreateContainerOptions{
+		Name: name,
+		Config: &docker.Config{
+			Tty:             true,
+			Labels:          map[string]string{"service": "true", "uid": name},
+			NetworkDisabled: false,
+			Image:           image,
+		},
+		HostConfig: &docker.HostConfig{
 			Binds:      []string{},
 			Privileged: true,
 		},
@@ -77,34 +88,34 @@ func CreateServiceContainer(name, image string) (*dockerclient.ContainerInfo, er
 }
 
 // createContainer
-func createContainer(cConfig *dockerclient.ContainerConfig) (*dockerclient.ContainerInfo, error) {
+func createContainer(cConfig docker.CreateContainerOptions) (*docker.Container, error) {
 
 	// LogInfo("CREATE CONTAINER! %#v", cConfig)
 
 	//
-	if !ImageExists(cConfig.Image) {
-		if err := dockerClient().PullImage(cConfig.Image, nil); err != nil {
+	if !ImageExists(cConfig.Config.Image) {
+		if err := dockerClient().PullImage(docker.PullImageOptions{Repository: cConfig.Config.Image}, docker.AuthConfiguration{}); err != nil {
 			return nil, err
 		}
 	}
 
 	// create container
-	id, err := dockerClient().CreateContainer(cConfig, cConfig.Labels["uid"])
+	container, err := dockerClient().CreateContainer(cConfig)
 	if err != nil {
-		LogInfo("NO WORKEY!! %v", err)
+		LogError("Unable to create Container %v", err)
 		return nil, err
 	}
 
-	if err := StartContainer(id); err != nil {
+	if err := StartContainer(container.ID); err != nil {
 		return nil, err
 	}
 
-	return dockerClient().InspectContainer(id)
+	return container, nil
 }
 
 // Start
 func StartContainer(id string) error {
-	return dockerClient().StartContainer(id, &dockerclient.HostConfig{
+	return dockerClient().StartContainer(id, &docker.HostConfig{
 		Privileged: true,
 	})
 }
@@ -119,47 +130,51 @@ func RemoveContainer(id string) error {
 		return err
 	}
 
-	return dockerClient().RemoveContainer(id, false, true)
+	return dockerClient().RemoveContainer(docker.RemoveContainerOptions{ID: id, RemoveVolumes: false, Force: true})
 }
 
 // InspectContainer
-func InspectContainer(id string) (*dockerclient.ContainerInfo, error) {
+func InspectContainer(id string) (*docker.Container, error) {
 	return dockerClient().InspectContainer(id)
 }
 
 // GetContainer
-func GetContainer(name string) (dockerclient.Container, error) {
+func GetContainer(name string) (*docker.Container, error) {
 	containers, err := ListContainers()
 	if err != nil {
-		return dockerclient.Container{}, err
+		return nil, err
 	}
 
 	for _, container := range containers {
-		for _, n := range container.Names {
-			if n == name || n == ("/"+name) {
-				return container, nil
-			}
-		}
-		if container.Id == name {
-			return container, nil
+		if container.Name == name || container.Name == ("/"+name) || container.ID == name {
+			return InspectContainer(container.ID)
 		}
 	}
-	return dockerclient.Container{}, errors.New("not found")
+	return nil, errors.New("not found")
 }
 
 // ListContainers
-func ListContainers(labels ...string) ([]dockerclient.Container, error) {
-	containers, err := dockerClient().ListContainers(true, false, "")
+func ListContainers(labels ...string) ([]*docker.Container, error) {
+	rtn := []*docker.Container{}
+
+	apiContainers, err := dockerClient().ListContainers(docker.ListContainersOptions{All: true, Size: false})
 	if len(labels) == 0 || err != nil {
-		return containers, err
+		for _, apiContainer := range apiContainers {
+			container, _ :=InspectContainer(apiContainer.ID)
+			if container != nil {
+				rtn = append(rtn, container)
+			}
+		}
+		return rtn, err
 	}
 
-	rtn := []dockerclient.Container{}
-
-	for _, container := range containers {
-		for _, label := range labels {
-			if container.Labels[label] == "true" {
-				rtn = append(rtn, container)
+	for _, apiContainer := range apiContainers {
+		container, _ :=InspectContainer(apiContainer.ID)
+		if container != nil {
+			for _, label := range labels {
+				if container.Config.Labels[label] == "true" {
+					rtn = append(rtn, container)
+				}
 			}
 		}
 	}
@@ -169,15 +184,29 @@ func ListContainers(labels ...string) ([]dockerclient.Container, error) {
 
 // Exec
 func ExecInContainer(container string, args ...string) ([]byte, error) {
-
-	// build the initial command, and then iterate over any additional arguments
-	// that are passed in as commands adding them the the final command
-	cmd := []string{"exec", container}
-	for _, a := range args {
-		cmd = append(cmd, a)
+	opts := docker.CreateExecOptions{
+    AttachStdout: true,
+    AttachStderr: true,
+    Cmd: args,
+    Container: container,
 	}
+	exec, err := dockerClient().CreateExec(opts)
 
-	return exec.Command("docker", cmd...).Output()
+	if err != nil {
+		return []byte{}, err
+	}
+	var b bytes.Buffer
+	err = dockerClient().StartExec(exec.ID, docker.StartExecOptions{OutputStream: &b, ErrorStream: &b})
+	// LogDebug("execincontainer: %s\n", b.Bytes())
+	results, err := dockerClient().InspectExec(exec.ID)
+	// LogDebug("execincontainer results: %+v\n", results)
+	if err != nil {
+		return b.Bytes(), err
+	}
+	if results.ExitCode != 0 {
+		return b.Bytes(), errors.New(fmt.Sprintf("Bad Exit Code (%d)", results.ExitCode))
+	}
+	return b.Bytes(), err
 }
 
 // Run
@@ -195,7 +224,7 @@ func RunInContainer(container, img string, args ...string) ([]byte, error) {
 
 // ImageExists
 func ImageExists(name string) bool {
-	images, err := dockerClient().ListImages(true)
+	images, err := dockerClient().ListImages(docker.ListImagesOptions{All: true})
 	if err != nil {
 		return false
 	}
@@ -211,7 +240,7 @@ func ImageExists(name string) bool {
 }
 
 func InstallImage(image string) error {
-	if err := dockerClient().PullImage(image, nil); err != nil {
+	if err := dockerClient().PullImage(docker.PullImageOptions{Repository: image}, docker.AuthConfiguration{}); err != nil {
 		return err
 	}
 
@@ -220,7 +249,7 @@ func InstallImage(image string) error {
 
 // PullImage
 func UpdateAllImages() error {
-	images, err := dockerClient().ListImages(true)
+	images, err := dockerClient().ListImages(docker.ListImagesOptions{All: true})
 	if err != nil {
 		return err
 	}
@@ -238,7 +267,7 @@ func UpdateAllImages() error {
 
 func UpdateImage(image string) error {
 	config.Mist.Publish([]string{"update"}, fmt.Sprintf(`{"model":"Update", "action":"update", "document":"{\"id\":\"1\", \"status\":\"pulling image for %s\"}"}`, image))
-	if err := dockerClient().PullImage(image, nil); err != nil {
+	if err := dockerClient().PullImage(docker.PullImageOptions{Repository: image}, docker.AuthConfiguration{}); err != nil {
 		return err
 	}
 
@@ -246,8 +275,8 @@ func UpdateImage(image string) error {
 }
 
 // dockerClient
-func dockerClient() *dockerclient.DockerClient {
-	d, err := dockerclient.NewDockerClient("unix:///var/run/docker.sock", nil)
+func dockerClient() *docker.Client {
+	d, err := docker.NewClient("unix:///var/run/docker.sock")
 	if err != nil {
 		config.Log.Error(err.Error())
 	}

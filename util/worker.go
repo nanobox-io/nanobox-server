@@ -9,6 +9,7 @@ package util
 
 import (
 	"sync"
+	"runtime/debug"
 
 	"github.com/pagodabox/nanobox-server/config"
 )
@@ -117,6 +118,7 @@ func (w *Worker) processJob(job Job) {
 	//
 	defer func() {
 		if err := recover(); err != nil {
+			config.Log.Error("%s: %s", err, debug.Stack())
 			config.Log.Error("[NANOBOX :: WORKER] Job failed: %+v\n", err)
 		}
 	}()

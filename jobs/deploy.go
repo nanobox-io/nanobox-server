@@ -42,9 +42,9 @@ func (j *Deploy) Process() {
 	util.LogInfo(stylish.Bullet("Removing containers from previous deploy..."))
 	containers, _ := util.ListContainers("code", "build")
 	for _, container := range containers {
-		if err := util.RemoveContainer(container.Id); err != nil {
+		if err := util.RemoveContainer(container.ID); err != nil {
 			util.HandleError(stylish.Error("Failed to remove old containers", err.Error()), "")
-			util.UpdateStatus(j, "errored")
+			// util.UpdateStatus(j, "errored")
 			return
 		}
 	}
@@ -53,7 +53,7 @@ func (j *Deploy) Process() {
 	util.LogDebug(stylish.Bullet("Ensure directories exist on host..."))
 	if err := util.CreateDirs(); err != nil {
 		util.HandleError(stylish.Error("Failed to create dirs", err.Error()), "")
-		util.UpdateStatus(j, "errored")
+		// util.UpdateStatus(j, "errored")
 		return
 	}
 
@@ -142,8 +142,8 @@ func (j *Deploy) Process() {
 	util.LogDebug(stylish.Bullet("Removing old containers..."))
 	serviceContainers, _ := util.ListContainers("service")
 	for _, container := range serviceContainers {
-		if !box.Node(container.Labels["uid"]).Valid {
-			util.RemoveContainer(container.Id)
+		if !box.Node(container.Config.Labels["uid"]).Valid {
+			util.RemoveContainer(container.ID)
 		}
 	}
 
@@ -194,7 +194,7 @@ func (j *Deploy) Process() {
 	serviceContainers, _ = util.ListContainers("service")
 	for _, container := range serviceContainers {
 
-		s := ServiceEnv{UID: container.Labels["uid"]}
+		s := ServiceEnv{UID: container.Config.Labels["uid"]}
 
 		serviceEnvs = append(serviceEnvs, &s)
 
@@ -205,7 +205,7 @@ func (j *Deploy) Process() {
 
 	for _, env := range serviceEnvs {
 		if !env.Success {
-			util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's environment variables", env.UID), err.Error()), "")
+			util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's environment variables", env.UID), env.UID), "")
 			// util.UpdateStatus(j, "errored")
 			return
 		}
@@ -290,11 +290,12 @@ func (j *Deploy) Process() {
 	// set routing to web components
 	util.LogDebug(stylish.Bullet("Configure routing..."))
 	if container, err := util.GetContainer("web1"); err == nil {
-		dc, _ := util.InspectContainer(container.Id)
+		dc, _ := util.InspectContainer(container.ID)
 
 		config.Router.AddTarget("/", "http://"+dc.NetworkSettings.IPAddress+":8080")
 		config.Router.Handler = nil
 	}
+	util.LogDebug(stylish.Bullet("after deploy hooks..."))
 
 	// after deploy hooks
 	for _, node := range box.Nodes() {
@@ -310,6 +311,7 @@ func (j *Deploy) Process() {
 			}
 		}
 	}
+	util.LogDebug(stylish.Bullet("done"))
 
 	util.UpdateStatus(j, "complete")
 }

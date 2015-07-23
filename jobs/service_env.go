@@ -28,12 +28,12 @@ func (j *ServiceEnv) Process() {
 	// run environment hook (blocking)
 	if out, err := util.ExecHook("environment", j.UID, nil); err != nil {
 		util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's environment variables", j.UID), err.Error()), "")
-		util.UpdateStatus(j.deploy, "errored")
+		// util.UpdateStatus(j.deploy, "errored")
 		return
 	} else {
 		if err := json.Unmarshal(out, &j.EVars); err != nil {
 			util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's environment variables", j.UID), err.Error()), "")
-			util.UpdateStatus(j.deploy, "errored")
+			// util.UpdateStatus(j.deploy, "errored")
 			return
 		}
 	}
