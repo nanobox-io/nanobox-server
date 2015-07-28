@@ -8,7 +8,6 @@ package api
 
 import (
   "net/http"
-  "strings"
   "fmt"
   "strconv"
 
@@ -27,7 +26,7 @@ func (api *API) Enter(rw http.ResponseWriter, req *http.Request) {
 
   cmd := []string{"/bin/bash"}
   if optionalCmd := req.FormValue("cmd"); optionalCmd != "" {
-    cmd = strings.Split(" ", optionalCmd)
+    cmd = append(cmd, "-c", optionalCmd)
   }
 
   container, err := util.CreateEnterContainer("enter1", cmd)

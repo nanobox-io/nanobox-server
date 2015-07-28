@@ -143,6 +143,7 @@ func (j *Deploy) Process() {
 	serviceContainers, _ := util.ListContainers("service")
 	for _, container := range serviceContainers {
 		if !box.Node(container.Config.Labels["uid"]).Valid {
+			config.Router.RemoveForward(container.Config.Labels["uid"])
 			util.RemoveContainer(container.ID)
 		}
 	}

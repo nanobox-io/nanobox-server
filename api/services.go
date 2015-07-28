@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"time"
+	"strings"
 
 	"github.com/pagodabox/nanobox-server/config"
 	"github.com/pagodabox/nanobox-server/util"
@@ -37,11 +38,12 @@ func (api *API) ListServices(rw http.ResponseWriter, req *http.Request) {
 	for _, container := range containers {
 
 		// a 'service' representing the container
+		name := strings.Replace(container.Name, "/", "", 1)
 		service := Service{
 			CreatedAt: container.Created,
 			IP:        container.NetworkSettings.IPAddress,
-			Name:      container.Name,
-			Port:      config.Router.GetLocalPort(container.Name),
+			Name:      name,
+			Port:      config.Router.GetLocalPort(name),
 		}
 
 		// add the service to the list to be returned
