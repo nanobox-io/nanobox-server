@@ -23,7 +23,6 @@ import (
 
 // structs
 type (
-
 	//
 	API struct {
 		Worker *util.Worker
@@ -71,6 +70,10 @@ func (api *API) registerRoutes() (*pat.Router, error) {
 	router := pat.New()
 
 	//
+	router.Post("/enter", api.handleRequest(api.Enter))
+	router.Post("/killenter", api.handleRequest(api.KillEnter))
+	router.Post("/resizeenter", api.handleRequest(api.ResizeEnter))
+
 	router.Post("/builds", api.handleRequest(api.CreateBuild))
 	router.Post("/deploys", api.handleRequest(api.CreateDeploy))
 	router.Post("/image-update", api.handleRequest(api.UpdateImages))
