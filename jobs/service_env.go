@@ -11,6 +11,7 @@ import (
 	"fmt"
 
 	"github.com/pagodabox/nanobox-golang-stylish"
+	"github.com/pagodabox/nanobox-server/config"
 	"github.com/pagodabox/nanobox-server/util"
 )
 
@@ -37,6 +38,21 @@ func (j *ServiceEnv) Process() {
 			return
 		}
 	}
+
+	// if a service doesnt have a port we cant continue
+	if j.EVars["port"] == "" {
+		util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's tunnel", j.UID), "no port given in environment"), "")
+		return
+	}
+
+	// now we need to set the host in the evars as well as create a tunnel port in the router
+	container, err := util.InspectContainer(j.UID)
+	if err != nil {
+		util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's tunnel", j.UID), err.Error()), "")
+	}
+
+	j.EVars["host"] = container.NetworkSettings.IPAddress
+	config.Router.AddForward(j.UID, j.EVars["host"]+":"+j.EVars["port"])
 
 	j.Success = true
 }
