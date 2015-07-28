@@ -25,7 +25,12 @@ func (api *API) Enter(rw http.ResponseWriter, req *http.Request) {
   }
   defer conn.Close()
 
-  container, err := util.CreateEnterContainer("enter1", []string{"/bin/bash"})
+  cmd := []string{"/bin/bash"}
+  if optionalCmd := req.FormValue("cmd"); optionalCmd != "" {
+    cmd = strings.Split(" ", optionalCmd)
+  }
+
+  container, err := util.CreateEnterContainer("enter1", cmd)
   if err != nil {
     conn.Write([]byte(err.Error()))
     return
@@ -54,40 +59,3 @@ func (api *API) ResizeEnter(rw http.ResponseWriter, req *http.Request) {
   fmt.Println(err)
 }
 
-func (api *API) Run(rw http.ResponseWriter, req *http.Request) {
-  util.RemoveContainer("run1")
-  conn, _, err := rw.(http.Hijacker).Hijack()
-  if err != nil {
-    rw.WriteHeader(http.StatusInternalServerError)
-    rw.Write([]byte(err.Error()))
-    return
-  }
-  defer conn.Close()
-
-  cmd := req.FormValue("cmd")
-  container, err := util.CreateEnterContainer("enter1", strings.Split(" ", cmd))
-  if err != nil {
-    conn.Write([]byte(err.Error()))
-    return
-  }
-
-  // Flush the options to make sure the client sets the raw mode
-  conn.Write([]byte{})
-
-  util.AttachToContainer(container.ID, conn, conn, conn)
-  util.RemoveContainer(container.ID)
-}
-
-func (api *API) KillRun(rw http.ResponseWriter, req *http.Request) {
-  util.KillContainer("run1", req.FormValue("signal"))
-}
-
-func (api *API) ResizeRun(rw http.ResponseWriter, req *http.Request) {
-  h, _ := strconv.Atoi(req.FormValue("h"))
-  w, _ := strconv.Atoi(req.FormValue("w"))
-  if h == 0 || w == 0 {
-    return
-  }
-  err := util.ResizeContainerTTY("run1", h, w)
-  fmt.Println(err)
-}

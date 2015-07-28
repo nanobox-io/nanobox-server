@@ -70,9 +70,6 @@ func (api *API) registerRoutes() (*pat.Router, error) {
 	router := pat.New()
 
 	//
-	router.Post("/run", api.handleRequest(api.Run))
-	router.Post("/killrun", api.handleRequest(api.KillRun))
-	router.Post("/resizerun", api.handleRequest(api.ResizeRun))
 	router.Post("/enter", api.handleRequest(api.Enter))
 	router.Post("/killenter", api.handleRequest(api.KillEnter))
 	router.Post("/resizeenter", api.handleRequest(api.ResizeEnter))
