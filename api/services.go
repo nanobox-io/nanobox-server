@@ -41,7 +41,7 @@ func (api *API) ListServices(rw http.ResponseWriter, req *http.Request) {
 			CreatedAt: container.Created,
 			IP:        container.NetworkSettings.IPAddress,
 			Name:      container.Name,
-			Port:      config.Router.GetLocalPort(container.Name), // put port here
+			Port:      config.Router.GetLocalPort(container.Name),
 		}
 
 		// add the service to the list to be returned
