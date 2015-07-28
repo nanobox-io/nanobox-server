@@ -45,7 +45,7 @@ func (j *Startup) Process() {
 	worker.Blocking = true
 	worker.Concurrent = true
 
-	serviceContainers, _ = util.ListContainers("service")
+	serviceContainers, _ := util.ListContainers("service")
 	for _, container := range serviceContainers {
 		s := ServiceEnv{UID: container.Config.Labels["uid"]}
 		worker.Queue(&s)
