@@ -38,11 +38,4 @@ func (j *Startup) Process() {
 		config.Router.Handler = router.NoDeploy{}
 	}
 
-	// we also need to set up a ssh tunnel for each running docker container
-	for _, container := range containers {
-		dc, err := util.InspectContainer(container.ID)
-		if err == nil {
-			config.Router.AddForward(dc.NetworkSettings.IPAddress + ":22")
-		}
-	}
 }
