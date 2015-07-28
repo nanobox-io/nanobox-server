@@ -25,7 +25,7 @@ import (
 type (
 	//
 	API struct {
-		Worker  *util.Worker
+		Worker *util.Worker
 	}
 )
 
@@ -85,7 +85,7 @@ func (api *API) registerRoutes() (*pat.Router, error) {
 func (api *API) handleRequest(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return func(rw http.ResponseWriter, req *http.Request) {
 
-		config.Log.Info(`
+		config.Log.Debug(`
 Request:
 --------------------------------------------------------------------------------
 %+v
@@ -95,7 +95,7 @@ Request:
 		//
 		fn(rw, req)
 
-		config.Log.Info(`
+		config.Log.Debug(`
 Response:
 --------------------------------------------------------------------------------
 %+v
