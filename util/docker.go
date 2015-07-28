@@ -12,12 +12,39 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"io"
 
 	// "strconv"
 
 	"github.com/fsouza/go-dockerclient"
 	"github.com/pagodabox/nanobox-server/config"
+	docksig "github.com/docker/docker/pkg/signal"
 )
+
+func CreateEnterContainer(name string, cmd []string) (*docker.Container, error) {
+	cConfig := docker.CreateContainerOptions{
+		Name: name,
+		Config: &docker.Config{
+			OpenStdin:       true,
+			Env:             []string{`PATH=/data/sbin:/data/bin:/opt/gonano/sbin:/opt/gonano/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`},
+			Tty:             true,
+			Labels:          map[string]string{"enter": "true", "uid": name},
+			NetworkDisabled: false,
+			WorkingDir:      "/code",
+			Image:           "nanobox/build",
+			Cmd:             cmd,
+		},
+		HostConfig: &docker.HostConfig{
+			Binds: []string{
+				"/mnt/sda/var/nanobox/deploy/:/data/",
+				"/vagrant/code/" + config.App + "/:/code/",
+			},
+			Privileged: true,
+		},
+	}
+
+	return createContainer(cConfig)
+}
 
 // CreateBuildContainer
 func CreateBuildContainer(name string) (*docker.Container, error) {
@@ -120,14 +147,41 @@ func StartContainer(id string) error {
 	})
 }
 
+func AttachToContainer(id string, in io.Reader, out io.Writer, err io.Writer) error {
+	attachConfig := docker.AttachToContainerOptions{
+	    Container: id,
+	    InputStream: in,
+	    OutputStream: out,
+	    ErrorStream: err,
+	    Stream: true,
+	    Stdin: true,
+	    Stdout: true,
+	    Stderr: true,
+	    RawTerminal: true,
+	}
+	return dockerClient().AttachToContainer(attachConfig)
+}
+
+func KillContainer(id, sig string) error {
+	return dockerClient().KillContainer(docker.KillContainerOptions{ID: id, Signal: docker.Signal(docksig.SignalMap[sig])})
+}
+
+func ResizeContainerTTY(id string, height, width int) error {
+	return dockerClient().ResizeContainerTTY(id, height, width)
+}
+
+func WaitContainer(id string) (int, error) {
+	return dockerClient().WaitContainer(id)
+}
+
 // RemoveContainer
 func RemoveContainer(id string) error {
-	if _, err := dockerClient().InspectContainer(id); err != nil {
-		return err
-	}
+	// if _, err := dockerClient().InspectContainer(id); err != nil {
+	// 	return err
+	// }
 
 	if err := dockerClient().StopContainer(id, 0); err != nil {
-		return err
+		// return err
 	}
 
 	return dockerClient().RemoveContainer(docker.RemoveContainerOptions{ID: id, RemoveVolumes: false, Force: true})
