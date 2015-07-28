@@ -19,7 +19,7 @@ import (
 	docksig "github.com/docker/docker/pkg/signal"
 )
 
-func CreateEnterContainer(name string, cmd []string) (*docker.Container, error) {
+func CreateExecContainer(name string, cmd []string) (*docker.Container, error) {
 	cConfig := docker.CreateContainerOptions{
 		Name: name,
 		Config: &docker.Config{

@@ -14,8 +14,8 @@ import (
   "github.com/pagodabox/nanobox-server/util"
 )
 
-func (api *API) Enter(rw http.ResponseWriter, req *http.Request) {
-  util.RemoveContainer("enter1")
+func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
+  util.RemoveContainer("exec1")
   conn, _, err := rw.(http.Hijacker).Hijack()
   if err != nil {
     rw.WriteHeader(http.StatusInternalServerError)
@@ -25,11 +25,11 @@ func (api *API) Enter(rw http.ResponseWriter, req *http.Request) {
   defer conn.Close()
 
   cmd := []string{"/bin/bash"}
-  if optionalCmd := req.FormValue("cmd"); optionalCmd != "" {
-    cmd = append(cmd, "-c", optionalCmd)
+  if additionalCmd := req.FormValue("cmd"); additionalCmd != "" {
+    cmd = append(cmd, "-c", additionalCmd)
   }
 
-  container, err := util.CreateEnterContainer("enter1", cmd)
+  container, err := util.CreateExecContainer("exec1", cmd)
   if err != nil {
     conn.Write([]byte(err.Error()))
     return
@@ -42,19 +42,19 @@ func (api *API) Enter(rw http.ResponseWriter, req *http.Request) {
   util.RemoveContainer(container.ID)
 }
 
-func (api *API) KillEnter(rw http.ResponseWriter, req *http.Request) {
+func (api *API) KillExec(rw http.ResponseWriter, req *http.Request) {
   fmt.Printf("signal recieved: %s\n", req.FormValue("signal"))
-  err := util.KillContainer("enter1", req.FormValue("signal"))
+  err := util.KillContainer("exec1", req.FormValue("signal"))
   fmt.Println(err)
 }
 
-func (api *API) ResizeEnter(rw http.ResponseWriter, req *http.Request) {
+func (api *API) ResizeExec(rw http.ResponseWriter, req *http.Request) {
   h, _ := strconv.Atoi(req.FormValue("h"))
   w, _ := strconv.Atoi(req.FormValue("w"))
   if h == 0 || w == 0 {
     return
   }
-  err := util.ResizeContainerTTY("enter1", h, w)
+  err := util.ResizeContainerTTY("exec1", h, w)
   fmt.Println(err)
 }
 
