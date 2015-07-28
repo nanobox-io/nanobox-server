@@ -9,31 +9,51 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
+	"time"
 
 	"github.com/pagodabox/nanobox-server/config"
 	"github.com/pagodabox/nanobox-server/util"
 )
 
-// CreateEVar
+//
+type Service struct {
+	CreatedAt time.Time
+	IP        string
+	Name      string
+	Port      string
+}
+
+// ListServices
 func (api *API) ListServices(rw http.ResponseWriter, req *http.Request) {
 	config.Log.Debug("[NANOBOX :: API] List Services\n")
 
-	containers, _ := util.ListContainers()
-	data := []map[string]string{}
-	for _, container := range containers {
-		dc, _ := util.InspectContainer(container.ID)
+	// a list of services to be returned in the response
+	services := []Service{}
 
-		c := container.Config.Labels
-		c["ip"] = dc.NetworkSettings.IPAddress
-		tunnelPort := config.Router.GetLocalPort(c["ip"] + ":22")
-		c["tunnel_port"] = strconv.Itoa(tunnelPort)
-		data = append(data, c)
+	// interate over each container building a corresponding service for that container
+	// and then add it to the list of services that will be passed back as the
+	// response
+	containers, _ := util.ListContainers()
+	for _, container := range containers {
+
+		// a 'service' representing the container
+		service := Service{
+			CreatedAt: container.Created,
+			IP:        container.NetworkSettings.IPAddress,
+			Name:      container.Name,
+			Port:      "1234", // put port here
+		}
+
+		// add the service to the list to be returned
+		services = append(services, service)
 	}
 
-	b, err := json.Marshal(data)
+	// marshall the services to json
+	b, err := json.Marshal(services)
 	if err != nil {
 		config.Log.Error("[NANOBOX :: API] list services (%s)", err.Error())
 	}
+
+	// return the list of services
 	rw.Write(b)
 }
