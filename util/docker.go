@@ -26,7 +26,7 @@ func CreateExecContainer(name string, cmd []string) (*docker.Container, error) {
 			OpenStdin:       true,
 			Env:             []string{`PATH=/data/sbin:/data/bin:/opt/gonano/sbin:/opt/gonano/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`},
 			Tty:             true,
-			Labels:          map[string]string{"enter": "true", "uid": name},
+			Labels:          map[string]string{"exec": "true", "uid": name},
 			NetworkDisabled: false,
 			WorkingDir:      "/code",
 			Image:           "nanobox/build",
