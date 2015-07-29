@@ -44,8 +44,8 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
       strSlice := strings.Split(rule, ":")
       if len(strSlice) == 2 {
         portInt, _ := strconv.Atoi(strSlice[0])
-        config.Router.AddForward(rule, portInt, container.NetworkSettings.IPAddress+":"+strSlice[1])
-        defer config.Router.RemoveForward(rule)
+        config.Router.AddForward("enter-"+rule, portInt, container.NetworkSettings.IPAddress+":"+strSlice[1])
+        defer config.Router.RemoveForward("enter-"+rule)
       }
     }
   }
