@@ -9,6 +9,7 @@ package jobs
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"github.com/pagodabox/nanobox-golang-stylish"
 	"github.com/pagodabox/nanobox-server/config"
@@ -53,7 +54,8 @@ func (j *ServiceEnv) Process() {
 
 	j.EVars["host"] = container.NetworkSettings.IPAddress
 	if config.Router.GetForward(j.UID) == nil {
-		config.Router.AddForward(j.UID, j.EVars["host"]+":"+j.EVars["port"])
+		portInt, _ := strconv.Atoi(j.EVars["port"])
+		config.Router.AddForward(j.UID, portInt, j.EVars["host"]+":"+j.EVars["port"])
 	}
 
 	j.Success = true
