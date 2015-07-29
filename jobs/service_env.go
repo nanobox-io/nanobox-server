@@ -52,7 +52,9 @@ func (j *ServiceEnv) Process() {
 	}
 
 	j.EVars["host"] = container.NetworkSettings.IPAddress
-	config.Router.AddForward(j.UID, j.EVars["host"]+":"+j.EVars["port"])
+	if config.Router.GetForward(j.UID) == nil {
+		config.Router.AddForward(j.UID, j.EVars["host"]+":"+j.EVars["port"])
+	}
 
 	j.Success = true
 }
