@@ -1,0 +1,3 @@
+gom "github.com/jeromer/syslogparser"
+gom "github.com/boltdb/bolt"
+gom "github.com/pagodabox/golang-hatchet"
