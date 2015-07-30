@@ -29,13 +29,14 @@ func CreateExecContainer(name string, cmd []string) (*docker.Container, error) {
 			NetworkDisabled: false,
 			WorkingDir:      "/code",
 			Image:           "nanobox/build",
+			User:            "gonano",
 			Cmd:             cmd,
 		},
 		HostConfig: &docker.HostConfig{
-			Binds: []string{
+			Binds: append([]string{
 				"/mnt/sda/var/nanobox/deploy/:/data/",
 				"/vagrant/code/" + config.App + "/:/code/",
-			},
+			}, libDirs()...),
 			Privileged: true,
 		},
 	}
@@ -134,7 +135,7 @@ func createContainer(cConfig docker.CreateContainerOptions) (*docker.Container, 
 		return nil, err
 	}
 
-	return container, nil
+	return InspectContainer(container.ID)
 }
 
 // Start

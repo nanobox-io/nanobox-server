@@ -40,7 +40,7 @@ func LogDebug(f string, v ...interface{}) {
 }
 
 // HandleError
-func HandleError(msg, err string) {
-	LogError("%s (%s)\n", msg, err)
+func HandleError(msg string) {
+	LogError(msg)
 	config.Router.Handler = router.FailedDeploy{}
 }

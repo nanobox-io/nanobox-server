@@ -29,27 +29,27 @@ func (j *ServiceEnv) Process() {
 
 	// run environment hook (blocking)
 	if out, err := util.ExecHook("environment", j.UID, nil); err != nil {
-		util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's environment variables", j.UID), err.Error()), "")
-		// util.UpdateStatus(j.deploy, "errored")
+		util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's environment variables", j.UID), err.Error()))
+		util.UpdateStatus(j.deploy, "errored")
 		return
 	} else {
 		if err := json.Unmarshal(out, &j.EVars); err != nil {
-			util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's environment variables", j.UID), err.Error()), "")
-			// util.UpdateStatus(j.deploy, "errored")
+			util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's environment variables", j.UID), err.Error()))
+			util.UpdateStatus(j.deploy, "errored")
 			return
 		}
 	}
 
 	// if a service doesnt have a port we cant continue
 	if j.EVars["port"] == "" {
-		util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's tunnel", j.UID), "no port given in environment"), "")
+		util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's tunnel", j.UID), "no port given in environment"))
 		return
 	}
 
 	// now we need to set the host in the evars as well as create a tunnel port in the router
 	container, err := util.InspectContainer(j.UID)
 	if err != nil {
-		util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's tunnel", j.UID), err.Error()), "")
+		util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's tunnel", j.UID), err.Error()))
 	}
 
 	j.EVars["host"] = container.NetworkSettings.IPAddress

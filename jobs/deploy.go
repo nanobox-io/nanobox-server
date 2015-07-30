@@ -43,8 +43,8 @@ func (j *Deploy) Process() {
 	containers, _ := util.ListContainers("code", "build")
 	for _, container := range containers {
 		if err := util.RemoveContainer(container.ID); err != nil {
-			util.HandleError(stylish.Error("Failed to remove old containers", err.Error()), "")
-			// util.UpdateStatus(j, "errored")
+			util.HandleError(stylish.Error("Failed to remove old containers", err.Error()))
+			util.UpdateStatus(j, "errored")
 			return
 		}
 	}
@@ -52,8 +52,8 @@ func (j *Deploy) Process() {
 	// Make sure we have the directories
 	util.LogDebug(stylish.Bullet("Ensure directories exist on host..."))
 	if err := util.CreateDirs(); err != nil {
-		util.HandleError(stylish.Error("Failed to create dirs", err.Error()), "")
-		// util.UpdateStatus(j, "errored")
+		util.HandleError(stylish.Error("Failed to create dirs", err.Error()))
+		util.UpdateStatus(j, "errored")
 		return
 	}
 
@@ -75,8 +75,8 @@ func (j *Deploy) Process() {
 	util.LogInfo(stylish.Bullet("Creating build container..."))
 	_, err := util.CreateBuildContainer("build1")
 	if err != nil {
-		util.HandleError(stylish.Error("Failed to create build container", err.Error()), "")
-		// util.UpdateStatus(j, "errored")
+		util.HandleError(stylish.Error("Failed to create build container", err.Error()))
+		util.UpdateStatus(j, "errored")
 		return
 	}
 
@@ -96,36 +96,36 @@ func (j *Deploy) Process() {
 
 	// run configure hook (blocking)
 	if _, err := util.ExecHook("configure", "build1", j.payload); err != nil {
-		util.LogInfo("ERROR %v\n", err)
-		// util.UpdateStatus(j, "errored")
-		return
-	}
-
-	// run sync hook (blocking)
-	if _, err := util.ExecHook("sync", "build1", j.payload); err != nil {
-		util.LogInfo("ERROR %v\n", err)
-		// util.UpdateStatus(j, "errored")
+		util.HandleError(stylish.Error("Failed to run configure hook", err.Error()))
+		util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run detect hook (blocking)
 	if _, err := util.ExecHook("detect", "build1", j.payload); err != nil {
-		util.LogInfo("ERROR %v\n", err)
-		// util.UpdateStatus(j, "errored")
+		util.HandleError(stylish.Error("Failed to run detect hook", err.Error()))
+		util.UpdateStatus(j, "errored")
+		return
+	}
+
+	// run sync hook (blocking)
+	if _, err := util.ExecHook("sync", "build1", j.payload); err != nil {
+		util.HandleError(stylish.Error("Failed to run sync hook", err.Error()))
+		util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run setup hook (blocking)
 	if _, err := util.ExecHook("setup", "build1", j.payload); err != nil {
-		util.LogInfo("ERROR %v\n", err)
-		// util.UpdateStatus(j, "errored")
+		util.HandleError(stylish.Error("Failed to run setup hook", err.Error()))
+		util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run boxfile hook (blocking)
 	if out, err := util.ExecHook("boxfile", "build1", j.payload); err != nil {
-		util.LogInfo("ERROR %v\n", err)
-		// util.UpdateStatus(j, "errored")
+		util.HandleError(stylish.Error("Failed to run boxfile hook", err.Error()))
+		util.UpdateStatus(j, "errored")
 		return
 
 		// if the hook runs succesfully merge the boxfiles
@@ -179,8 +179,8 @@ func (j *Deploy) Process() {
 	// ensure all services started correctly before continuing
 	for _, starts := range serviceStarts {
 		if !starts.Success {
-			util.HandleError(stylish.Error(fmt.Sprintf("Failed to start %v", starts.UID), "unsuccessful start"), "")
-			// util.UpdateStatus(j, "errored")
+			util.HandleError(stylish.Error(fmt.Sprintf("Failed to start %v", starts.UID), ""))
+			util.UpdateStatus(j, "errored")
 			return
 		}
 	}
@@ -206,8 +206,8 @@ func (j *Deploy) Process() {
 
 	for _, env := range serviceEnvs {
 		if !env.Success {
-			util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's environment variables", env.UID), env.UID), "")
-			// util.UpdateStatus(j, "errored")
+			util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's environment variables", env.UID), ""))
+			util.UpdateStatus(j, "errored")
 			return
 		}
 
@@ -220,29 +220,29 @@ func (j *Deploy) Process() {
 
 	// run prepare hook (blocking)
 	if _, err := util.ExecHook("prepare", "build1", j.payload); err != nil {
-		util.LogInfo("ERROR %v\n", err)
-		// util.UpdateStatus(j, "errored")
+		util.HandleError(stylish.Error("Failed to run prepare hook", err.Error()))
+		util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run build hook (blocking)
 	if _, err := util.ExecHook("build", "build1", j.payload); err != nil {
-		util.LogInfo("ERROR %v\n", err)
-		// util.UpdateStatus(j, "errored")
+		util.HandleError(stylish.Error("Failed to run build hook", err.Error()))
+		util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run publish hook (blocking)
 	if _, err := util.ExecHook("publish", "build1", j.payload); err != nil {
-		util.LogInfo("ERROR %v\n", err)
-		// util.UpdateStatus(j, "errored")
+		util.HandleError(stylish.Error("Failed to run publish hook", err.Error()))
+		util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run cleanup hook (blocking)
 	if _, err := util.ExecHook("cleanup", "build1", j.payload); err != nil {
-		util.LogInfo("ERROR %v\n", err)
-		// util.UpdateStatus(j, "errored")
+		util.HandleError(stylish.Error("Failed to run cleanup hook", err.Error()))
+		util.UpdateStatus(j, "errored")
 		return
 	}
 
@@ -267,8 +267,8 @@ func (j *Deploy) Process() {
 
 	for _, serv := range codeServices {
 		if !serv.Success {
-			util.HandleError("A Service was not started correctly ("+serv.UID+")", "failure")
-			// util.UpdateStatus(j, "errored")
+			util.HandleError("A Service was not started correctly ("+serv.UID+")")
+			util.UpdateStatus(j, "errored")
 			return
 		}
 	}
@@ -281,8 +281,8 @@ func (j *Deploy) Process() {
 
 			// run before deploy hook (blocking)
 			if _, err := util.ExecHook("before_deploy", node, map[string]interface{}{"before_deploy": bd, "before_deploy_all": bda}); err != nil {
-				util.LogInfo("ERROR %v\n", err)
-				// util.UpdateStatus(j, "errored")
+				util.HandleError(stylish.Error("Failed to run before_deploy hook", err.Error()))
+				util.UpdateStatus(j, "errored")
 				return
 			}
 		}
@@ -306,8 +306,8 @@ func (j *Deploy) Process() {
 
 			// run after deploy hook (blocking)
 			if _, err := util.ExecHook("after_deploy", node, map[string]interface{}{"after_deploy": ad, "after_deploy_all": ada}); err != nil {
-				util.LogInfo("ERROR %v\n", err)
-				// util.UpdateStatus(j, "errored")
+				util.HandleError(stylish.Error("Failed to run after_deploy hook", err.Error()))
+				util.UpdateStatus(j, "errored")
 				return
 			}
 		}

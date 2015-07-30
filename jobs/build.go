@@ -30,19 +30,6 @@ func (j *Build) Process() {
 	util.LogInfo(stylish.Bullet("Parsing Boxfile..."))
 	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
 
-	// run boxfile hook (blocking)
-	if out, err := util.ExecHook("boxfile", "build1", j.payload); err != nil {
-		util.LogInfo("ERROR %v\n", err)
-		// util.UpdateStatus(j, "errored")
-		return
-
-		// if the hook runs succesfully merge the boxfiles
-	} else {
-		util.LogDebug(stylish.Bullet("Merging Boxfiles..."))
-		util.LogDebug("BOXFILE STUFF! %v\n", string(out))
-		box.Merge(boxfile.New([]byte(out)))
-	}
-
 	// define the build payload
 	j.payload = map[string]interface{}{
 		"app":        config.App,
@@ -98,7 +85,7 @@ func (j *Build) Process() {
 	// ensure all services started correctly before continuing
 	for _, restart := range restarts {
 		if !restart.Success {
-			util.HandleError(stylish.Error(fmt.Sprintf("Failed to start %v", restart.UID), "unsuccessful restart"), "")
+			util.HandleError(stylish.Error(fmt.Sprintf("Failed to start %v", restart.UID), "unsuccessful restart"))
 			// util.UpdateStatus(j, "errored")
 			return
 		}

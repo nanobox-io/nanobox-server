@@ -39,6 +39,7 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 
   // maybe add a forward port mapping
   if req.FormValue("forward") != "" {
+    fmt.Println(req.FormValue("forward"))
     rules := strings.Split(req.FormValue("forward"), ",")
     for _, rule := range rules {
       strSlice := strings.Split(rule, ":")
@@ -49,7 +50,6 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
       }
     }
   }
-
 
   // Flush the options to make sure the client sets the raw mode
   conn.Write([]byte{})

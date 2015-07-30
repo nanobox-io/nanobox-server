@@ -8,6 +8,8 @@ package util
 
 import (
 	"os"
+	"io/ioutil"
+	"fmt"
 )
 
 var dirs []string = []string{"cache", "deploy", "build"}
@@ -30,4 +32,18 @@ func Clean() error {
 		}
 	}
 	return CreateDirs()
+}
+
+
+func libDirs() (rtn []string) {
+	files, err := ioutil.ReadDir("/mnt/sda/var/nanobox/cache/lib_dirs/")
+	if err != nil {
+		return
+	}
+	for _, file := range files {
+		if file.IsDir() {
+			rtn = append(rtn, fmt.Sprintf("/mnt/sda/var/nanobox/cache/lib_dirs/%s/:/code/%s/", file.Name(), file.Name()))
+		}
+	}
+	return rtn
 }
