@@ -7,9 +7,9 @@
 package util
 
 import (
-	"os"
-	"io/ioutil"
 	"fmt"
+	"io/ioutil"
+	"os"
 )
 
 var dirs []string = []string{"cache", "deploy", "build"}
@@ -33,7 +33,6 @@ func Clean() error {
 	}
 	return CreateDirs()
 }
-
 
 func libDirs() (rtn []string) {
 	files, err := ioutil.ReadDir("/mnt/sda/var/nanobox/cache/lib_dirs/")

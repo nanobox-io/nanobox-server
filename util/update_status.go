@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/pagodabox/nanobox-server/config"
 	"reflect"
-	"strings"
 	"runtime"
+	"strings"
 )
 
 func UpdateStatus(v interface{}, status string) {

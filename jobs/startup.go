@@ -38,7 +38,6 @@ func (j *Startup) Process() {
 		config.Router.Handler = router.NoDeploy{}
 	}
 
-
 	// we also need to set up a ssh tunnel for each running docker container
 	// this is easiest to do by creating a ServiceEnv job and working it
 	worker := util.NewWorker()

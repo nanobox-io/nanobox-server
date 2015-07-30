@@ -16,7 +16,7 @@ type ImageUpdate struct {
 func (j *ImageUpdate) Process() {
 	err := util.UpdateAllImages()
 	if err != nil {
-		util.HandleError("Unable to pull images:"+err.Error())
+		util.HandleError("Unable to pull images:" + err.Error())
 		return
 	}
 }

@@ -42,22 +42,22 @@ func (j *Build) Process() {
 
 	// run sync hook (blocking)
 	if _, err := util.ExecHook("sync", "build1", j.payload); err != nil {
-		util.LogInfo("ERROR %v\n", err)
-		// util.UpdateStatus(j, "errored")
+		util.HandleError(stylish.Error("Failed to run sync hook", err.Error()))
+		util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run build hook (blocking)
 	if _, err := util.ExecHook("build", "build1", j.payload); err != nil {
-		util.LogInfo("ERROR %v\n", err)
-		// util.UpdateStatus(j, "errored")
+		util.HandleError(stylish.Error("Failed to run build hook", err.Error()))
+		util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run publish hook (blocking)
 	if _, err := util.ExecHook("publish", "build1", j.payload); err != nil {
-		util.LogInfo("ERROR %v\n", err)
-		// util.UpdateStatus(j, "errored")
+		util.HandleError(stylish.Error("Failed to run publish hook", err.Error()))
+		util.UpdateStatus(j, "errored")
 		return
 	}
 
@@ -81,12 +81,11 @@ func (j *Build) Process() {
 
 	worker.Process()
 
-	config.Log.Info("work done")
 	// ensure all services started correctly before continuing
 	for _, restart := range restarts {
 		if !restart.Success {
-			util.HandleError(stylish.Error(fmt.Sprintf("Failed to start %v", restart.UID), "unsuccessful restart"))
-			// util.UpdateStatus(j, "errored")
+			util.HandleError(stylish.Error(fmt.Sprintf("Failed to restart %v", restart.UID), "unsuccessful restart"))
+			util.UpdateStatus(j, "errored")
 			return
 		}
 	}

@@ -11,12 +11,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"os/exec"
 	"io"
+	"os/exec"
 
+	docksig "github.com/docker/docker/pkg/signal"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/pagodabox/nanobox-server/config"
-	docksig "github.com/docker/docker/pkg/signal"
 )
 
 func CreateExecContainer(name string, cmd []string) (*docker.Container, error) {
@@ -147,15 +147,15 @@ func StartContainer(id string) error {
 
 func AttachToContainer(id string, in io.Reader, out io.Writer, err io.Writer) error {
 	attachConfig := docker.AttachToContainerOptions{
-	    Container: id,
-	    InputStream: in,
-	    OutputStream: out,
-	    ErrorStream: err,
-	    Stream: true,
-	    Stdin: true,
-	    Stdout: true,
-	    Stderr: true,
-	    RawTerminal: true,
+		Container:    id,
+		InputStream:  in,
+		OutputStream: out,
+		ErrorStream:  err,
+		Stream:       true,
+		Stdin:        true,
+		Stdout:       true,
+		Stderr:       true,
+		RawTerminal:  true,
 	}
 	return dockerClient().AttachToContainer(attachConfig)
 }
