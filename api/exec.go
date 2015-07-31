@@ -44,7 +44,6 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	box := mergedBox()
-	fmt.Printf("%#v", box.Parsed)
 	if boxForwards, ok := box.Node("console").Value("forwards").([]interface{}); ok {
 		for _, boxFInterface := range boxForwards {
 			if boxForward, ok := boxFInterface.(string); ok {
@@ -52,7 +51,6 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 			}
 		}
 	}
-	fmt.Printf("%#v", forwards)
 	// maybe add a forward port mapping
 	for _, rule := range forwards {
 		strSlice := strings.Split(rule, ":")
