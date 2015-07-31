@@ -18,8 +18,9 @@ func (api *API) CreateDeploy(rw http.ResponseWriter, req *http.Request) {
 	config.Log.Debug("[NANOBOX :: API] Deploy create\n")
 
 	deploy := jobs.Deploy{
-		ID:    newUUID(),
-		Reset: req.FormValue("reset") == "true",
+		ID:      newUUID(),
+		Reset:   req.FormValue("reset") == "true",
+		Sandbox: req.FormValue("sandbox") == "true",
 	}
 	api.Worker.QueueAndProcess(&deploy)
 

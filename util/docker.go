@@ -19,98 +19,67 @@ import (
 	"github.com/pagodabox/nanobox-server/config"
 )
 
-func CreateExecContainer(name string, cmd []string) (*docker.Container, error) {
+type CreateConfig struct {
+	Category  string
+	Name  string
+	Cmd   []string
+	Image string
+}
+
+func CreateContainer(conf CreateConfig) (*docker.Container, error) {
+	if conf.Image == "" {
+		conf.Image = "nanobox/build"
+	}
+
 	cConfig := docker.CreateContainerOptions{
-		Name: name,
+		Name: conf.Name,
 		Config: &docker.Config{
-			OpenStdin:       true,
 			Tty:             true,
-			Labels:          map[string]string{"exec": "true", "uid": name},
+			Labels:          map[string]string{conf.Category: "true", "uid": conf.Name},
 			NetworkDisabled: false,
-			WorkingDir:      "/code",
-			Image:           "nanobox/build",
-			User:            "gonano",
-			Cmd:             cmd,
+			Image:           conf.Image,
 		},
 		HostConfig: &docker.HostConfig{
-			Binds: append([]string{
+			Privileged: true,
+		},
+	}
+	
+	return createContainer(addCategoryConfig(conf.Category, cConfig))
+}
+
+
+func addCategoryConfig(category string, cConfig docker.CreateContainerOptions) docker.CreateContainerOptions {
+	switch category {
+	case "exec":
+		cConfig.Config.OpenStdin = true
+		cConfig.Config.WorkingDir = "/code"
+		cConfig.Config.User = "gonano"
+		cConfig.HostConfig.Binds = append([]string{
 				"/mnt/sda/var/nanobox/deploy/:/data/",
 				"/vagrant/code/" + config.App + "/:/code/",
-			}, libDirs()...),
-			Privileged: true,
-		},
-	}
+			}, libDirs()...)
+	case "build":
+		cConfig.Config.Cmd = []string{"/bin/sleep", "365d"}
+		cConfig.HostConfig.Binds = []string{
+			"/mnt/sda/var/nanobox/cache/:/mnt/cache/",
+			"/mnt/sda/var/nanobox/deploy/:/mnt/deploy/",
+			"/mnt/sda/var/nanobox/build/:/mnt/build/",
 
-	return createContainer(cConfig)
+			"/vagrant/code/" + config.App + "/:/share/code/:ro",
+			"/vagrant/engines/:/share/engines/:ro",
+		}
+	case "code":
+		cConfig.Config.Image = "nanobox/code"
+		cConfig.HostConfig.Binds = []string{
+			"/mnt/sda/var/nanobox/deploy/:/data/",
+			"/mnt/sda/var/nanobox/build/:/code/:ro",
+		}
+	case "service":
+		// nothing to be done here
+	}
+	return cConfig
 }
 
-// CreateBuildContainer
-func CreateBuildContainer(name string) (*docker.Container, error) {
-	cConfig := docker.CreateContainerOptions{
-		Name: name,
-		Config: &docker.Config{
-			Tty:             true,
-			Labels:          map[string]string{"build": "true", "uid": name},
-			NetworkDisabled: false,
-			Image:           "nanobox/build",
-			Cmd:             []string{"/bin/sleep", "365d"},
-		},
-		HostConfig: &docker.HostConfig{
-			Binds: []string{
-				"/mnt/sda/var/nanobox/cache/:/mnt/cache/",
-				"/mnt/sda/var/nanobox/deploy/:/mnt/deploy/",
-				"/mnt/sda/var/nanobox/build/:/mnt/build/",
-
-				"/vagrant/code/" + config.App + "/:/share/code/:ro",
-				"/vagrant/engines/:/share/engines/:ro",
-			},
-			Privileged: true,
-		},
-	}
-
-	return createContainer(cConfig)
-}
-
-// CreateCodeContainer
-func CreateCodeContainer(name string) (*docker.Container, error) {
-	cConfig := docker.CreateContainerOptions{
-		Name: name,
-		Config: &docker.Config{
-			Tty:             true,
-			Labels:          map[string]string{"code": "true", "uid": name},
-			NetworkDisabled: false,
-			Image:           "nanobox/code",
-		},
-		HostConfig: &docker.HostConfig{
-			Binds: []string{
-				"/mnt/sda/var/nanobox/deploy/:/data/",
-				"/mnt/sda/var/nanobox/build/:/code/:ro",
-			},
-			Privileged: true,
-		},
-	}
-
-	return createContainer(cConfig)
-}
-
-// CreateServiceContainer
-func CreateServiceContainer(name, image string) (*docker.Container, error) {
-	cConfig := docker.CreateContainerOptions{
-		Name: name,
-		Config: &docker.Config{
-			Tty:             true,
-			Labels:          map[string]string{"service": "true", "uid": name},
-			NetworkDisabled: false,
-			Image:           image,
-		},
-		HostConfig: &docker.HostConfig{
-			Binds:      []string{},
-			Privileged: true,
-		},
-	}
-
-	return createContainer(cConfig)
-}
 
 // createContainer
 func createContainer(cConfig docker.CreateContainerOptions) (*docker.Container, error) {
@@ -140,9 +109,7 @@ func createContainer(cConfig docker.CreateContainerOptions) (*docker.Container, 
 
 // Start
 func StartContainer(id string) error {
-	return dockerClient().StartContainer(id, &docker.HostConfig{
-		Privileged: true,
-	})
+	return dockerClient().StartContainer(id, nil)
 }
 
 func AttachToContainer(id string, in io.Reader, out io.Writer, err io.Writer) error {

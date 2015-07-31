@@ -118,6 +118,7 @@ func (b Boxfile) Nodes(types ...string) (rtn []string) {
       switch t {
       case "service":
         if key != "nanobox" &&
+          key != "console" &&
           key != "global" &&
           key != "build" &&
           name != "web" &&

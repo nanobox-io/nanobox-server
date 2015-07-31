@@ -22,9 +22,9 @@ import (
 
 //
 type Deploy struct {
-	ID    string
-	Reset bool
-
+	ID      string
+	Reset   bool
+	Sandbox bool
 	payload map[string]interface{}
 }
 
@@ -73,7 +73,7 @@ func (j *Deploy) Process() {
 
 	// create a build container
 	util.LogInfo(stylish.Bullet("Creating build container..."))
-	_, err := util.CreateBuildContainer("build1")
+	_, err := util.CreateContainer(util.CreateConfig{Category: "build", Name: "build1"})
 	if err != nil {
 		util.HandleError(stylish.Error("Failed to create build container", err.Error()))
 		util.UpdateStatus(j, "errored")
@@ -246,31 +246,36 @@ func (j *Deploy) Process() {
 		return
 	}
 
-	// build new code containers
-	codeServices := []*ServiceStart{}
-	for _, node := range box.Nodes("code") {
-		if _, err := util.GetContainer(node); err != nil {
-			// container doesn't exist so we need to create it
-			s := ServiceStart{
-				Boxfile: box.Node(node),
-				UID:     node,
-				EVars:   evars,
+	// we will only create new code nodes if we are not
+	// in a sandbox environment
+	if !j.Sandbox {
+		// build new code containers
+		codeServices := []*ServiceStart{}
+		for _, node := range box.Nodes("code") {
+			if _, err := util.GetContainer(node); err != nil {
+				// container doesn't exist so we need to create it
+				s := ServiceStart{
+					Boxfile: box.Node(node),
+					UID:     node,
+					EVars:   evars,
+				}
+
+				codeServices = append(codeServices, &s)
+
+				worker.Queue(&s)
 			}
-
-			codeServices = append(codeServices, &s)
-
-			worker.Queue(&s)
 		}
-	}
 
-	worker.Process()
+		worker.Process()
 
-	for _, serv := range codeServices {
-		if !serv.Success {
-			util.HandleError("A Service was not started correctly (" + serv.UID + ")")
-			util.UpdateStatus(j, "errored")
-			return
+		for _, serv := range codeServices {
+			if !serv.Success {
+				util.HandleError("A Service was not started correctly (" + serv.UID + ")")
+				util.UpdateStatus(j, "errored")
+				return
+			}
 		}
+		
 	}
 
 	// run before deploy hooks
@@ -289,11 +294,10 @@ func (j *Deploy) Process() {
 	}
 
 	// set routing to web components
-	util.LogDebug(stylish.Bullet("Configure routing..."))
 	if container, err := util.GetContainer("web1"); err == nil {
-		dc, _ := util.InspectContainer(container.ID)
+		util.LogDebug(stylish.Bullet("Configure routing..."))
 
-		config.Router.AddTarget("/", "http://"+dc.NetworkSettings.IPAddress+":8080")
+		config.Router.AddTarget("/", "http://"+container.NetworkSettings.IPAddress+":8080")
 		config.Router.Handler = nil
 	}
 	util.LogDebug(stylish.Bullet("after deploy hooks..."))

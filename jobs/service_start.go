@@ -40,27 +40,21 @@ func (j *ServiceStart) Process() {
 
 	// start the container
 	image := regexp.MustCompile(`\d+`).ReplaceAllString(j.UID, "")
-
-	switch image {
-
-	//
-	case "web", "worker", "tcp":
-		_, err = util.CreateCodeContainer(j.UID)
-		if err != nil {
-			util.HandleError(fmt.Sprintf("Failed to create %v", j.UID))
-			util.UpdateStatus(j.deploy, "errored")
-			return
-		}
-
-		//
-	default:
-		_, err = util.CreateServiceContainer(j.UID, "nanobox/"+image)
-		if err != nil {
-			util.HandleError(fmt.Sprintf("Failed to create %v", j.UID))
-			util.UpdateStatus(j.deploy, "errored")
-			return
-		}
+	createConfig := util.CreateConfig{Name: j.UID}
+	if image == "web" || image == "worker" || image == "tcp" {
+		createConfig.Category = "code"
+	} else {
+		createConfig.Category = "service"
+		createConfig.Image = "nanobox/"+image
 	}
+
+	_, err = util.CreateContainer(createConfig)
+	if err != nil {
+		util.HandleError(fmt.Sprintf("Failed to create %v", j.UID))
+		util.UpdateStatus(j.deploy, "errored")
+		return
+	}
+
 
 	// payload
 	payload := map[string]interface{}{

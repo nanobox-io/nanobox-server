@@ -32,7 +32,8 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 		cmd = append(cmd, "-c", additionalCmd)
 	}
 
-	container, err := util.CreateExecContainer("exec1", cmd)
+
+	container, err := util.CreateContainer(util.CreateConfig{Name:"exec1", Cmd: cmd})
 	if err != nil {
 		conn.Write([]byte(err.Error()))
 		return
@@ -51,10 +52,19 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 			}
 		}
 	}
+
 	// maybe add a forward port mapping
 	for _, rule := range forwards {
 		strSlice := strings.Split(rule, ":")
-		if len(strSlice) == 2 {
+		switch len(strSlice) {
+		case 1:
+			portInt, err := strconv.Atoi(strSlice[0])
+			if err != nil {
+				return
+			}
+			config.Router.AddForward("enter-"+rule, portInt, container.NetworkSettings.IPAddress+":"+strSlice[0])
+			defer config.Router.RemoveForward("enter-" + rule)
+		case 2:
 			portInt, _ := strconv.Atoi(strSlice[0])
 			config.Router.AddForward("enter-"+rule, portInt, container.NetworkSettings.IPAddress+":"+strSlice[1])
 			defer config.Router.RemoveForward("enter-" + rule)

@@ -56,7 +56,7 @@ func Init() error {
 		host:                 "0.0.0.0",
 		port:                 "1757",
 		logtapPort:           "6361",
-		logtapHistoricalPort: "8080",
+		logtapHistoricalPort: "6362",
 		logtapHistoricalFile: "/tmp/bolt.db",
 		mistPort:             "1445",
 		routerPort:           "80",
