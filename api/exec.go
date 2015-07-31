@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pagodabox/nanobox-boxfile"
 	"github.com/pagodabox/nanobox-server/config"
 	"github.com/pagodabox/nanobox-server/util"
 )
@@ -37,17 +38,28 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// maybe add a forward port mapping
+	forwards := []string{}
 	if req.FormValue("forward") != "" {
-		fmt.Println(req.FormValue("forward"))
-		rules := strings.Split(req.FormValue("forward"), ",")
-		for _, rule := range rules {
-			strSlice := strings.Split(rule, ":")
-			if len(strSlice) == 2 {
-				portInt, _ := strconv.Atoi(strSlice[0])
-				config.Router.AddForward("enter-"+rule, portInt, container.NetworkSettings.IPAddress+":"+strSlice[1])
-				defer config.Router.RemoveForward("enter-" + rule)
+	  forwards = append(forwards, strings.Split(req.FormValue("forward"), ",")...)
+	}
+
+	box := mergedBox()
+	fmt.Printf("%#v", box.Parsed)
+	if boxForwards, ok := box.Node("console").Value("forwards").([]interface{}); ok {
+		for _, boxFInterface := range boxForwards {
+			if boxForward, ok := boxFInterface.(string); ok {
+				forwards = append(forwards, boxForward)
 			}
+		}
+	}
+	fmt.Printf("%#v", forwards)
+	// maybe add a forward port mapping
+	for _, rule := range forwards {
+		strSlice := strings.Split(rule, ":")
+		if len(strSlice) == 2 {
+			portInt, _ := strconv.Atoi(strSlice[0])
+			config.Router.AddForward("enter-"+rule, portInt, container.NetworkSettings.IPAddress+":"+strSlice[1])
+			defer config.Router.RemoveForward("enter-" + rule)
 		}
 	}
 
@@ -72,4 +84,12 @@ func (api *API) ResizeExec(rw http.ResponseWriter, req *http.Request) {
 	}
 	err := util.ResizeContainerTTY("exec1", h, w)
 	fmt.Println(err)
+}
+
+func mergedBox() (box boxfile.Boxfile) {
+	box = boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
+	if out, err := util.ExecHook("boxfile", "build1", map[string]interface{}{}); err == nil {
+		box.Merge(boxfile.New([]byte(out)))
+	}
+	return
 }
