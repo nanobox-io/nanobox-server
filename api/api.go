@@ -74,6 +74,7 @@ func (api *API) registerRoutes() (*pat.Router, error) {
 	router.Post("/killexec", api.handleRequest(api.KillExec))
 	router.Post("/resizeexec", api.handleRequest(api.ResizeExec))
 
+	router.Post("/bootstrap", api.handleRequest(api.CreateBootstrap))
 	router.Post("/builds", api.handleRequest(api.CreateBuild))
 	router.Post("/deploys", api.handleRequest(api.CreateDeploy))
 	router.Post("/image-update", api.handleRequest(api.UpdateImages))
