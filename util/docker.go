@@ -68,6 +68,15 @@ func addCategoryConfig(category string, cConfig docker.CreateContainerOptions) d
 			"/vagrant/code/" + config.App + "/:/share/code/:ro",
 			"/vagrant/engines/:/share/engines/:ro",
 		}
+	case "bootstrap":
+		cConfig.Config.Cmd = []string{"/bin/sleep", "365d"}
+		cConfig.HostConfig.Binds = []string{
+			"/mnt/sda/var/nanobox/cache/:/mnt/cache/",
+			"/mnt/sda/var/nanobox/deploy/:/mnt/deploy/",
+
+			"/vagrant/code/" + config.App + "/:/code/",
+			"/vagrant/engines/:/share/engines/:ro",
+		}
 	case "code":
 		cConfig.Config.Image = "nanobox/code"
 		cConfig.HostConfig.Binds = []string{
