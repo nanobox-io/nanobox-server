@@ -40,7 +40,8 @@ func (j *Deploy) Process() {
 
 	// remove all code containers
 	util.LogInfo(stylish.Bullet("Removing containers from previous deploy..."))
-	containers, _ := util.ListContainers("code", "build")
+	// might as well remove bootstraps and execs too
+	containers, _ := util.ListContainers("code", "build", "bootstrap", "exec")
 	for _, container := range containers {
 		if err := util.RemoveContainer(container.ID); err != nil {
 			util.HandleError(stylish.Error("Failed to remove old containers", err.Error()))
@@ -55,7 +56,7 @@ func (j *Deploy) Process() {
 		util.HandleError(stylish.Error("Failed to create dirs", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
-	}
+	} 
 
 	// wipe the previous deploy data if reset == true
 	if j.Reset {
@@ -275,7 +276,6 @@ func (j *Deploy) Process() {
 				return
 			}
 		}
-		
 	}
 
 	// run before deploy hooks
@@ -299,6 +299,8 @@ func (j *Deploy) Process() {
 
 		config.Router.AddTarget("/", "http://"+container.NetworkSettings.IPAddress+":8080")
 		config.Router.Handler = nil
+	} else {
+		config.Router.Handler = router.NoDeploy{}
 	}
 	util.LogDebug(stylish.Bullet("after deploy hooks..."))
 

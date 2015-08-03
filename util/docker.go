@@ -43,15 +43,18 @@ func CreateContainer(conf CreateConfig) (*docker.Container, error) {
 			Privileged: true,
 		},
 	}
-	
-	return createContainer(addCategoryConfig(conf.Category, cConfig))
+	addCategoryConfig(conf.Category, &cConfig)
+	return createContainer(cConfig)
 }
 
 
-func addCategoryConfig(category string, cConfig docker.CreateContainerOptions) docker.CreateContainerOptions {
+func addCategoryConfig(category string, cConfig *docker.CreateContainerOptions) {
 	switch category {
 	case "exec":
 		cConfig.Config.OpenStdin = true
+		cConfig.Config.AttachStdin = true
+		cConfig.Config.AttachStdout = true
+		cConfig.Config.AttachStderr = true
 		cConfig.Config.WorkingDir = "/code"
 		cConfig.Config.User = "gonano"
 		cConfig.HostConfig.Binds = append([]string{
@@ -86,7 +89,7 @@ func addCategoryConfig(category string, cConfig docker.CreateContainerOptions) d
 	case "service":
 		// nothing to be done here
 	}
-	return cConfig
+	return
 }
 
 
