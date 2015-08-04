@@ -15,8 +15,8 @@ import (
 
 //
 type Bootstrap struct {
-	ID      string
-	Engine  string
+	ID     string
+	Engine string
 }
 
 // Bootstrap the code according to the engine provided
@@ -50,7 +50,7 @@ func (j *Bootstrap) Process() {
 		"engine":     j.Engine,
 		"logtap_uri": config.LogtapURI,
 	}
-	
+
 	// run configure hook (blocking)
 	if _, err := util.ExecHook("bootstrap", "bootstrap1", payload); err != nil {
 		util.HandleError(stylish.Error("Failed to run bootstrap hook", err.Error()))

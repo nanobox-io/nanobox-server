@@ -20,10 +20,10 @@ import (
 )
 
 type CreateConfig struct {
-	Category  string
-	Name  string
-	Cmd   []string
-	Image string
+	Category string
+	Name     string
+	Cmd      []string
+	Image    string
 }
 
 func CreateContainer(conf CreateConfig) (*docker.Container, error) {
@@ -47,7 +47,6 @@ func CreateContainer(conf CreateConfig) (*docker.Container, error) {
 	return createContainer(cConfig)
 }
 
-
 func addCategoryConfig(category string, cConfig *docker.CreateContainerOptions) {
 	switch category {
 	case "exec":
@@ -58,9 +57,9 @@ func addCategoryConfig(category string, cConfig *docker.CreateContainerOptions) 
 		cConfig.Config.WorkingDir = "/code"
 		cConfig.Config.User = "gonano"
 		cConfig.HostConfig.Binds = append([]string{
-				"/mnt/sda/var/nanobox/deploy/:/data/",
-				"/vagrant/code/" + config.App + "/:/code/",
-			}, libDirs()...)
+			"/mnt/sda/var/nanobox/deploy/:/data/",
+			"/vagrant/code/" + config.App + "/:/code/",
+		}, libDirs()...)
 	case "build":
 		cConfig.Config.Cmd = []string{"/bin/sleep", "365d"}
 		cConfig.HostConfig.Binds = []string{
@@ -91,7 +90,6 @@ func addCategoryConfig(category string, cConfig *docker.CreateContainerOptions) 
 	}
 	return
 }
-
 
 // createContainer
 func createContainer(cConfig docker.CreateContainerOptions) (*docker.Container, error) {
@@ -278,30 +276,14 @@ func InstallImage(image string) error {
 	return nil
 }
 
-// PullImage
-func UpdateAllImages() error {
-	images, err := dockerClient().ListImages(docker.ListImagesOptions{All: true})
-	if err != nil {
-		return err
-	}
-	for _, image := range images {
-		for _, tag := range image.RepoTags {
-			err := UpdateImage(tag)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	config.Mist.Publish([]string{"update"}, `{"model":"Update", "action":"update", "document":"{\"id\":\"1\", \"status\":\"complete\"}"}`)
-	return nil
+func ListImages() ([]docker.APIImages, error) {
+	return dockerClient().ListImages(docker.ListImagesOptions{All: true})
 }
 
 func UpdateImage(image string) error {
-	config.Mist.Publish([]string{"update"}, fmt.Sprintf(`{"model":"Update", "action":"update", "document":"{\"id\":\"1\", \"status\":\"pulling image for %s\"}"}`, image))
 	if err := dockerClient().PullImage(docker.PullImageOptions{Repository: image}, docker.AuthConfiguration{}); err != nil {
 		return err
 	}
-
 	return nil
 }
 

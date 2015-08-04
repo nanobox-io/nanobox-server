@@ -15,9 +15,9 @@ import (
 // CreateDeploy
 func (api *API) CreateBootstrap(rw http.ResponseWriter, req *http.Request) {
 
-	bootstrap := jobs.Bootstrap{ 
-		ID:      newUUID(),
-		Engine:   req.FormValue("engine"),
+	bootstrap := jobs.Bootstrap{
+		ID:     newUUID(),
+		Engine: req.FormValue("engine"),
 	}
 	api.Worker.QueueAndProcess(&bootstrap)
 

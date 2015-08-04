@@ -7,6 +7,9 @@
 package jobs
 
 import (
+	"fmt"
+
+	"github.com/pagodabox/nanobox-golang-stylish"
 	"github.com/pagodabox/nanobox-server/util"
 )
 
@@ -14,9 +17,22 @@ type ImageUpdate struct {
 }
 
 func (j *ImageUpdate) Process() {
-	err := util.UpdateAllImages()
+	images, err := util.ListImages()
 	if err != nil {
 		util.HandleError("Unable to pull images:" + err.Error())
+		util.UpdateStatus(j, "errored")
 		return
 	}
+	for _, image := range images {
+		for _, tag := range image.RepoTags {
+			util.LogInfo(stylish.Bullet(fmt.Sprintf("Updating image: %s", tag)))
+			err := util.UpdateImage(tag)
+			if err != nil {
+				util.HandleError("Unable to pull images:" + err.Error())
+				util.UpdateStatus(j, "errored")
+			}
+		}
+	}
+
+	util.UpdateStatus(j, "complete")
 }

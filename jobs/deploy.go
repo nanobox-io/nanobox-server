@@ -56,7 +56,7 @@ func (j *Deploy) Process() {
 		util.HandleError(stylish.Error("Failed to create dirs", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
-	} 
+	}
 
 	// wipe the previous deploy data if reset == true
 	if j.Reset {

@@ -8,9 +8,9 @@ package api
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
-	"io"
 	"strings"
 
 	"github.com/pagodabox/nanobox-boxfile"
@@ -18,11 +18,11 @@ import (
 	"github.com/pagodabox/nanobox-server/util"
 )
 
-// starter is a bandaid for a problem with docker 
-// where it will not send the first data until it recieves 
+// starter is a bandaid for a problem with docker
+// where it will not send the first data until it recieves
 // something on stdin
-type starter struct{
-	thing io.Reader
+type starter struct {
+	thing   io.Reader
 	started bool
 }
 
@@ -50,8 +50,7 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 		cmd = append(cmd, "-c", additionalCmd)
 	}
 
-
-	container, err := util.CreateContainer(util.CreateConfig{Category: "exec", Name:"exec1", Cmd: cmd})
+	container, err := util.CreateContainer(util.CreateConfig{Category: "exec", Name: "exec1", Cmd: cmd})
 	if err != nil {
 		conn.Write([]byte(err.Error()))
 		return
@@ -59,7 +58,7 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 
 	forwards := []string{}
 	if req.FormValue("forward") != "" {
-	  forwards = append(forwards, strings.Split(req.FormValue("forward"), ",")...)
+		forwards = append(forwards, strings.Split(req.FormValue("forward"), ",")...)
 	}
 
 	box := mergedBox()

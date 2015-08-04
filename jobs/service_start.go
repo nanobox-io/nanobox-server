@@ -45,7 +45,7 @@ func (j *ServiceStart) Process() {
 		createConfig.Category = "code"
 	} else {
 		createConfig.Category = "service"
-		createConfig.Image = "nanobox/"+image
+		createConfig.Image = "nanobox/" + image
 	}
 
 	_, err = util.CreateContainer(createConfig)
@@ -54,7 +54,6 @@ func (j *ServiceStart) Process() {
 		util.UpdateStatus(j.deploy, "errored")
 		return
 	}
-
 
 	// payload
 	payload := map[string]interface{}{
