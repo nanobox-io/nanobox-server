@@ -252,7 +252,7 @@ func RunInContainer(container, img string, args ...string) ([]byte, error) {
 
 // ImageExists
 func ImageExists(name string) bool {
-	images, err := dockerClient().ListImages(docker.ListImagesOptions{})
+	images, err := ListImages()
 	if err != nil {
 		return false
 	}
@@ -276,7 +276,7 @@ func InstallImage(image string) error {
 }
 
 func ListImages() ([]docker.APIImages, error) {
-	return dockerClient().ListImages(docker.ListImagesOptions{All: true})
+	return dockerClient().ListImages(docker.ListImagesOptions{})
 }
 
 func UpdateImage(image string) error {
