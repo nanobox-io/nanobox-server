@@ -70,6 +70,10 @@ func (api *API) registerRoutes() (*pat.Router, error) {
 	router := pat.New()
 
 	//
+	router.Get("/ping", func(rw http.ResponseWriter, req *http.Request) {
+  	rw.Write([]byte("pong"))
+	})
+
 	router.Post("/exec", api.handleRequest(api.Exec))
 	router.Post("/killexec", api.handleRequest(api.KillExec))
 	router.Post("/resizeexec", api.handleRequest(api.ResizeExec))
@@ -104,8 +108,6 @@ Response:
 `, rw)
 	}
 }
-
-// helpers
 
 // newUUID
 func newUUID() string {

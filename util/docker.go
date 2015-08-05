@@ -106,7 +106,6 @@ func createContainer(cConfig docker.CreateContainerOptions) (*docker.Container, 
 	// create container
 	container, err := dockerClient().CreateContainer(cConfig)
 	if err != nil {
-		LogError("Unable to create Container %v", err)
 		return nil, err
 	}
 
@@ -253,7 +252,7 @@ func RunInContainer(container, img string, args ...string) ([]byte, error) {
 
 // ImageExists
 func ImageExists(name string) bool {
-	images, err := dockerClient().ListImages(docker.ListImagesOptions{All: true})
+	images, err := dockerClient().ListImages(docker.ListImagesOptions{})
 	if err != nil {
 		return false
 	}
