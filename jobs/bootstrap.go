@@ -54,6 +54,7 @@ func (j *Bootstrap) Process() {
 	// run configure hook (blocking)
 	if _, err := util.ExecHook("bootstrap", "bootstrap1", payload); err != nil {
 		util.HandleError(stylish.Error("Failed to run bootstrap hook", err.Error()))
+		util.UpdateStatus(j, "errored")
 	}
 
 	util.RemoveContainer("bootstrap1")
