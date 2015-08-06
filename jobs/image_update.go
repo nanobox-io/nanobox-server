@@ -27,6 +27,11 @@ func (j *ImageUpdate) Process() {
 	}
 
 	//
+	if len(images) == 0 {
+		util.LogInfo(stylish.Bullet("No images available for update..."))
+	}
+
+	//
 	for _, image := range images {
 		for _, tag := range image.RepoTags {
 
