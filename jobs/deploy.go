@@ -25,6 +25,7 @@ type Deploy struct {
 	ID      string
 	Reset   bool
 	Sandbox bool
+
 	payload map[string]interface{}
 }
 
@@ -278,6 +279,8 @@ func (j *Deploy) Process() {
 		}
 	}
 
+	util.LogDebug(stylish.Bullet("Running before deploy hooks..."))
+
 	// run before deploy hooks
 	for _, node := range box.Nodes() {
 		bd := box.Node(node).Value("before_deploy")
@@ -302,7 +305,9 @@ func (j *Deploy) Process() {
 	} else {
 		config.Router.Handler = router.NoDeploy{}
 	}
-	util.LogDebug(stylish.Bullet("after deploy hooks..."))
+
+	//
+	util.LogDebug(stylish.Bullet("Running after deploy hooks..."))
 
 	// after deploy hooks
 	for _, node := range box.Nodes() {
@@ -318,7 +323,6 @@ func (j *Deploy) Process() {
 			}
 		}
 	}
-	util.LogDebug(stylish.Bullet("done"))
 
 	util.UpdateStatus(j, "complete")
 }

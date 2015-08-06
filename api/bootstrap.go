@@ -19,6 +19,8 @@ func (api *API) CreateBootstrap(rw http.ResponseWriter, req *http.Request) {
 		ID:     newUUID(),
 		Engine: req.FormValue("engine"),
 	}
+
+	//
 	api.Worker.QueueAndProcess(&bootstrap)
 
 	rw.Write([]byte("{\"id\":\"" + bootstrap.ID + "\", \"status\":\"created\"}"))

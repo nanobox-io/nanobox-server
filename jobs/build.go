@@ -18,9 +18,10 @@ import (
 
 //
 type Build struct {
-	ID      string
+	ID    string
+	Reset bool
+
 	payload map[string]interface{}
-	Reset   bool
 }
 
 // Proccess syncronies your docker containers with the boxfile specification
@@ -76,7 +77,6 @@ func (j *Build) Process() {
 		r := Restart{UID: uid}
 		restarts = append(restarts, &r)
 		worker.Queue(&r)
-
 	}
 
 	worker.Process()

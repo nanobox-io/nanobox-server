@@ -13,10 +13,12 @@ import (
 	"github.com/pagodabox/nanobox-server/util"
 )
 
-type ImageUpdate struct {
-}
+type ImageUpdate struct{}
 
+//
 func (j *ImageUpdate) Process() {
+
+	//
 	images, err := util.ListImages()
 	if err != nil {
 		util.HandleError("Unable to pull images:" + err.Error())
@@ -24,12 +26,17 @@ func (j *ImageUpdate) Process() {
 		return
 	}
 
+	//
 	for _, image := range images {
 		for _, tag := range image.RepoTags {
+
+			//
 			util.LogInfo(stylish.Bullet(fmt.Sprintf("Updating image: %s", tag)))
+
 			if err := util.UpdateImage(tag); err != nil {
-				util.HandleError("Unable to pull images:" + err.Error())
+				util.HandleError("Unable to update image:" + err.Error())
 				util.UpdateStatus(j, "errored")
+				return
 			}
 		}
 	}

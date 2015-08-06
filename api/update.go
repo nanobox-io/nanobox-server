@@ -9,15 +9,14 @@ package api
 import (
 	"net/http"
 
-	"github.com/pagodabox/nanobox-server/config"
 	"github.com/pagodabox/nanobox-server/jobs"
 )
 
-// CreateEVar
+// UpdateImages
 func (api *API) UpdateImages(rw http.ResponseWriter, req *http.Request) {
-	config.Log.Debug("[NANOBOX :: API] Deploy create\n")
 
+	//
 	api.Worker.QueueAndProcess(&jobs.ImageUpdate{})
 
-	rw.Write([]byte("{\"id\":\"1\"}"))
+	rw.Write([]byte("{\"id\":\"1\", \"status\":\"created\"}"))
 }

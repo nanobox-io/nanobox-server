@@ -26,7 +26,6 @@ type Service struct {
 
 // ListServices
 func (api *API) ListServices(rw http.ResponseWriter, req *http.Request) {
-	config.Log.Debug("[NANOBOX :: API] List Services\n")
 
 	// a list of services to be returned in the response
 	services := []Service{}
