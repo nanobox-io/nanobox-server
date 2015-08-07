@@ -46,7 +46,8 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 	defer conn.Close()
 
 	cmd := []string{"/bin/bash"}
-	if additionalCmd := req.FormValue("cmd"); additionalCmd != "" {
+	additionalCmd := req.FormValue("cmd")
+	if additionalCmd != "" {
 		cmd = append(cmd, "-c", additionalCmd)
 	}
 
@@ -55,6 +56,8 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 		conn.Write([]byte(err.Error()))
 		return
 	}
+
+	go util.AttachToContainer(container.ID, conn, conn, conn)
 
 	forwards := []string{}
 	if req.FormValue("forward") != "" {
@@ -104,9 +107,9 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 
 	// Flush the options to make sure the client sets the raw mode
 	conn.Write([]byte{})
-	s := &starter{thing: conn}
+	// s := &starter{thing: conn}
 
-	util.AttachToContainer(container.ID, s, conn, conn)
+	util.WaitContainer(container.ID)
 	util.RemoveContainer(container.ID)
 }
 

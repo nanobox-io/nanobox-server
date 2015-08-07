@@ -31,6 +31,7 @@ func CreateContainer(conf CreateConfig) (*docker.Container, error) {
 		conf.Image = "nanobox/build"
 	}
 
+	fmt.Printf("%#v\n", conf.Cmd)
 	cConfig := docker.CreateContainerOptions{
 		Name: conf.Name,
 		Config: &docker.Config{
@@ -38,12 +39,15 @@ func CreateContainer(conf CreateConfig) (*docker.Container, error) {
 			Labels:          map[string]string{conf.Category: "true", "uid": conf.Name},
 			NetworkDisabled: false,
 			Image:           conf.Image,
+			Cmd:             conf.Cmd,
 		},
 		HostConfig: &docker.HostConfig{
 			Privileged: true,
 		},
 	}
 	addCategoryConfig(conf.Category, &cConfig)
+	fmt.Printf("%+v\n", cConfig)
+	fmt.Printf("%+v\n", cConfig.Config)
 	return createContainer(cConfig)
 }
 
