@@ -43,6 +43,7 @@ func CreateContainer(conf CreateConfig) (*docker.Container, error) {
 		},
 		HostConfig: &docker.HostConfig{
 			Privileged: true,
+			RestartPolicy: docker.AlwaysRestart(),
 		},
 	}
 	addCategoryConfig(conf.Category, &cConfig)
