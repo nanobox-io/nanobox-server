@@ -14,6 +14,9 @@ import (
 // Exec
 func ExecHook(hook, container string, payload map[string]interface{}) ([]byte, error) {
 
+	if payload == nil {
+		payload = map[string]interface{}{}
+	}
 	// marshal the payload
 	b, err := json.Marshal(payload)
 	if err != nil {
@@ -25,6 +28,10 @@ func ExecHook(hook, container string, payload map[string]interface{}) ([]byte, e
 
 // Run
 func RunHook(hook, container, img string, payload map[string]interface{}) ([]byte, error) {
+
+	if payload == nil {
+		payload = map[string]interface{}{}
+	}
 
 	// marshal the payload
 	b, err := json.Marshal(payload)

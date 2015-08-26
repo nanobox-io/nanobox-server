@@ -125,17 +125,20 @@ func (j *Deploy) Process() {
 	}
 
 	// run boxfile hook (blocking)
-	if out, err := util.ExecHook("boxfile", "build1", j.payload); err != nil {
-		util.HandleError(stylish.Error("Failed to run boxfile hook", err.Error()))
-		util.UpdateStatus(j, "errored")
-		return
+	if !box.Node("build").BoolValue("disable_engine_boxfile") {
+		if out, err := util.ExecHook("boxfile", "build1", j.payload); err != nil {
+			util.HandleError(stylish.Error("Failed to run boxfile hook", err.Error()))
+			util.UpdateStatus(j, "errored")
+			return
 
-		// if the hook runs succesfully merge the boxfiles
-	} else {
-		util.LogDebug(stylish.Bullet("Merging Boxfiles..."))
-		util.LogDebug("BOXFILE STUFF! %v\n", string(out))
-		box.Merge(boxfile.New([]byte(out)))
+			// if the hook runs succesfully merge the boxfiles
+		} else {
+			util.LogDebug(stylish.Bullet("Merging Boxfiles..."))
+			util.LogDebug("BOXFILE STUFF! %v\n", string(out))
+			box.Merge(boxfile.New([]byte(out)))
+		}
 	}
+
 
 	// add the missing storage nodes to the boxfile
 	box.AddStorageNode()

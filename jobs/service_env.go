@@ -33,29 +33,33 @@ func (j *ServiceEnv) Process() {
 		util.UpdateStatus(j.deploy, "errored")
 		return
 	} else {
+		config.Log.Info("getting port data: %s", out)
 		if err := json.Unmarshal(out, &j.EVars); err != nil {
 			util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's environment variables", j.UID), err.Error()))
 			util.UpdateStatus(j.deploy, "errored")
 			return
 		}
 	}
-
+	config.Log.Info("getting port data: %+v", j.EVars)
 	// if a service doesnt have a port we cant continue
-	if j.EVars["port"] == "" {
+	if j.EVars["PORT"] == "" {
 		util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's tunnel", j.UID), "no port given in environment"))
 		return
 	}
 
+	
 	// now we need to set the host in the evars as well as create a tunnel port in the router
 	container, err := util.InspectContainer(j.UID)
 	if err != nil {
 		util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's tunnel", j.UID), err.Error()))
 	}
+	config.Log.Info("container: %+v", container)
 
-	j.EVars["host"] = container.NetworkSettings.IPAddress
+	j.EVars["HOST"] = container.NetworkSettings.IPAddress
 	if config.Router.GetForward(j.UID) == nil {
-		portInt, _ := strconv.Atoi(j.EVars["port"])
-		config.Router.AddForward(j.UID, portInt, j.EVars["host"]+":"+j.EVars["port"])
+		config.Log.Info("adding forward")
+		portInt, _ := strconv.Atoi(j.EVars["PORT"])
+		config.Router.AddForward(j.UID, portInt, j.EVars["HOST"]+":"+j.EVars["PORT"])
 	}
 
 	j.Success = true

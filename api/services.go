@@ -22,6 +22,8 @@ type Service struct {
 	IP        string
 	Name      string
 	Port      int
+	Username  string `json:"username,omitempty"`
+	Password  string `json:"password,omitempty"`
 }
 
 // ListServices
@@ -43,6 +45,16 @@ func (api *API) ListServices(rw http.ResponseWriter, req *http.Request) {
 			IP:        container.NetworkSettings.IPAddress,
 			Name:      name,
 			Port:      config.Router.GetLocalPort(name),
+		}
+
+		// run environment hook (blocking)
+		if out, err := util.ExecHook("environment", container.ID, nil); err == nil {
+			config.Log.Info("getting port data: %s", out)
+			evars := map[string]string{}
+			if err := json.Unmarshal(out, &evars); err == nil {
+				service.Password = evars["PASSWORD"]
+				service.Username = evars["USERNAME"]
+			}
 		}
 
 		// add the service to the list to be returned

@@ -51,7 +51,7 @@ func (j *ServiceStart) Process() {
 	_, err = util.CreateContainer(createConfig)
 	if err != nil {
 		util.HandleError(fmt.Sprintf("Failed to create %v", j.UID))
-		util.UpdateStatus(j.deploy, "errored")
+		util.UpdateStatus(&j.deploy, "errored")
 		return
 	}
 
@@ -81,15 +81,15 @@ func (j *ServiceStart) Process() {
 
 	// run configure hook (blocking)
 	if _, err := util.ExecHook("configure", j.UID, payload); err != nil {
-		util.HandleError(fmt.Sprintf("ERROR %v\n", err))
-		util.UpdateStatus(j.deploy, "errored")
+		util.HandleError(fmt.Sprintf("ERROR configure %v\n", err))
+		util.UpdateStatus(&j.deploy, "errored")
 		return
 	}
 
 	// run start hook (blocking)
 	if _, err := util.ExecHook("start", j.UID, payload); err != nil {
-		util.HandleError(fmt.Sprintf("ERROR %v\n", err))
-		util.UpdateStatus(j.deploy, "errored")
+		util.HandleError(fmt.Sprintf("ERROR start %v\n", err))
+		util.UpdateStatus(&j.deploy, "errored")
 		return
 	}
 

@@ -10,7 +10,7 @@ import (
 )
 
 func UpdateStatus(v interface{}, status string) {
-	t := reflect.TypeOf(v).Elem()
+	t := reflect.TypeOf(v)
 	value := reflect.ValueOf(v).Elem()
 	id := "1"
 

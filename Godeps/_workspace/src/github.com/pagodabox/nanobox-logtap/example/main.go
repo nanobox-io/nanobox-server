@@ -9,7 +9,7 @@ func main() {
 	log.Prefix("[logtap]")
 	ltap := logtap.New(log)
 	ltap.Start()
-
+	
 	sysc := logtap.NewSyslogCollector("514")
 	ltap.AddCollector("syslog", sysc)
 	sysc.Start()
