@@ -95,13 +95,12 @@ func (j *Deploy) Process() {
 		"logtap_uri": config.LogtapURI,
 	}
 
-	env := map[string]interface{}{"APP_NAME": config.App}
+	evar := map[string]interface{}{}
 	if box.Node("env").Valid {
-		for key, val := range box.Node("env").Parsed {
-			env[key] = val
-		}
+		evar = box.Node("env").Parsed
 	}
-	j.payload["env"] = env
+	evar["APP_NAME"] = config.App
+	j.payload["env"] = evar
 
 	// run configure hook (blocking)
 	if _, err := util.ExecHook("configure", "build1", j.payload); err != nil {

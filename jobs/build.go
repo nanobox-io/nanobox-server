@@ -39,12 +39,12 @@ func (j *Build) Process() {
 		"boxfile":    box.Node("build").Parsed,
 		"logtap_uri": config.LogtapURI,
 	}
-	var env map[string]interface{}{}
+	evar := map[string]interface{}{}
 	if box.Node("env").Valid {
-		env = box.Node("env").Parsed
+		evar = box.Node("env").Parsed
 	}
-	env["APP_NAME"] = config.App
-	j.payload["env"] = env
+	evar["APP_NAME"] = config.App
+	j.payload["env"] = evar
 
 	// run sync hook (blocking)
 	if _, err := util.ExecHook("sync", "build1", j.payload); err != nil {
