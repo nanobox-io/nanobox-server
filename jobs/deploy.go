@@ -90,11 +90,18 @@ func (j *Deploy) Process() {
 	j.payload = map[string]interface{}{
 		"app":        config.App,
 		"dns":        []string{config.App + ".nano.dev"},
-		"env":        map[string]string{"APP_NAME": config.App},
 		"port":       "8080",
 		"boxfile":    box.Node("build").Parsed,
 		"logtap_uri": config.LogtapURI,
 	}
+
+	env := map[string]interface{}{"APP_NAME": config.App}
+	if box.Node("env").Valid {
+		for key, val := range box.Node("env").Parsed {
+			env[key] = val
+		}
+	}
+	j.payload["env"] = env
 
 	// run configure hook (blocking)
 	if _, err := util.ExecHook("configure", "build1", j.payload); err != nil {

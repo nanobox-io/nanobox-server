@@ -35,11 +35,16 @@ func (j *Build) Process() {
 	j.payload = map[string]interface{}{
 		"app":        config.App,
 		"dns":        []string{config.App + ".nano.dev"},
-		"env":        map[string]string{"APP_NAME": config.App},
 		"port":       "8080",
 		"boxfile":    box.Node("build").Parsed,
 		"logtap_uri": config.LogtapURI,
 	}
+	var env map[string]interface{}{}
+	if box.Node("env").Valid {
+		env = box.Node("env").Parsed
+	}
+	env["APP_NAME"] = config.App
+	j.payload["env"] = env
 
 	// run sync hook (blocking)
 	if _, err := util.ExecHook("sync", "build1", j.payload); err != nil {
