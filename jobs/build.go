@@ -27,6 +27,13 @@ type Build struct {
 // Proccess syncronies your docker containers with the boxfile specification
 func (j *Build) Process() {
 
+	_, err := util.InspectContainer("build1")
+	if err != nil {
+		util.LogError("you cannot build without having run a deploy first")
+		util.UpdateStatus(j, "errored")
+		return
+	}
+
 	// parse the boxfile
 	util.LogInfo(stylish.Bullet("Parsing Boxfile..."))
 	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
