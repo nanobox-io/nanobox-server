@@ -27,6 +27,9 @@ type CreateConfig struct {
 }
 
 func CreateContainer(conf CreateConfig) (*docker.Container, error) {
+	if conf.Category == "" || conf.Image == "" {
+		return nil, fmt.Errorf("Cannot create a container without an image")
+	}
 	cConfig := docker.CreateContainerOptions{
 		Name: conf.Name,
 		Config: &docker.Config{
