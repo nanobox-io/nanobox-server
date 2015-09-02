@@ -15,6 +15,7 @@ import (
 // CreateDeploy
 func (api *API) CreateDeploy(rw http.ResponseWriter, req *http.Request) {
 
+	//
 	deploy := jobs.Deploy{
 		ID:      newUUID(),
 		Reset:   (req.FormValue("reset") == "true"),
@@ -24,5 +25,6 @@ func (api *API) CreateDeploy(rw http.ResponseWriter, req *http.Request) {
 	//
 	api.Worker.QueueAndProcess(&deploy)
 
+	//
 	rw.Write([]byte("{\"id\":\"" + deploy.ID + "\", \"status\":\"created\"}"))
 }

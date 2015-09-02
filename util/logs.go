@@ -9,34 +9,33 @@ package util
 import (
 	"fmt"
 
-	"github.com/pagodabox/nanobox-logtap"
 	"github.com/pagodabox/nanobox-router"
 	"github.com/pagodabox/nanobox-server/config"
 )
 
-// LogFatal
-func LogFatal(f string, v ...interface{}) {
-	config.Logtap.Publish("deploy", logtap.FATAL, fmt.Sprintf(f, v...))
-}
-
-// LogError
-func LogError(f string, v ...interface{}) {
-	config.Logtap.Publish("deploy", logtap.ERROR, fmt.Sprintf(f, v...))
-}
-
-// LogWarn
-func LogWarn(f string, v ...interface{}) {
-	config.Logtap.Publish("deploy", logtap.WARN, fmt.Sprintf(f, v...))
+// LogDebug
+func LogDebug(f string, v ...interface{}) {
+	config.Logtap.Publish("deploy", 1, fmt.Sprintf(f, v...))
 }
 
 // LogInfo
 func LogInfo(f string, v ...interface{}) {
-	config.Logtap.Publish("deploy", logtap.INFO, fmt.Sprintf(f, v...))
+	config.Logtap.Publish("deploy", 2, fmt.Sprintf(f, v...))
 }
 
-// LogDebug
-func LogDebug(f string, v ...interface{}) {
-	config.Logtap.Publish("deploy", logtap.DEBUG, fmt.Sprintf(f, v...))
+// LogWarn
+func LogWarn(f string, v ...interface{}) {
+	config.Logtap.Publish("deploy", 3, fmt.Sprintf(f, v...))
+}
+
+// LogError
+func LogError(f string, v ...interface{}) {
+	config.Logtap.Publish("deploy", 4, fmt.Sprintf(f, v...))
+}
+
+// LogFatal
+func LogFatal(f string, v ...interface{}) {
+	config.Logtap.Publish("deploy", 5, fmt.Sprintf(f, v...))
 }
 
 // HandleError

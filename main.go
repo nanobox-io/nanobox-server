@@ -27,8 +27,8 @@ func main() {
 	api := api.Init()
 
 	// start nanobox
-	if err := api.Start(config.APIPort); err != nil {
-		config.Log.Fatal("[NANOBOX] Unable to start API, aborting...\n%v\n", err)
+	if err := api.Start(config.Ports["api"]); err != nil {
+		config.Log.Fatal("[nanobox/main.go] Unable to start API, aborting...\n%v\n", err)
 		os.Exit(1)
 	}
 }

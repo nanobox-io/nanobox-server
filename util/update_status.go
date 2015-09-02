@@ -9,17 +9,21 @@ import (
 	"github.com/pagodabox/nanobox-server/config"
 )
 
+// due to the way this uses the reflect library there are certain assumptions made
+// about the interface the function recieves:
+// 1. It is of type Struct{}
+// 2. Its Kind is one of: Array, Chan, Map, Ptr, or Slice
+// 3. The ID (if any) will always be of type String
 func UpdateStatus(v interface{}, status string) {
-	t := reflect.TypeOf(v)
-	value := reflect.ValueOf(v).Elem()
-	id := "1"
 
-	//
-	if value.FieldByName("ID").Kind() == reflect.String {
-		id = value.FieldByName("ID").String()
+	name := reflect.TypeOf(v).Elem().Name()
+	id := reflect.ValueOf(v).Elem().FieldByName("ID").String()
+
+	if id == "" {
+		id = "1"
 	}
 
 	// allow any messages that were waiting to be sent before me
 	runtime.Gosched()
-	config.Mist.Publish([]string{"job", strings.ToLower(t.Name())}, fmt.Sprintf(`{"model":"%s", "action":"update", "document":"{\"id\":\"%s\", \"status\":\"%s\"}"}`, t.Name(), id, status))
+	config.Mist.Publish([]string{"job", strings.ToLower(name)}, fmt.Sprintf(`{"model":"%s", "action":"update", "document":"{\"id\":\"%s\", \"status\":\"%s\"}"}`, name, id, status))
 }

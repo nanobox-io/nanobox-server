@@ -14,7 +14,7 @@ import (
 
 	"github.com/pagodabox/nanobox-boxfile"
 	"github.com/pagodabox/nanobox-golang-stylish"
-	"github.com/pagodabox/nanobox-logtap"
+	// "github.com/pagodabox/nanobox-logtap"
 	"github.com/pagodabox/nanobox-router"
 	"github.com/pagodabox/nanobox-server/config"
 	"github.com/pagodabox/nanobox-server/util"
@@ -33,7 +33,7 @@ type Deploy struct {
 func (j *Deploy) Process() {
 
 	// clear the deploy log
-	config.Logtap.Drains["history"].(*logtap.HistoricalDrain).ClearDeploy()
+	// config.Logtap.Drains["history"].(*logtap.HistoricalDrain).ClearDeploy()
 
 	// set routing to watch logs
 	util.LogDebug(stylish.Bullet("Watching logs at /deploys..."))
@@ -41,6 +41,7 @@ func (j *Deploy) Process() {
 
 	// remove all code containers
 	util.LogInfo(stylish.Bullet("Removing containers from previous deploy..."))
+
 	// might as well remove bootstraps and execs too
 	containers, _ := util.ListContainers("code", "build", "bootstrap", "exec")
 	for _, container := range containers {
@@ -103,6 +104,7 @@ func (j *Deploy) Process() {
 			}
 		}
 	}
+
 	evar["APP_NAME"] = config.App
 	j.payload["env"] = evar
 
@@ -148,7 +150,6 @@ func (j *Deploy) Process() {
 			box.Merge(boxfile.New([]byte(out)))
 		}
 	}
-
 
 	// add the missing storage nodes to the boxfile
 	box.AddStorageNode()

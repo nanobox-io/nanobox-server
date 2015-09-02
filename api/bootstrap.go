@@ -15,6 +15,7 @@ import (
 // CreateDeploy
 func (api *API) CreateBootstrap(rw http.ResponseWriter, req *http.Request) {
 
+	//
 	bootstrap := jobs.Bootstrap{
 		ID:     newUUID(),
 		Engine: req.FormValue("engine"),
@@ -23,5 +24,6 @@ func (api *API) CreateBootstrap(rw http.ResponseWriter, req *http.Request) {
 	//
 	api.Worker.QueueAndProcess(&bootstrap)
 
+	//
 	rw.Write([]byte("{\"id\":\"" + bootstrap.ID + "\", \"status\":\"created\"}"))
 }

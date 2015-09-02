@@ -15,6 +15,7 @@ import (
 // CreateBuild
 func (api *API) CreateBuild(rw http.ResponseWriter, req *http.Request) {
 
+	//
 	build := jobs.Build{
 		ID:    newUUID(),
 		Reset: (req.FormValue("reset") == "true"),
@@ -23,5 +24,6 @@ func (api *API) CreateBuild(rw http.ResponseWriter, req *http.Request) {
 	//
 	api.Worker.QueueAndProcess(&build)
 
+	//
 	rw.Write([]byte("{\"id\":\"" + build.ID + "\", \"status\":\"created\"}"))
 }

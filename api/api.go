@@ -13,8 +13,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"code.google.com/p/go-uuid/uuid"
 	"github.com/gorilla/pat"
+	"github.com/pborman/uuid"
 
 	"github.com/pagodabox/nanobox-server/config"
 	"github.com/pagodabox/nanobox-server/jobs"
@@ -40,7 +40,7 @@ func Init() *API {
 
 // Start
 func (api *API) Start(port string) error {
-	config.Log.Info("[NANOBOX :: API] Starting server...\n")
+	config.Log.Info("[nanobox/api] Starting server...\n")
 
 	//
 	api.Worker.QueueAndProcess(&jobs.Startup{})
@@ -52,10 +52,10 @@ func (api *API) Start(port string) error {
 	}
 
 	//
-	config.Log.Info("[NANOBOX :: API] Listening on port %v\n", port)
+	config.Log.Info("[nanobox/api] Listening on port %v\n", port)
 
 	// blocking...
-	if err := http.ListenAndServe(":"+port, routes); err != nil {
+	if err := http.ListenAndServe(port, routes); err != nil {
 		return err
 	}
 
@@ -64,14 +64,14 @@ func (api *API) Start(port string) error {
 
 // registerRoutes
 func (api *API) registerRoutes() (*pat.Router, error) {
-	config.Log.Debug("[NANOBOX :: API] Registering routes...\n")
+	config.Log.Info("[nanobox/api] Registering routes...\n")
 
 	//
 	router := pat.New()
 
 	//
 	router.Get("/ping", func(rw http.ResponseWriter, req *http.Request) {
-  	rw.Write([]byte("pong"))
+		rw.Write([]byte("pong"))
 	})
 
 	router.Post("/exec", api.handleRequest(api.Exec))
