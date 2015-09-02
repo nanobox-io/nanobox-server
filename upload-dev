@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+GOOS=linux godep go build -o nanobox-server-dev
+
+cat nanobox-server-dev | md5 >> nanobox-server-dev.md5
+
+s3cmd put --acl-public nanobox-server-dev.md5 nanobox-server-dev s3://tools.nanobox.io/server/linux/amd64/ 
+
+rm nanobox-server-dev.md5
