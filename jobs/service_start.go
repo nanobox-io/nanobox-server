@@ -9,6 +9,7 @@ package jobs
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	// "github.com/fsouza/go-dockerclient"
 
@@ -40,12 +41,18 @@ func (j *ServiceStart) Process() {
 
 	// start the container
 	image := regexp.MustCompile(`\d+`).ReplaceAllString(j.UID, "")
+	extra := strings.Trim(strings.Join([]string{j.Boxfile.StringValue("version"), j.Boxfile.StringValue("stability")}, "-"), "-")
+	if extra != "" {
+		image = image + ":" + extra
+	}
+
 	createConfig := util.CreateConfig{Name: j.UID}
+	createConfig.Image = "nanobox/" + image
+	
 	if image == "web" || image == "worker" || image == "tcp" {
 		createConfig.Category = "code"
 	} else {
 		createConfig.Category = "service"
-		createConfig.Image = "nanobox/" + image
 	}
 
 	_, err = util.CreateContainer(createConfig)

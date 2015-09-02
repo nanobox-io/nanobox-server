@@ -27,11 +27,6 @@ type CreateConfig struct {
 }
 
 func CreateContainer(conf CreateConfig) (*docker.Container, error) {
-	if conf.Image == "" {
-		conf.Image = "nanobox/build"
-	}
-
-	fmt.Printf("%#v\n", conf.Cmd)
 	cConfig := docker.CreateContainerOptions{
 		Name: conf.Name,
 		Config: &docker.Config{
@@ -47,8 +42,6 @@ func CreateContainer(conf CreateConfig) (*docker.Container, error) {
 		},
 	}
 	addCategoryConfig(conf.Category, &cConfig)
-	fmt.Printf("%+v\n", cConfig)
-	fmt.Printf("%+v\n", cConfig.Config)
 	return createContainer(cConfig)
 }
 
@@ -85,7 +78,6 @@ func addCategoryConfig(category string, cConfig *docker.CreateContainerOptions) 
 			"/vagrant/engines/:/share/engines/:ro",
 		}
 	case "code":
-		cConfig.Config.Image = "nanobox/code"
 		cConfig.HostConfig.Binds = []string{
 			"/mnt/sda/var/nanobox/deploy/:/data/",
 			"/mnt/sda/var/nanobox/build/:/code/:ro",

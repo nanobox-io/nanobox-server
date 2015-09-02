@@ -68,24 +68,30 @@ func (j *Deploy) Process() {
 		}
 	}
 
+	// parse the boxfile
+	util.LogDebug(stylish.Bullet("Parsing Boxfile..."))
+	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
+
+	image := "nanobox/build"
+	if stab := box.Node("build").StringValue("stability"); stab != "" {
+		image = image + ":" + stab
+	}
 	// if the build image doesn't exist it needs to be downloaded
-	if !util.ImageExists("nanobox/build") {
+	if !util.ImageExists(image) {
 		util.LogInfo(stylish.Bullet("Pulling the latest build image (this will take awhile)... "))
-		util.InstallImage("nanobox/build")
+		util.InstallImage(image)
 	}
 
 	// create a build container
 	util.LogInfo(stylish.Bullet("Creating build container..."))
-	_, err := util.CreateContainer(util.CreateConfig{Category: "build", Name: "build1"})
+
+	_, err := util.CreateContainer(util.CreateConfig{Image: image, Category: "build", Name: "build1"})
 	if err != nil {
 		util.HandleError(stylish.Error("Failed to create build container", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
 	}
 
-	// parse the boxfile
-	util.LogDebug(stylish.Bullet("Parsing Boxfile..."))
-	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
 
 	// define the deploy payload
 	j.payload = map[string]interface{}{
