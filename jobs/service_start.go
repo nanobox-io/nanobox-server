@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-
 	// "github.com/fsouza/go-dockerclient"
 
 	"github.com/pagodabox/nanobox-boxfile"
@@ -39,34 +38,47 @@ func (j *ServiceStart) Process() {
 
 	util.LogInfo(stylish.Bullet(fmt.Sprintf("Starting %v...", j.UID)))
 
-	// start the container
+	createConfig := util.CreateConfig{Name: j.UID}
+
+	
 	image := regexp.MustCompile(`\d+`).ReplaceAllString(j.UID, "")
+	if image == "web" || image == "worker" || image == "tcp" || image == "udp" {
+		createConfig.Category = "code"
+		image = "code"
+	} else {
+		createConfig.Category = "service"
+	}
+
 	extra := strings.Trim(strings.Join([]string{j.Boxfile.StringValue("version"), j.Boxfile.StringValue("stability")}, "-"), "-")
 	if extra != "" {
 		image = image + ":" + extra
 	}
 
-	createConfig := util.CreateConfig{Name: j.UID}
 	createConfig.Image = "nanobox/" + image
 	
-	if image == "web" || image == "worker" || image == "tcp" {
-		createConfig.Category = "code"
-	} else {
-		createConfig.Category = "service"
-	}
-
+	fmt.Println(createConfig)
+	// start the container
 	_, err = util.CreateContainer(createConfig)
 	if err != nil {
+		fmt.Println(err)
 		util.HandleError(fmt.Sprintf("Failed to create %v", j.UID))
 		util.UpdateStatus(&j.deploy, "errored")
 		return
 	}
-
+	
 	// payload
 	payload := map[string]interface{}{
 		"boxfile":    j.Boxfile.Parsed,
 		"logtap_uri": config.LogtapURI,
 		"uid":        j.UID,
+		// service hooks needed a reasonable default[:member][:schema][:meta][:ram]
+		"member":     map[string]interface{}{
+			"schema":   map[string]interface{}{
+				"meta":   map[string]interface{}{
+					"ram":  128000000, // bytes
+				},
+			},
+		},
 	}
 
 	// adds to the payload storage information if storage is required
@@ -87,14 +99,16 @@ func (j *ServiceStart) Process() {
 	}
 
 	// run configure hook (blocking)
-	if _, err := util.ExecHook("configure", j.UID, payload); err != nil {
+	if data, err := util.ExecHook("default-configure", j.UID, payload); err != nil {
+		util.LogDebug("Failed Hook Output:\n%s\n", data)
 		util.HandleError(fmt.Sprintf("ERROR configure %v\n", err))
 		util.UpdateStatus(&j.deploy, "errored")
 		return
 	}
 
 	// run start hook (blocking)
-	if _, err := util.ExecHook("start", j.UID, payload); err != nil {
+	if data, err := util.ExecHook("default-start", j.UID, payload); err != nil {
+		util.LogDebug("Failed Hook Output:\n%s\n", data)
 		util.HandleError(fmt.Sprintf("ERROR start %v\n", err))
 		util.UpdateStatus(&j.deploy, "errored")
 		return

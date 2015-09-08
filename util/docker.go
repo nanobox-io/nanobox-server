@@ -9,7 +9,6 @@ package util
 //
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"os/exec"
@@ -178,7 +177,7 @@ func GetContainer(name string) (*docker.Container, error) {
 			return InspectContainer(container.ID)
 		}
 	}
-	return nil, errors.New("not found")
+	return nil, fmt.Errorf("not found")
 }
 
 // ListContainers
@@ -228,11 +227,18 @@ func ExecInContainer(container string, args ...string) ([]byte, error) {
 	// LogDebug("execincontainer: %s\n", b.Bytes())
 	results, err := dockerClient().InspectExec(exec.ID)
 	// LogDebug("execincontainer results: %+v\n", results)
+
+	// if 'no such file or directory' squash the error
+	if strings.Contains(b.String(), "no such file or directory") {
+		return b.Bytes(), nil
+	}
+
 	if err != nil {
 		return b.Bytes(), err
 	}
+
 	if results.ExitCode != 0 {
-		return b.Bytes(), errors.New(fmt.Sprintf("Bad Exit Code (%d)", results.ExitCode))
+		return b.Bytes(), fmt.Errorf("Bad Exit Code (%d)", results.ExitCode)
 	}
 	return b.Bytes(), err
 }

@@ -54,21 +54,21 @@ func (j *Build) Process() {
 	j.payload["env"] = evar
 
 	// run sync hook (blocking)
-	if _, err := util.ExecHook("sync", "build1", j.payload); err != nil {
+	if _, err := util.ExecHook("default-sync", "build1", j.payload); err != nil {
 		util.HandleError(stylish.Error("Failed to run sync hook", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run build hook (blocking)
-	if _, err := util.ExecHook("build", "build1", j.payload); err != nil {
+	if _, err := util.ExecHook("default-build", "build1", j.payload); err != nil {
 		util.HandleError(stylish.Error("Failed to run build hook", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run publish hook (blocking)
-	if _, err := util.ExecHook("publish", "build1", j.payload); err != nil {
+	if _, err := util.ExecHook("default-publish", "build1", j.payload); err != nil {
 		util.HandleError(stylish.Error("Failed to run publish hook", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return

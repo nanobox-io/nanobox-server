@@ -43,8 +43,9 @@ func (j *Deploy) Process() {
 	util.LogInfo(stylish.Bullet("Removing containers from previous deploy..."))
 
 	// might as well remove bootstraps and execs too
-	containers, _ := util.ListContainers("code", "build", "bootstrap", "exec")
+	containers, _ := util.ListContainers("code", "build", "bootstrap", "exec", "tcp", "udp")
 	for _, container := range containers {
+		util.RemoveForward(container.NetworkSettings.IPAddress)
 		if err := util.RemoveContainer(container.ID); err != nil {
 			util.HandleError(stylish.Error("Failed to remove old containers", err.Error()))
 			util.UpdateStatus(j, "errored")
@@ -115,28 +116,32 @@ func (j *Deploy) Process() {
 	j.payload["env"] = evar
 
 	// run configure hook (blocking)
-	if _, err := util.ExecHook("configure", "build1", j.payload); err != nil {
+	if out, err := util.ExecHook("default-configure", "build1", j.payload); err != nil {
+		util.LogDebug("Failed Hook Output: \n %s", out)
 		util.HandleError(stylish.Error("Failed to run configure hook", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run detect hook (blocking)
-	if _, err := util.ExecHook("detect", "build1", j.payload); err != nil {
+	if out, err := util.ExecHook("default-detect", "build1", j.payload); err != nil {
+		util.LogDebug("Failed Hook Output: \n %s", out)
 		util.HandleError(stylish.Error("Failed to run detect hook", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run sync hook (blocking)
-	if _, err := util.ExecHook("sync", "build1", j.payload); err != nil {
+	if out, err := util.ExecHook("default-sync", "build1", j.payload); err != nil {
+		util.LogDebug("Failed Hook Output: \n %s", out)
 		util.HandleError(stylish.Error("Failed to run sync hook", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run setup hook (blocking)
-	if _, err := util.ExecHook("setup", "build1", j.payload); err != nil {
+	if out, err := util.ExecHook("default-setup", "build1", j.payload); err != nil {
+		util.LogDebug("Failed Hook Output: \n %s", out)
 		util.HandleError(stylish.Error("Failed to run setup hook", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
@@ -144,7 +149,8 @@ func (j *Deploy) Process() {
 
 	// run boxfile hook (blocking)
 	if !box.Node("build").BoolValue("disable_engine_boxfile") {
-		if out, err := util.ExecHook("boxfile", "build1", j.payload); err != nil {
+		if out, err := util.ExecHook("default-boxfile", "build1", j.payload); err != nil {
+			util.LogDebug("Failed Hook Output: \n %s", out)
 			util.HandleError(stylish.Error("Failed to run boxfile hook", err.Error()))
 			util.UpdateStatus(j, "errored")
 			return
@@ -165,7 +171,7 @@ func (j *Deploy) Process() {
 	serviceContainers, _ := util.ListContainers("service")
 	for _, container := range serviceContainers {
 		if !box.Node(container.Config.Labels["uid"]).Valid {
-			config.Router.RemoveForward(container.Config.Labels["uid"])
+			util.RemoveForward(container.NetworkSettings.IPAddress)
 			util.RemoveContainer(container.ID)
 		}
 	}
@@ -241,28 +247,32 @@ func (j *Deploy) Process() {
 	j.payload["env"] = evars
 
 	// run prepare hook (blocking)
-	if _, err := util.ExecHook("prepare", "build1", j.payload); err != nil {
+	if out, err := util.ExecHook("default-prepare", "build1", j.payload); err != nil {
+		util.LogDebug("Failed Hook Output: \n %s", out)
 		util.HandleError(stylish.Error("Failed to run prepare hook", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run build hook (blocking)
-	if _, err := util.ExecHook("build", "build1", j.payload); err != nil {
+	if out, err := util.ExecHook("default-build", "build1", j.payload); err != nil {
+		util.LogDebug("Failed Hook Output: \n %s", out)
 		util.HandleError(stylish.Error("Failed to run build hook", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run publish hook (blocking)
-	if _, err := util.ExecHook("publish", "build1", j.payload); err != nil {
+	if out, err := util.ExecHook("default-publish", "build1", j.payload); err != nil {
+		util.LogDebug("Failed Hook Output: \n %s", out)
 		util.HandleError(stylish.Error("Failed to run publish hook", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run cleanup hook (blocking)
-	if _, err := util.ExecHook("cleanup", "build1", j.payload); err != nil {
+	if out, err := util.ExecHook("default-cleanup", "build1", j.payload); err != nil {
+		util.LogDebug("Failed Hook Output: \n %s", out)
 		util.HandleError(stylish.Error("Failed to run cleanup hook", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
@@ -308,7 +318,8 @@ func (j *Deploy) Process() {
 		if bd != nil || bda != nil {
 
 			// run before deploy hook (blocking)
-			if _, err := util.ExecHook("before_deploy", node, map[string]interface{}{"before_deploy": bd, "before_deploy_all": bda}); err != nil {
+			if out, err := util.ExecHook("default-before_deploy", node, map[string]interface{}{"before_deploy": bd, "before_deploy_all": bda}); err != nil {
+				util.LogDebug("Failed Hook Output: \n %s", out)
 				util.HandleError(stylish.Error("Failed to run before_deploy hook", err.Error()))
 				util.UpdateStatus(j, "errored")
 				return
@@ -316,11 +327,38 @@ func (j *Deploy) Process() {
 		}
 	}
 
-	// set routing to web components
-	if container, err := util.GetContainer("web1"); err == nil {
-		util.LogDebug(stylish.Bullet("Configure routing..."))
+	// setup any custom routes for each code service
+	for _, node := range box.Nodes("code"){
+		n := box.Node(node)
+		if ports, ok := n.Value("ports").([]string); ok {
+			container, err := util.GetContainer(node)
+			if err == nil {
+				for _, port := range ports {
+					ftPorts := strings.Split(port, ":")
+					if len(ftPorts) == 2 {
+						if node == "web1" {
+							ftPorts[1] = config.Ports["router"]
+						}
+						util.AddForward(ftPorts[0], container.NetworkSettings.IPAddress, ftPorts[1])
+					}
+				}
+			}
+		}
+	}
 
-		config.Router.AddTarget("/", "http://"+container.NetworkSettings.IPAddress+":8080")
+	if container, err := util.GetContainer("web1"); err == nil {
+		port := "8080"
+		if ports, ok := box.Node("web1").Value("ports").([]string); ok {
+			for _, port := range ports {
+				ftPorts := strings.Split(port, ":")
+				if len(ftPorts) == 2 && ftPorts[0] == "80" {
+					port = ftPorts[1]
+				}
+			}
+		}
+
+		util.LogDebug(stylish.Bullet("Configure routing..."))
+		config.Router.AddTarget("/", "http://"+container.NetworkSettings.IPAddress+":"+ port)
 		config.Router.Handler = nil
 	} else {
 		config.Router.Handler = router.NoDeploy{}
@@ -336,7 +374,8 @@ func (j *Deploy) Process() {
 		if ad != nil || ada != nil {
 
 			// run after deploy hook (blocking)
-			if _, err := util.ExecHook("after_deploy", node, map[string]interface{}{"after_deploy": ad, "after_deploy_all": ada}); err != nil {
+			if out, err := util.ExecHook("default-after_deploy", node, map[string]interface{}{"after_deploy": ad, "after_deploy_all": ada}); err != nil {
+				util.LogDebug("Failed Hook Output: \n %s", out)
 				util.HandleError(stylish.Error("Failed to run after_deploy hook", err.Error()))
 				util.UpdateStatus(j, "errored")
 				return

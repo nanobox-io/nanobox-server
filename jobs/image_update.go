@@ -8,6 +8,7 @@ package jobs
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pagodabox/nanobox-golang-stylish"
 	"github.com/pagodabox/nanobox-server/util"
@@ -37,11 +38,12 @@ func (j *ImageUpdate) Process() {
 
 			//
 			util.LogInfo(stylish.Bullet(fmt.Sprintf("Updating image: %s", tag)))
-
-			if err := util.UpdateImage(tag); err != nil {
-				util.HandleError("Unable to update image:" + err.Error())
-				util.UpdateStatus(j, "errored")
-				return
+			if strings.HasPrefix(tag, "nanobox") {
+				if err := util.UpdateImage(tag); err != nil {
+					util.HandleError("Unable to update image:" + err.Error())
+					util.UpdateStatus(j, "errored")
+					return
+				}
 			}
 		}
 	}

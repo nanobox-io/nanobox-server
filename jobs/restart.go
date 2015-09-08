@@ -36,7 +36,7 @@ func (j *Restart) Process() {
 	}
 
 	// run restart hook (blocking)
-	if _, err := util.ExecHook("restart", j.UID, payload); err != nil {
+	if _, err := util.ExecHook("default-restart", j.UID, payload); err != nil {
 		util.LogInfo("ERROR %v\n", err)
 		return
 	}

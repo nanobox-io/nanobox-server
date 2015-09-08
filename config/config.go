@@ -12,9 +12,11 @@ import (
 	"io/ioutil"
 	"net"
 	"time"
+	"strings"
 
 	"github.com/jcelliott/lumber"
 
+	
 	"github.com/pagodabox/golang-hatchet"
 	"github.com/pagodabox/golang-mist"
 	"github.com/pagodabox/nanobox-logtap"
@@ -29,6 +31,7 @@ var (
 	App       string
 	LogtapURI string
 	Ports     map[string]string
+	IP        string
 
 	Log    hatchet.Logger
 	Logtap *logtap.Logtap
@@ -49,16 +52,17 @@ func Init() error {
 		"api":    ":1757",
 		"logtap": ":6361",
 		"mist":   ":1445",
-		"router": "80",
+		"router": "60000",
 	}
 
-	ip, err := externalIP()
+	IP, err = externalIP()
 	if err != nil {
 		Log.Error("error: %s\n", err.Error())
 		return err
 	}
 
-	LogtapURI = ip + Ports["logtap"]
+
+	LogtapURI = IP + Ports["logtap"]
 
 	App, err = appName()
 	for err != nil {
@@ -141,6 +145,9 @@ func externalIP() (string, error) {
 			ip = ip.To4()
 			if ip == nil {
 				continue // not an ipv4 address
+			}
+			if strings.HasPrefix(ip.String(), "10") {
+				continue
 			}
 			return ip.String(), nil
 		}

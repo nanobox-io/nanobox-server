@@ -28,7 +28,7 @@ func (j *ServiceEnv) Process() {
 	j.Success = false
 
 	// run environment hook (blocking)
-	if out, err := util.ExecHook("environment", j.UID, nil); err != nil {
+	if out, err := util.ExecHook("default-environment", j.UID, nil); err != nil {
 		util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's environment variables", j.UID), err.Error()))
 		util.UpdateStatus(j.deploy, "errored")
 		return
@@ -56,10 +56,18 @@ func (j *ServiceEnv) Process() {
 	config.Log.Info("container: %+v", container)
 
 	j.EVars["HOST"] = container.NetworkSettings.IPAddress
-	if config.Router.GetForward(j.UID) == nil {
-		config.Log.Info("adding forward")
-		portInt, _ := strconv.Atoi(j.EVars["PORT"])
-		config.Router.AddForward(j.UID, portInt, j.EVars["HOST"]+":"+j.EVars["PORT"])
+	err = util.AddForward(j.EVars["PORT"], j.EVars["HOST"], j.EVars["PORT"])
+	if err != nil {
+		port, _ := strconv.Atoi(j.EVars["PORT"])
+		for i := 1; i <= 10; i++ {
+			err = util.AddForward(strconv.Itoa(port + i), j.EVars["HOST"], j.EVars["PORT"])
+			if err == nil {
+				break
+			}
+		}
+		if err != nil {
+			util.HandleError(stylish.Error("Failed to setup forward for service", err.Error()))
+		}
 	}
 
 	j.Success = true
