@@ -5,13 +5,12 @@ package jobs
 // 	"github.com/pagodabox/nanobox-router"
 // )
 
-
 // func configureRoutes(box boxfile.Boxfile) {
 // 	webs := box.Nodes("web")
 // 	for _, web := range webs {
 // 		b := box.Node(web)
 // 		if ports, ok := b.Value("ports").([]string); ok
-		
+
 // 	}
 
 // }

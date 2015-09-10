@@ -30,9 +30,9 @@ func (j *Restart) Process() {
 	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
 	// restart payload
 	payload := map[string]interface{}{
-		"boxfile":    box.Node(j.UID).Parsed,
-		"logtap_uri": config.LogtapURI,
-		"uid":        j.UID,
+		"boxfile":     box.Node(j.UID).Parsed,
+		"logtap_host": config.LogtapHost,
+		"uid":         j.UID,
 	}
 
 	// run restart hook (blocking)

@@ -47,8 +47,8 @@ func (j *Bootstrap) Process() {
 
 	// define the deploy payload
 	payload := map[string]interface{}{
-		"engine":     j.Engine,
-		"logtap_uri": config.LogtapURI,
+		"engine":      j.Engine,
+		"logtap_host": config.LogtapHost,
 	}
 
 	// run configure hook (blocking)

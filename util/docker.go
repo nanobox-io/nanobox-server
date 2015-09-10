@@ -40,7 +40,7 @@ func CreateContainer(conf CreateConfig) (*docker.Container, error) {
 			Cmd:             conf.Cmd,
 		},
 		HostConfig: &docker.HostConfig{
-			Privileged: true,
+			Privileged:    true,
 			RestartPolicy: docker.AlwaysRestart(),
 		},
 	}
@@ -159,6 +159,41 @@ func RemoveContainer(id string) error {
 	}
 
 	return dockerClient().RemoveContainer(docker.RemoveContainerOptions{ID: id, RemoveVolumes: false, Force: true})
+}
+
+// create a new exec object in docker
+// this new exec object can then be ran.
+func CreateExec(id string, cmd []string, in, out, err bool) (*docker.Exec, error) {
+	config := docker.CreateExecOptions{
+		Tty:          true,
+		Cmd:          cmd,
+		Container:    id,
+		AttachStdin:  in,
+		AttachStdout: out,
+		AttachStderr: err,
+	}
+
+	return dockerClient().CreateExec(config)
+}
+
+// resize the exec.
+func ResizeExecTTY(id string, height, width int) error {
+	return dockerClient().ResizeExecTTY(id, height, width)
+}
+
+// Start the exec. This will hang until the exec exits.
+func RunExec(exec *docker.Exec, in io.Reader, out io.Writer, err io.Writer) (*docker.ExecInspect, error) {
+	e := dockerClient().StartExec(exec.ID, docker.StartExecOptions{
+		Tty:          true,
+		InputStream:  in,
+		OutputStream: out,
+		ErrorStream:  err,
+		RawTerminal:  true,
+	})
+	if e != nil {
+		return nil, e
+	}
+	return dockerClient().InspectExec(exec.ID)
 }
 
 // InspectContainer

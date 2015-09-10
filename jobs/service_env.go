@@ -46,7 +46,7 @@ func (j *ServiceEnv) Process() {
 		util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's tunnel", j.UID), "no port given in environment"))
 		return
 	}
-	
+
 	// now we need to set the host in the evars as well as create a tunnel port in the router
 	container, err := util.InspectContainer(j.UID)
 	if err != nil {
@@ -60,7 +60,7 @@ func (j *ServiceEnv) Process() {
 		if err != nil {
 			port, _ := strconv.Atoi(j.EVars["PORT"])
 			for i := 1; i <= 10; i++ {
-				err = util.AddForward(strconv.Itoa(port + i), j.EVars["HOST"], j.EVars["PORT"])
+				err = util.AddForward(strconv.Itoa(port+i), j.EVars["HOST"], j.EVars["PORT"])
 				if err == nil {
 					break
 				}
@@ -70,7 +70,6 @@ func (j *ServiceEnv) Process() {
 			}
 		}
 	}
-
 
 	j.Success = true
 }

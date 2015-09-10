@@ -12,32 +12,32 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/jcelliott/lumber"
 
 	"github.com/pagodabox/golang-hatchet"
 	"github.com/pagodabox/golang-mist"
 	"github.com/pagodabox/nanobox-logtap"
+	logapi "github.com/pagodabox/nanobox-logtap/api"
 	"github.com/pagodabox/nanobox-logtap/archive"
 	"github.com/pagodabox/nanobox-logtap/collector"
 	"github.com/pagodabox/nanobox-logtap/drain"
-	logapi "github.com/pagodabox/nanobox-logtap/api"
 	"github.com/pagodabox/nanobox-router"
 )
 
 //
 var (
-	App       string
-	LogtapURI string
-	Ports     map[string]string
-	IP        string
+	App        string
+	LogtapHost string
+	Ports      map[string]string
+	IP         string
 
-	Log    hatchet.Logger
-	Logtap *logtap.Logtap
-	Mist   *mist.Mist
-	Router *router.Router
+	Log        hatchet.Logger
+	Logtap     *logtap.Logtap
+	Mist       *mist.Mist
+	Router     *router.Router
 	LogHandler http.HandlerFunc
 )
 
@@ -52,7 +52,7 @@ func init() {
 	//
 	Ports = map[string]string{
 		"api":    ":1757",
-		"logtap": ":6361",
+		"logtap": ":514",
 		"mist":   ":1445",
 		"router": "60000",
 	}
@@ -62,9 +62,9 @@ func init() {
 		Log.Error("error: %s\n", err.Error())
 	}
 
+	LogtapHost = IP
 
-	LogtapURI = IP + Ports["logtap"]
-
+	Log.Info("LogtapHost: " + LogtapHost)
 	App, err = appName()
 	for err != nil {
 		Log.Error("error: %s\n", err.Error())
@@ -90,17 +90,18 @@ func init() {
 
 	// define logtap collectors/drains; we don't need to defer Close() anything here,
 	// because these want to live as long as the server
-	if _, err := collector.SyslogUDPStart("app", ":514", Logtap); err != nil {
+	if _, err := collector.SyslogUDPStart("app", Ports["logtap"], Logtap); err != nil {
 		panic(err)
 	}
 
 	//
-	if _, err := collector.SyslogTCPStart("app", ":514", Logtap); err != nil {
+	if _, err := collector.SyslogTCPStart("app", Ports["logtap"], Logtap); err != nil {
 		panic(err)
 	}
 
-	//
-	if _, err := collector.StartHttpCollector("deploy", Ports["logtap"], Logtap); err != nil {
+	// we will be adding a 0 to the end of the logtap port because we cant have 2 tcp listeneres
+	// on the same port
+	if _, err := collector.StartHttpCollector("deploy", Ports["logtap"]+"0", Logtap); err != nil {
 		panic(err)
 	}
 

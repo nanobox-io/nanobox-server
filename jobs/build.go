@@ -40,11 +40,11 @@ func (j *Build) Process() {
 
 	// define the build payload
 	j.payload = map[string]interface{}{
-		"app":        config.App,
-		"dns":        []string{config.App + ".nano.dev"},
-		"port":       "8080",
-		"boxfile":    box.Node("build").Parsed,
-		"logtap_uri": config.LogtapURI,
+		"app":         config.App,
+		"dns":         []string{config.App + ".nano.dev"},
+		"port":        "8080",
+		"boxfile":     box.Node("build").Parsed,
+		"logtap_host": config.LogtapHost,
 	}
 	evar := map[string]interface{}{}
 	if box.Node("env").Valid {

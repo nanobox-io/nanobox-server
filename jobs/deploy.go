@@ -77,7 +77,7 @@ func (j *Deploy) Process() {
 	if stab := box.Node("build").StringValue("stability"); stab != "" {
 		image = image + ":" + stab
 	}
-	util.LogDebug(stylish.Bullet("image name: "+image))
+	util.LogDebug(stylish.Bullet("image name: " + image))
 	// if the build image doesn't exist it needs to be downloaded
 	if !util.ImageExists(image) {
 		util.LogInfo(stylish.Bullet("Pulling the latest build image (this will take awhile)... "))
@@ -94,14 +94,13 @@ func (j *Deploy) Process() {
 		return
 	}
 
-
 	// define the deploy payload
 	j.payload = map[string]interface{}{
-		"app":        config.App,
-		"dns":        []string{config.App + ".nano.dev"},
-		"port":       "8080",
-		"boxfile":    box.Node("build").Parsed,
-		"logtap_uri": config.LogtapURI,
+		"app":         config.App,
+		"dns":         []string{config.App + ".nano.dev"},
+		"port":        "8080",
+		"boxfile":     box.Node("build").Parsed,
+		"logtap_host": config.LogtapHost,
 	}
 
 	evar := map[string]string{}
@@ -335,8 +334,10 @@ func (j *Deploy) Process() {
 		}
 	}
 
+	// replace with configureRoutes(box) and configureForwards(box)
+
 	// setup any custom routes for each code service
-	for _, node := range box.Nodes("code"){
+	for _, node := range box.Nodes("code") {
 		n := box.Node(node)
 		if ports, ok := n.Value("ports").([]string); ok {
 			container, err := util.GetContainer(node)
@@ -366,7 +367,7 @@ func (j *Deploy) Process() {
 		}
 
 		util.LogDebug(stylish.Bullet("Configure routing..."))
-		config.Router.AddTarget("/", "http://"+container.NetworkSettings.IPAddress+":"+ port)
+		config.Router.AddTarget("/", "http://"+container.NetworkSettings.IPAddress+":"+port)
 		config.Router.Handler = nil
 	} else {
 		config.Router.Handler = router.NoDeploy{}

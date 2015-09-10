@@ -18,6 +18,8 @@ import (
 	"github.com/pagodabox/nanobox-server/util"
 )
 
+var execKeys = map[string]string{}
+
 // starter is a bandaid for a problem with docker
 // where it will not send the first data until it recieves
 // something on stdin
@@ -35,7 +37,12 @@ func (s *starter) Read(p []byte) (int, error) {
 	return s.thing.Read(p)
 }
 
-func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
+func (api *API) Run(rw http.ResponseWriter, req *http.Request) {
+	name := req.FormValue("container")
+	if name != "" {
+		api.Exec(rw, req)
+		return
+	}
 	util.RemoveContainer("exec1")
 	conn, _, err := rw.(http.Hijacker).Hijack()
 	if err != nil {
@@ -103,19 +110,71 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 	util.RemoveContainer(container.ID)
 }
 
-func (api *API) KillExec(rw http.ResponseWriter, req *http.Request) {
+func (api *API) KillRun(rw http.ResponseWriter, req *http.Request) {
 	fmt.Printf("signal recieved: %s\n", req.FormValue("signal"))
 	err := util.KillContainer("exec1", req.FormValue("signal"))
 	fmt.Println(err)
 }
 
-func (api *API) ResizeExec(rw http.ResponseWriter, req *http.Request) {
+func (api *API) ResizeRun(rw http.ResponseWriter, req *http.Request) {
 	h, _ := strconv.Atoi(req.FormValue("h"))
 	w, _ := strconv.Atoi(req.FormValue("w"))
 	if h == 0 || w == 0 {
 		return
 	}
 	err := util.ResizeContainerTTY("exec1", h, w)
+	fmt.Println(err)
+}
+
+// proxy an exec request to docker. This allows us to have the same
+// exec power but with added security.
+func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
+	name := req.FormValue("container")
+
+	conn, _, err := rw.(http.Hijacker).Hijack()
+	if err != nil {
+		rw.WriteHeader(http.StatusInternalServerError)
+		rw.Write([]byte(err.Error()))
+		return
+	}
+	defer conn.Close()
+
+	cmd := []string{"/bin/bash"}
+	if additionalCmd := req.FormValue("cmd"); additionalCmd != "" {
+		cmd = append(cmd, "-c", additionalCmd)
+	}
+
+	container, err := util.GetContainer(name)
+	if err != nil {
+		conn.Write([]byte(err.Error()))
+		return
+	}
+
+	// Flush the options to make sure the client sets the raw mode
+	conn.Write([]byte{})
+
+	exec, err := util.CreateExec(container.ID, cmd, true, true, true)
+	if err == nil {
+		execKeys[name] = exec.ID
+		defer delete(execKeys, name)
+		util.RunExec(exec, conn, conn, conn)
+	}
+}
+
+// necessary for anything using a windowing system through the exec.
+func (api *API) ResizeExec(rw http.ResponseWriter, req *http.Request) {
+	name := req.FormValue("container")
+	if name == "" || execKeys[name] == "" {
+		rw.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	h, _ := strconv.Atoi(req.FormValue("h"))
+	w, _ := strconv.Atoi(req.FormValue("w"))
+	if h == 0 || w == 0 {
+		return
+	}
+	err := util.ResizeExecTTY(execKeys[name], h, w)
 	fmt.Println(err)
 }
 

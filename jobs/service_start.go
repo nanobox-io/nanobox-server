@@ -40,7 +40,6 @@ func (j *ServiceStart) Process() {
 
 	createConfig := util.CreateConfig{Name: j.UID}
 
-	
 	image := regexp.MustCompile(`\d+`).ReplaceAllString(j.UID, "")
 	if image == "web" || image == "worker" || image == "tcp" || image == "udp" {
 		createConfig.Category = "code"
@@ -56,8 +55,8 @@ func (j *ServiceStart) Process() {
 	}
 
 	createConfig.Image = "nanobox/" + image
-	
-	util.LogDebug(stylish.Bullet("image name: "+createConfig.Image))
+
+	util.LogDebug(stylish.Bullet("image name: " + createConfig.Image))
 	fmt.Println(createConfig)
 	// start the container
 	_, err = util.CreateContainer(createConfig)
@@ -67,23 +66,23 @@ func (j *ServiceStart) Process() {
 		util.UpdateStatus(&j.deploy, "errored")
 		return
 	}
-	
+
 	// payload
 	payload := map[string]interface{}{
-		"boxfile":    j.Boxfile.Parsed,
-		"logtap_uri": config.LogtapURI,
-		"uid":        j.UID,
+		"boxfile":     j.Boxfile.Parsed,
+		"logtap_host": config.LogtapHost,
+		"uid":         j.UID,
 
 		// service hooks needed a reasonable default[:member][:schema][:meta][:ram]
-		"member":     map[string]interface{}{
-			"schema":   map[string]interface{}{
-				"meta":   map[string]interface{}{
-					"ram":  128000000, // bytes
+		"member": map[string]interface{}{
+			"schema": map[string]interface{}{
+				"meta": map[string]interface{}{
+					"ram": 128000000, // bytes
 				},
 			},
 		},
 
-		// service hooks need a reasonable default for [:ssh][:admin_key][:private_key] 
+		// service hooks need a reasonable default for [:ssh][:admin_key][:private_key]
 		"ssh": map[string]interface{}{
 			"admin_key": map[string]interface{}{
 				"private_key": "notarealkey",
