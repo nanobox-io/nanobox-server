@@ -65,7 +65,7 @@ func (j *Deploy) Process() {
 	if j.Reset {
 		util.LogInfo(stylish.Bullet("Resetting cache and code directories"))
 		if err := util.Clean(); err != nil {
-			util.LogInfo(stylish.Warning(fmt.Sprintf("Failed to reset cache and code directories:\n%v", err.Error())))
+			util.LogInfo(stylish.Warning("Failed to reset cache and code directories:\n%v", err.Error()))
 		}
 	}
 
@@ -77,7 +77,9 @@ func (j *Deploy) Process() {
 	if stab := box.Node("build").StringValue("stability"); stab != "" {
 		image = image + ":" + stab
 	}
-	util.LogDebug(stylish.Bullet("image name: " + image))
+
+	util.LogDebug(stylish.Bullet("image name: %v", image))
+
 	// if the build image doesn't exist it needs to be downloaded
 	if !util.ImageExists(image) {
 		util.LogInfo(stylish.Bullet("Pulling the latest build image (this will take awhile)... "))
@@ -158,7 +160,6 @@ func (j *Deploy) Process() {
 			// if the hook runs succesfully merge the boxfiles
 		} else {
 			util.LogDebug(stylish.Bullet("Merging Boxfiles..."))
-			util.LogDebug("BOXFILE STUFF! %v\n", string(out))
 			box.Merge(boxfile.New([]byte(out)))
 		}
 	}
@@ -201,13 +202,13 @@ func (j *Deploy) Process() {
 	}
 
 	util.LogInfo(stylish.Bullet("Starting services"))
-	util.LogDebug("SERVICES! %#v\n", serviceStarts)
 	worker.Process()
 
 	// ensure all services started correctly before continuing
 	for _, starts := range serviceStarts {
 		if !starts.Success {
-			util.HandleError(stylish.Error(fmt.Sprintf("Failed to start %v", starts.UID), ""))
+			util.HandleError(stylish.ErrorHeader("Failed to start %v", starts.UID))
+			util.HandleError(stylish.ErrorBody(""))
 			util.UpdateStatus(j, "errored")
 			return
 		}
@@ -241,7 +242,8 @@ func (j *Deploy) Process() {
 
 	for _, env := range serviceEnvs {
 		if !env.Success {
-			util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's environment variables", env.UID), ""))
+			util.HandleError(stylish.ErrorHeader("Failed to configure %v's environment variables", env.UID))
+			util.HandleError(stylish.ErrorBody(""))
 			util.UpdateStatus(j, "errored")
 			return
 		}

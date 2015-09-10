@@ -36,7 +36,7 @@ func (j *ServiceStart) Process() {
 
 	j.Success = false
 
-	util.LogInfo(stylish.Bullet(fmt.Sprintf("Starting %v...", j.UID)))
+	util.LogInfo(stylish.Bullet("Starting %v...", j.UID))
 
 	createConfig := util.CreateConfig{Name: j.UID}
 
@@ -56,7 +56,8 @@ func (j *ServiceStart) Process() {
 
 	createConfig.Image = "nanobox/" + image
 
-	util.LogDebug(stylish.Bullet("image name: " + createConfig.Image))
+	util.LogDebug(stylish.Bullet("image name: %v", createConfig.Image))
+
 	fmt.Println(createConfig)
 	// start the container
 	_, err = util.CreateContainer(createConfig)

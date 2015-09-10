@@ -26,7 +26,7 @@ type Restart struct {
 func (j *Restart) Process() {
 	j.Success = false
 
-	util.LogInfo(stylish.Bullet(fmt.Sprintf("Restarting app in %s container...", j.UID)))
+	util.LogInfo(stylish.Bullet("Restarting app in %s container...", j.UID))
 	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
 	// restart payload
 	payload := map[string]interface{}{

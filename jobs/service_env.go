@@ -29,13 +29,15 @@ func (j *ServiceEnv) Process() {
 
 	// run environment hook (blocking)
 	if out, err := util.ExecHook("environment", j.UID, nil); err != nil {
-		util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's environment variables", j.UID), err.Error()))
+		util.HandleError(stylish.ErrorHeader("Failed to configure %v's environment variables", j.UID))
+		util.HandleError(stylish.ErrorBody(err.Error()))
 		util.UpdateStatus(j.deploy, "errored")
 		return
 	} else {
 		config.Log.Info("getting port data: %s", out)
 		if err := json.Unmarshal(out, &j.EVars); err != nil {
-			util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's environment variables", j.UID), err.Error()))
+			util.HandleError(stylish.ErrorHeader("Failed to configure %v's environment variables", j.UID))
+			util.HandleError(stylish.ErrorBody(err.Error()))
 			util.UpdateStatus(j.deploy, "errored")
 			return
 		}
@@ -43,14 +45,16 @@ func (j *ServiceEnv) Process() {
 	config.Log.Debug("getting port data: %+v", j.EVars)
 	// if a service doesnt have a port we cant continue
 	if j.EVars["PORT"] == "" {
-		util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's tunnel", j.UID), "no port given in environment"))
+		util.HandleError(stylish.ErrorHeader("Failed to configure %v's tunnel", j.UID))
+		util.HandleError(stylish.ErrorBody(err.Error()))
 		return
 	}
 
 	// now we need to set the host in the evars as well as create a tunnel port in the router
 	container, err := util.InspectContainer(j.UID)
 	if err != nil {
-		util.HandleError(stylish.Error(fmt.Sprintf("Failed to configure %v's tunnel", j.UID), err.Error()))
+		util.HandleError(stylish.ErrorHeader("Failed to configure %v's tunnel", j.UID))
+		util.HandleError(stylish.ErrorBody(err.Error()))
 	}
 	config.Log.Debug("container: %+v", container)
 
