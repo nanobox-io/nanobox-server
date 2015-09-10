@@ -49,13 +49,15 @@ func (j *ServiceStart) Process() {
 		createConfig.Category = "service"
 	}
 
-	extra := strings.Trim(strings.Join([]string{j.Boxfile.StringValue("version"), j.Boxfile.StringValue("stability")}, "-"), "-")
+	fmt.Println(j.Boxfile)
+	extra := strings.Trim(strings.Join([]string{j.Boxfile.VersionValue("version"), j.Boxfile.StringValue("stability")}, "-"), "-")
 	if extra != "" {
 		image = image + ":" + extra
 	}
 
 	createConfig.Image = "nanobox/" + image
 	
+	util.LogDebug(stylish.Bullet("image name: "+createConfig.Image))
 	fmt.Println(createConfig)
 	// start the container
 	_, err = util.CreateContainer(createConfig)
@@ -71,12 +73,21 @@ func (j *ServiceStart) Process() {
 		"boxfile":    j.Boxfile.Parsed,
 		"logtap_uri": config.LogtapURI,
 		"uid":        j.UID,
+
 		// service hooks needed a reasonable default[:member][:schema][:meta][:ram]
 		"member":     map[string]interface{}{
 			"schema":   map[string]interface{}{
 				"meta":   map[string]interface{}{
 					"ram":  128000000, // bytes
 				},
+			},
+		},
+
+		// service hooks need a reasonable default for [:ssh][:admin_key][:private_key] 
+		"ssh": map[string]interface{}{
+			"admin_key": map[string]interface{}{
+				"private_key": "notarealkey",
+				"public_key":  "notarealkey",
 			},
 		},
 	}

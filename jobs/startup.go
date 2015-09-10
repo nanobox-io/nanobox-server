@@ -19,15 +19,6 @@ type Startup struct{}
 // process on startup
 func (j *Startup) Process() {
 
-	// start all the old containers
-	containers, _ := util.ListContainers()
-	for _, container := range containers {
-		err := util.StartContainer(container.ID)
-		if err != nil {
-			config.Log.Error(err.Error())
-		}
-	}
-
 	// when we start we need to reset up the routing
 	if container, err := util.GetContainer("web1"); err == nil {
 		dc, _ := util.InspectContainer(container.ID)
@@ -46,7 +37,7 @@ func (j *Startup) Process() {
 
 	serviceContainers, _ := util.ListContainers("service")
 	for _, container := range serviceContainers {
-		s := ServiceEnv{UID: container.Config.Labels["uid"]}
+		s := ServiceEnv{UID: container.Config.Labels["uid"], created: true}
 		worker.Queue(&s)
 	}
 

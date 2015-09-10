@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"strings"
 
 	docksig "github.com/docker/docker/pkg/signal"
 	"github.com/fsouza/go-dockerclient"

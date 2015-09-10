@@ -11,18 +11,19 @@ import (
 	"errors"
 	"io/ioutil"
 	"net"
+	"net/http"
 	"time"
 	"strings"
 
 	"github.com/jcelliott/lumber"
 
-	
 	"github.com/pagodabox/golang-hatchet"
 	"github.com/pagodabox/golang-mist"
 	"github.com/pagodabox/nanobox-logtap"
 	"github.com/pagodabox/nanobox-logtap/archive"
 	"github.com/pagodabox/nanobox-logtap/collector"
 	"github.com/pagodabox/nanobox-logtap/drain"
+	logapi "github.com/pagodabox/nanobox-logtap/api"
 	"github.com/pagodabox/nanobox-router"
 )
 
@@ -37,10 +38,11 @@ var (
 	Logtap *logtap.Logtap
 	Mist   *mist.Mist
 	Router *router.Router
+	LogHandler http.HandlerFunc
 )
 
 //
-func Init() error {
+func init() {
 
 	// create an error object
 	var err error
@@ -58,7 +60,6 @@ func Init() error {
 	IP, err = externalIP()
 	if err != nil {
 		Log.Error("error: %s\n", err.Error())
-		return err
 	}
 
 
@@ -105,13 +106,11 @@ func Init() error {
 
 	//
 	db, err := archive.NewBoltArchive("/tmp/bolt.db")
-	// handler := api.GenerateArchiveEndpoint(boltArchive)
+	LogHandler = logapi.GenerateArchiveEndpoint(db)
 
 	//
 	Logtap.AddDrain("historical", db.Write)
 	Logtap.AddDrain("mist", drain.AdaptPublisher(Mist))
-
-	return nil
 }
 
 //

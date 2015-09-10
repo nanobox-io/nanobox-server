@@ -10,8 +10,8 @@ package main
 import (
 	"os"
 
-	"github.com/pagodabox/nanobox-server/api"
 	"github.com/pagodabox/nanobox-server/config"
+	"github.com/pagodabox/nanobox-server/api"
 )
 
 //
@@ -19,9 +19,6 @@ const Version = "0.0.1"
 
 //
 func main() {
-
-	// read the config file and create configurations
-	config.Init()
 
 	// initialize the api and set up routing
 	api := api.Init()

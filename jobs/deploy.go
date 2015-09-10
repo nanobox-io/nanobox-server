@@ -77,6 +77,7 @@ func (j *Deploy) Process() {
 	if stab := box.Node("build").StringValue("stability"); stab != "" {
 		image = image + ":" + stab
 	}
+	util.LogDebug(stylish.Bullet("image name: "+image))
 	// if the build image doesn't exist it needs to be downloaded
 	if !util.ImageExists(image) {
 		util.LogInfo(stylish.Bullet("Pulling the latest build image (this will take awhile)... "))
@@ -224,7 +225,14 @@ func (j *Deploy) Process() {
 	for _, container := range serviceContainers {
 
 		s := ServiceEnv{UID: container.Config.Labels["uid"]}
-
+		created := false
+		for _, start := range serviceStarts {
+			if s.UID == start.UID {
+				created = true
+				break
+			}
+		}
+		s.created = created
 		serviceEnvs = append(serviceEnvs, &s)
 
 		worker.Queue(&s)

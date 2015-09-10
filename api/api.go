@@ -74,6 +74,7 @@ func (api *API) registerRoutes() (*pat.Router, error) {
 		rw.Write([]byte("pong"))
 	})
 
+	router.Get("/logs", config.LogHandler)
 	router.Post("/exec", api.handleRequest(api.Exec))
 	router.Post("/killexec", api.handleRequest(api.KillExec))
 	router.Post("/resizeexec", api.handleRequest(api.ResizeExec))

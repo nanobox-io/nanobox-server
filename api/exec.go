@@ -78,30 +78,20 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 		strSlice := strings.Split(rule, ":")
 		switch len(strSlice) {
 		case 1:
-			portInt, err := strconv.Atoi(strSlice[0])
-			if err != nil {
-				continue
-			}
-			port, err := config.Router.AddForward("enter-"+rule, portInt, container.NetworkSettings.IPAddress+":"+strSlice[0])
+			// fromPort, toIp, toPort string
+			err := util.AddForward(strSlice[0], container.NetworkSettings.IPAddress, strSlice[0])
 			if err != nil {
 				fmt.Fprintf(conn, "could not establish forward: %s\r\n", rule)
 				continue
 			}
-			if port != portInt {
-				fmt.Fprintf(conn, "requested port(%d) taken, we gave you %d instead\r\n", portInt, port)
-			}
-			defer config.Router.RemoveForward("enter-" + rule)
+			defer util.RemoveForward(container.NetworkSettings.IPAddress)
 		case 2:
-			portInt, _ := strconv.Atoi(strSlice[0])
-			port, err := config.Router.AddForward("enter-"+rule, portInt, container.NetworkSettings.IPAddress+":"+strSlice[1])
+			err := util.AddForward(strSlice[0], container.NetworkSettings.IPAddress, strSlice[1])
 			if err != nil {
 				fmt.Fprintf(conn, "could not establish forward: %s\r\n", rule)
 				continue
 			}
-			if port != portInt {
-				fmt.Fprintf(conn, "requested port(%d) taken, we gave you %d instead\r\n", portInt, port)
-			}
-			defer config.Router.RemoveForward("enter-" + rule)
+			defer config.Router.RemoveForward(container.NetworkSettings.IPAddress)
 		}
 	}
 
