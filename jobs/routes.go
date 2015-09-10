@@ -1,4 +1,4 @@
-package job
+package jobs
 
 import (
 	"github.com/pagodabox/nanobox-boxfile"
