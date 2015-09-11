@@ -22,8 +22,8 @@ type Service struct {
 	IP        string
 	Name      string
 	Ports      []int
-	Username  string `json:"username,omitempty"`
-	Password  string `json:"password,omitempty"`
+	Username  string `json:"omitempty"`
+	Password  string `json:"omitempty"`
 }
 
 // ListServices
