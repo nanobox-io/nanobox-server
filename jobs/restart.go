@@ -8,8 +8,6 @@
 package jobs
 
 import (
-	"fmt"
-
 	"github.com/pagodabox/nanobox-boxfile"
 	"github.com/pagodabox/nanobox-golang-stylish"
 	"github.com/pagodabox/nanobox-server/config"

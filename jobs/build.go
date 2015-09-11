@@ -8,8 +8,6 @@
 package jobs
 
 import (
-	"fmt"
-
 	"github.com/pagodabox/nanobox-boxfile"
 	"github.com/pagodabox/nanobox-golang-stylish"
 	"github.com/pagodabox/nanobox-server/config"
@@ -96,7 +94,7 @@ func (j *Build) Process() {
 	// ensure all services started correctly before continuing
 	for _, restart := range restarts {
 		if !restart.Success {
-			util.HandleError(stylish.ErrorHeader("Failed to restart %v", restart.UID))
+			util.HandleError(stylish.ErrorHeading("Failed to restart %v", restart.UID))
 			util.HandleError(stylish.ErrorBody("unsuccessful restart"))
 			util.UpdateStatus(j, "errored")
 			return

@@ -9,7 +9,6 @@ package jobs
 
 //
 import (
-	"fmt"
 	"strings"
 
 	"github.com/pagodabox/nanobox-boxfile"
@@ -207,7 +206,7 @@ func (j *Deploy) Process() {
 	// ensure all services started correctly before continuing
 	for _, starts := range serviceStarts {
 		if !starts.Success {
-			util.HandleError(stylish.ErrorHeader("Failed to start %v", starts.UID))
+			util.HandleError(stylish.ErrorHeading("Failed to start %v", starts.UID))
 			util.HandleError(stylish.ErrorBody(""))
 			util.UpdateStatus(j, "errored")
 			return
@@ -216,7 +215,6 @@ func (j *Deploy) Process() {
 
 	// grab the environment data from all service containers
 	evars := j.payload["env"].(map[string]string)
-
 
 	// we configure ports before we run the service env
 	// because service env will add tunnels for the services
@@ -245,7 +243,7 @@ func (j *Deploy) Process() {
 
 	for _, env := range serviceEnvs {
 		if !env.Success {
-			util.HandleError(stylish.ErrorHeader("Failed to configure %v's environment variables", env.UID))
+			util.HandleError(stylish.ErrorHeading("Failed to configure %v's environment variables", env.UID))
 			util.HandleError(stylish.ErrorBody(""))
 			util.UpdateStatus(j, "errored")
 			return

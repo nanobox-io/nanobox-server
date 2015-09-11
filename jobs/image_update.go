@@ -7,7 +7,6 @@
 package jobs
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/pagodabox/nanobox-golang-stylish"
