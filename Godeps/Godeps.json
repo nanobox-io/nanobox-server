@@ -68,7 +68,7 @@
 		},
 		{
 			"ImportPath": "github.com/pagodabox/nanobox-golang-stylish",
-			"Rev": "415e45279b9f721b2496eda3fab750ddbf68933b"
+			"Rev": "ca033f3662eac67c4b31003400c592307c6abbd8"
 		},
 		{
 			"ImportPath": "github.com/pagodabox/nanobox-logtap",

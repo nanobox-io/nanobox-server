@@ -31,6 +31,7 @@ type ServiceStart struct {
 //
 func (j *ServiceStart) Process() {
 
+	util.LogDebug(stylish.Bullet("New Boxfile in serivce start: \n %#v", j.Boxfile.Parsed))
 	// var ci *docker.Container
 	var err error
 

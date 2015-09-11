@@ -101,7 +101,15 @@ func configurePorts(box boxfile.Boxfile) error {
 func routes(box boxfile.Boxfile) (rtn []router.Route) {
 	boxRoutes, ok := box.Value("routes").([]string)
 	if !ok {
-		return 
+		tmps, ok := box.Value("routes").([]interface{})
+		if !ok {
+			return
+		}
+		for _, tmp := range tmps {
+			if str, ok := tmp.(string); ok {
+				boxRoutes = append(boxRoutes, str)
+			}
+		}
 	}
 	for _, route := range boxRoutes {
 		routeParts := strings.Split(route, ":")
@@ -122,7 +130,15 @@ func ports(box boxfile.Boxfile) (map[string]string) {
 	rtn := map[string]string{}
 	ports, ok := box.Value("ports").([]string)
 	if !ok {
-		return rtn
+		tmps, ok := box.Value("ports").([]interface{})
+		if !ok {
+			return rtn
+		}
+		for _, tmp := range tmps {
+			if str, ok := tmp.(string); ok {
+				ports = append(ports, str)
+			}
+		}
 	}
 
 	for _, port := range ports {

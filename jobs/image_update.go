@@ -36,8 +36,8 @@ func (j *ImageUpdate) Process() {
 		for _, tag := range image.RepoTags {
 
 			//
-			util.LogInfo(stylish.Bullet("Updating image: %s", tag))
 			if strings.HasPrefix(tag, "nanobox") {
+				util.LogInfo(stylish.Bullet("Updating image: %s", tag))
 				if err := util.UpdateImage(tag); err != nil {
 					util.HandleError("Unable to update image:" + err.Error())
 					util.UpdateStatus(j, "errored")

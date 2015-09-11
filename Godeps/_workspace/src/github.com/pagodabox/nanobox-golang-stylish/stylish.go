@@ -22,20 +22,22 @@ import (
 //
 // Output:
 // :::::::::::::::::::::::::: I AM A HEADER :::::::::::::::::::::::::
-func Header(msg string) string {
+func Header(msg string, v ...interface{}) string {
 
 	maxLen := 70
-	subLen := len(fmt.Sprintf("%v", msg))
+	subLen := len(fmt.Sprintf(msg, v...))
 
 	leftLen := (maxLen-subLen)/2 + (maxLen-subLen)%2
 	rightLen := (maxLen - subLen) / 2
 
-	// print msg, inserting a ':' (colon) 'n' times, where 'n' is the number
+	heading := strings.ToUpper(fmt.Sprintf(msg, v...))
+
+	// print heading, inserting a ':' (colon) 'n' times, where 'n' is the number
 	// remaining after subtracting subLen (number of 'reserved' characters) from
 	// maxLen (maximum number of allowed characters)
 	return fmt.Sprintf(`
-%v
-`, fmt.Sprintf("%v %v %v", strings.Repeat(":", leftLen), strings.ToUpper(msg), strings.Repeat(":", rightLen)))
+%s
+`, fmt.Sprintf("%s %s %s", strings.Repeat(":", leftLen), heading, strings.Repeat(":", rightLen)))
 }
 
 // ProcessStart styles and prints a 'child process' as outlined at:
@@ -46,17 +48,19 @@ func Header(msg string) string {
 //
 // Output:
 // I AM A PROCESS -------------------------------------------------->
-func ProcessStart(msg string) string {
+func ProcessStart(msg string, v ...interface{}) string {
 
 	maxLen := 70
-	subLen := len(fmt.Sprintf("%v->", msg))
+	subLen := len(fmt.Sprintf("%s%s->", fmt.Sprintf(msg, v...)))
 
-	// print msg, inserting a '-' (colon) 'n' times, where 'n' is the number
+	process := strings.ToUpper(fmt.Sprintf(msg, v...))
+
+	// print process, inserting a '-' (colon) 'n' times, where 'n' is the number
 	// remaining after subtracting subLen (number of 'reserved' characters) from
 	// maxLen (maximum number of allowed characters)
 	return fmt.Sprintf(`
-%v
-`, fmt.Sprintf("%v %v->", strings.ToUpper(msg), strings.Repeat("-", (maxLen-subLen))))
+%s
+`, fmt.Sprintf("%s %s->", process, strings.Repeat("-", (maxLen-subLen))))
 }
 
 // ProcessEnd styles and prints a 'child process' as outlined at:
@@ -79,17 +83,19 @@ func ProcessEnd() string {
 //
 // Output:
 // I AM A SUB TASK ----------------------->
-func SubTaskStart(msg string) string {
+func SubTaskStart(msg string, v ...interface{}) string {
 
 	maxLen := 40
-	subLen := len(fmt.Sprintf("%v->", msg))
+	subLen := len(fmt.Sprintf("%s->", fmt.Sprintf(msg, v...)))
+
+	task := strings.ToUpper(fmt.Sprintf(msg, v...))
 
 	// print msg, inserting a ':' (colon) 'n' times, where 'n' is the number
 	// remaining after subtracting subLen (number of 'reserved' characters) from
 	// maxLen (maximum number of allowed characters)
 	return fmt.Sprintf(`
-%v
-`, fmt.Sprintf("%v %v->", strings.ToUpper(msg), strings.Repeat("-", (maxLen-subLen))))
+%s
+`, fmt.Sprintf("%s %s->", task, strings.Repeat("-", (maxLen-subLen))))
 }
 
 // SubTaskSuccess styles and prints a footer to a successful subtask
@@ -122,8 +128,8 @@ func Fail() string {
 //
 // Output:
 // +> i am a bullet
-func Bullet(msg string) string {
-	return fmt.Sprintf("+> %v\n", msg)
+func Bullet(msg string, v ...interface{}) string {
+	return fmt.Sprintf("+> %s\n", fmt.Sprintf(msg, v...))
 }
 
 // SubBullet styles and prints a message as outlined at:
@@ -134,8 +140,8 @@ func Bullet(msg string) string {
 //
 // Output:
 //    i am a sub bullet
-func SubBullet(msg string) string {
-	return fmt.Sprintf("   %v\n", msg)
+func SubBullet(msg string, v ...interface{}) string {
+	return fmt.Sprintf("   %s\n", fmt.Sprintf(msg, v...))
 }
 
 // Warning styles and prints a message as outlined at:
@@ -147,11 +153,35 @@ func SubBullet(msg string) string {
 // Output:
 // -----------------------------  WARNING  -----------------------------
 // You just bought Hot Pockets!
-func Warning(body string) string {
+func Warning(body string, v ...interface{}) string {
 	return fmt.Sprintf(`
 -----------------------------  WARNING  -----------------------------
-%v
-`, wordwrap.WrapString(body, 70))
+%s
+`, wordwrap.WrapString(fmt.Sprintf(body, v...), 70))
+}
+
+// ErrorHeading styles and prints an error heading as outlined at:
+// http://nanodocs.gopagoda.io/engines/style-guide#fatal_errors
+//
+// Usage:
+// ErrorHeading "nuclear launch detected"
+//
+// Output:
+// ! NUCLEAR LAUNCH DETECTED !
+func ErrorHeading(heading string, v ...interface{}) string {
+	return fmt.Sprintf("\n! %s !\n", strings.ToUpper(fmt.Sprintf(heading, v...)))
+}
+
+// ErrorBody styles and prints an error body as outlined at:
+// http://nanodocs.gopagoda.io/engines/style-guide#fatal_errors
+//
+// Usage:
+// ErrorBody "All your base are belong to us"
+//
+// Output:
+// All your base are belong to us
+func ErrorBody(body string, v ...interface{}) string {
+	return fmt.Sprintf("%s\n", wordwrap.WrapString(fmt.Sprintf(body, v...), 70))
 }
 
 // Error styles and prints a message as outlined at:
@@ -165,9 +195,5 @@ func Warning(body string) string {
 //
 // All your base are belong to us
 func Error(heading, body string) string {
-	return fmt.Sprintf(`
-! %v !
-
-%v
-`, strings.ToUpper(heading), wordwrap.WrapString(body, 70))
+	return fmt.Sprintf("%s%s", ErrorHeading(heading), ErrorBody(body))
 }
