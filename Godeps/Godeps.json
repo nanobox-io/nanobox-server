@@ -64,7 +64,7 @@
 		},
 		{
 			"ImportPath": "github.com/pagodabox/nanobox-boxfile",
-			"Rev": "9ffb0b99976fe155d58964601f2b9aaeca8abe3c"
+			"Rev": "354445c99f0589eb576dba9852fd2df98edc4884"
 		},
 		{
 			"ImportPath": "github.com/pagodabox/nanobox-golang-stylish",
@@ -80,7 +80,7 @@
 		},
 		{
 			"ImportPath": "github.com/pagodabox/nanobox-router",
-			"Rev": "79f2c7d86b714abeb5d22e2f279c5d8482c2cc07"
+			"Rev": "7a4a67b10f85676a7022c1f45be26eeb8a41f576"
 		},
 		{
 			"ImportPath": "github.com/pborman/uuid",

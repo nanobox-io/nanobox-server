@@ -8,10 +8,10 @@ package api
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/pagodabox/nanobox-boxfile"
 	"github.com/pagodabox/nanobox-server/config"
@@ -20,29 +20,15 @@ import (
 
 var execKeys = map[string]string{}
 
-// starter is a bandaid for a problem with docker
-// where it will not send the first data until it recieves
-// something on stdin
-type starter struct {
-	thing   io.Reader
-	started bool
-}
-
-func (s *starter) Read(p []byte) (int, error) {
-	if !s.started {
-		s.started = true
-		p[0] = '\n'
-		return len([]byte("\n")), nil
-	}
-	return s.thing.Read(p)
-}
-
 func (api *API) Run(rw http.ResponseWriter, req *http.Request) {
+	fmt.Printf("RUN: %#v\n", req)
 	name := req.FormValue("container")
 	if name != "" {
+		fmt.Println("name:",name)
 		api.Exec(rw, req)
 		return
 	}
+	fmt.Println("no name")
 	util.RemoveContainer("exec1")
 	conn, _, err := rw.(http.Hijacker).Hijack()
 	if err != nil {
@@ -58,7 +44,7 @@ func (api *API) Run(rw http.ResponseWriter, req *http.Request) {
 		cmd = append(cmd, "-c", additionalCmd)
 	}
 
-	container, err := util.CreateContainer(util.CreateConfig{Category: "exec", Name: "exec1", Cmd: cmd})
+	container, err := util.CreateContainer(util.CreateConfig{Image: "nanobox/build", Category: "exec", Name: "exec1", Cmd: cmd})
 	if err != nil {
 		conn.Write([]byte(err.Error()))
 		return
@@ -98,13 +84,12 @@ func (api *API) Run(rw http.ResponseWriter, req *http.Request) {
 				fmt.Fprintf(conn, "could not establish forward: %s\r\n", rule)
 				continue
 			}
-			defer config.Router.RemoveForward(container.NetworkSettings.IPAddress)
+			defer util.RemoveForward(container.NetworkSettings.IPAddress)
 		}
 	}
 
 	// Flush the options to make sure the client sets the raw mode
 	conn.Write([]byte{})
-	// s := &starter{thing: conn}
 
 	util.WaitContainer(container.ID)
 	util.RemoveContainer(container.ID)
@@ -117,6 +102,10 @@ func (api *API) KillRun(rw http.ResponseWriter, req *http.Request) {
 }
 
 func (api *API) ResizeRun(rw http.ResponseWriter, req *http.Request) {
+	if req.FormValue("container") != "" {
+		api.ResizeExec(rw, req)
+		return
+	}
 	h, _ := strconv.Atoi(req.FormValue("h"))
 	w, _ := strconv.Atoi(req.FormValue("w"))
 	if h == 0 || w == 0 {
@@ -164,6 +153,9 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 // necessary for anything using a windowing system through the exec.
 func (api *API) ResizeExec(rw http.ResponseWriter, req *http.Request) {
 	name := req.FormValue("container")
+	if execKeys[name] == "" {
+		time.Sleep(1 * time.Second)
+	}
 	if name == "" || execKeys[name] == "" {
 		rw.WriteHeader(http.StatusNotFound)
 		return
@@ -174,6 +166,7 @@ func (api *API) ResizeExec(rw http.ResponseWriter, req *http.Request) {
 	if h == 0 || w == 0 {
 		return
 	}
+
 	err := util.ResizeExecTTY(execKeys[name], h, w)
 	fmt.Println(err)
 }

@@ -18,7 +18,6 @@ import (
 
 type ServiceEnv struct {
 	deploy  Deploy
-	created bool
 	EVars   map[string]string
 	UID     string
 	Success bool
@@ -59,19 +58,17 @@ func (j *ServiceEnv) Process() {
 	config.Log.Debug("container: %+v", container)
 
 	j.EVars["HOST"] = container.NetworkSettings.IPAddress
-	if j.created {
-		err = util.AddForward(j.EVars["PORT"], j.EVars["HOST"], j.EVars["PORT"])
+	err = util.AddForward(j.EVars["PORT"], j.EVars["HOST"], j.EVars["PORT"])
+	if err != nil {
+		port, _ := strconv.Atoi(j.EVars["PORT"])
+		for i := 1; i <= 10; i++ {
+			err = util.AddForward(strconv.Itoa(port+i), j.EVars["HOST"], j.EVars["PORT"])
+			if err == nil {
+				break
+			}
+		}
 		if err != nil {
-			port, _ := strconv.Atoi(j.EVars["PORT"])
-			for i := 1; i <= 10; i++ {
-				err = util.AddForward(strconv.Itoa(port+i), j.EVars["HOST"], j.EVars["PORT"])
-				if err == nil {
-					break
-				}
-			}
-			if err != nil {
-				util.HandleError(stylish.Error("Failed to setup forward for service", err.Error()))
-			}
+			util.HandleError(stylish.Error("Failed to setup forward for service", err.Error()))
 		}
 	}
 

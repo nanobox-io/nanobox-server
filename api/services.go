@@ -21,7 +21,7 @@ type Service struct {
 	CreatedAt time.Time
 	IP        string
 	Name      string
-	Port      int
+	Ports      []int
 	Username  string `json:"username,omitempty"`
 	Password  string `json:"password,omitempty"`
 }
@@ -35,7 +35,7 @@ func (api *API) ListServices(rw http.ResponseWriter, req *http.Request) {
 	// interate over each container building a corresponding service for that container
 	// and then add it to the list of services that will be passed back as the
 	// response
-	containers, _ := util.ListContainers()
+	containers, _ := util.ListContainers("service")
 	for _, container := range containers {
 
 		// a 'service' representing the container
@@ -44,8 +44,18 @@ func (api *API) ListServices(rw http.ResponseWriter, req *http.Request) {
 			CreatedAt: container.Created,
 			IP:        container.NetworkSettings.IPAddress,
 			Name:      name,
-			Port:      config.Router.GetLocalPort(name),
 		}
+
+		ports := []int{}
+		vips, _ := util.ListVips()
+		for _, vip := range vips {
+			for _, server := range vip.Servers {
+				if server.Host == service.IP {
+					ports = append(ports, vip.Port)
+				}
+			}
+		}
+		service.Ports = ports
 
 		// run environment hook (blocking)
 		if out, err := util.ExecHook("environment", container.ID, nil); err == nil {

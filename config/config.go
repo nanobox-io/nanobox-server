@@ -37,7 +37,6 @@ var (
 	Log        hatchet.Logger
 	Logtap     *logtap.Logtap
 	Mist       *mist.Mist
-	Router     *router.Router
 	LogHandler http.HandlerFunc
 )
 
@@ -73,8 +72,11 @@ func init() {
 	}
 
 	// create new router
-	Router = router.New(Ports["router"], Log)
-
+	err = router.StartHTTP(":"+Ports["router"])
+	if err != nil {
+		Log.Error("error: %s\n", err.Error())
+	}
+	
 	// create a new mist and start listening for messages at *:1445
 	Mist = mist.New()
 	Mist.Listen(Ports["mist"])

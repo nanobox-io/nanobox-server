@@ -37,7 +37,7 @@ func (j *Deploy) Process() {
 
 	// set routing to watch logs
 	util.LogDebug(stylish.Bullet("Watching logs at /deploys..."))
-	config.Router.Handler = router.DeployInProgress{}
+	router.ErrorHandler = router.DeployInProgress{}
 
 	// remove all code containers
 	util.LogInfo(stylish.Bullet("Removing containers from previous deploy..."))
@@ -217,6 +217,17 @@ func (j *Deploy) Process() {
 	// grab the environment data from all service containers
 	evars := j.payload["env"].(map[string]string)
 
+
+	// we configure ports before we run the service env
+	// because service env will add tunnels for the services
+	// seperate from the boxfile specific ports
+	err = configurePorts(box)
+	if err != nil {
+		util.HandleError(stylish.Error("Failed to configure Ports", err.Error()))
+		util.UpdateStatus(j, "errored")
+		return
+	}
+
 	//
 	serviceEnvs := []*ServiceEnv{}
 
@@ -225,14 +236,6 @@ func (j *Deploy) Process() {
 	for _, container := range serviceContainers {
 
 		s := ServiceEnv{UID: container.Config.Labels["uid"]}
-		created := false
-		for _, start := range serviceStarts {
-			if s.UID == start.UID {
-				created = true
-				break
-			}
-		}
-		s.created = created
 		serviceEnvs = append(serviceEnvs, &s)
 
 		worker.Queue(&s)
@@ -336,43 +339,11 @@ func (j *Deploy) Process() {
 		}
 	}
 
-	// replace with configureRoutes(box) and configureForwards(box)
-
-	// setup any custom routes for each code service
-	for _, node := range box.Nodes("code") {
-		n := box.Node(node)
-		if ports, ok := n.Value("ports").([]string); ok {
-			container, err := util.GetContainer(node)
-			if err == nil {
-				for _, port := range ports {
-					ftPorts := strings.Split(port, ":")
-					if len(ftPorts) == 2 {
-						if node == "web1" {
-							ftPorts[1] = config.Ports["router"]
-						}
-						util.AddForward(ftPorts[0], container.NetworkSettings.IPAddress, ftPorts[1])
-					}
-				}
-			}
-		}
-	}
-
-	if container, err := util.GetContainer("web1"); err == nil {
-		port := "8080"
-		if ports, ok := box.Node("web1").Value("ports").([]string); ok {
-			for _, port := range ports {
-				ftPorts := strings.Split(port, ":")
-				if len(ftPorts) == 2 && ftPorts[0] == "80" {
-					port = ftPorts[1]
-				}
-			}
-		}
-
-		util.LogDebug(stylish.Bullet("Configure routing..."))
-		config.Router.AddTarget("/", "http://"+container.NetworkSettings.IPAddress+":"+port)
-		config.Router.Handler = nil
-	} else {
-		config.Router.Handler = router.NoDeploy{}
+	err = configureRoutes(box)
+	if err != nil {
+		util.HandleError(stylish.Error("Failed to configure Routes", err.Error()))
+		util.UpdateStatus(j, "errored")
+		return
 	}
 
 	//

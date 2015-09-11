@@ -10,7 +10,14 @@ import (
 
 // make sure the router is being forwarded
 func init() {
-	AddForward("80", config.IP, config.Ports["router"])
+	err := AddForward("80", config.IP, config.Ports["router"])
+	if err != nil {
+		config.Log.Error("load balancer error: "+ err.Error())
+	}
+	err = AddForward("443", config.IP, config.Ports["router"])
+	if err != nil {
+		config.Log.Error("load balancer error: "+ err.Error())
+	}
 }
 
 // add a server into the lvs system
@@ -57,4 +64,8 @@ func RemoveForward(ip string) error {
 		return fmt.Errorf(errorString)
 	}
 	return nil
+}
+
+func ListVips() ([]lvs.Vip, error) {
+	return lvs.ListVips()
 }

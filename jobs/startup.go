@@ -8,7 +8,8 @@ package jobs
 
 //
 import (
-	"github.com/pagodabox/nanobox-router"
+	"github.com/pagodabox/nanobox-boxfile"
+
 	"github.com/pagodabox/nanobox-server/config"
 	"github.com/pagodabox/nanobox-server/util"
 )
@@ -18,16 +19,23 @@ type Startup struct{}
 
 // process on startup
 func (j *Startup) Process() {
+	config.Log.Info("starting startup job")
 
-	// when we start we need to reset up the routing
-	if container, err := util.GetContainer("web1"); err == nil {
-		dc, _ := util.InspectContainer(container.ID)
+// TODO get the boxfile. merge with build boxfile(if any) and call:
+  // configureRoutes(box)
+	// configurePorts(box)
+	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
 
-		config.Router.AddTarget("/", "http://"+dc.NetworkSettings.IPAddress+":8080")
-		config.Router.Handler = nil
-	} else {
-		config.Router.Handler = router.NoDeploy{}
+	// if i have a build make sure to merge the boxfile
+	_, err := util.InspectContainer("build1")
+	if err == nil {
+		if out, err := util.ExecHook("default-boxfile", "build1", nil); err == nil {
+			box.Merge(boxfile.New([]byte(out)))
+		}
 	}
+
+	configureRoutes(box)
+	configurePorts(box)
 
 	// we also need to set up a ssh tunnel for each running docker container
 	// this is easiest to do by creating a ServiceEnv job and working it
@@ -37,7 +45,7 @@ func (j *Startup) Process() {
 
 	serviceContainers, _ := util.ListContainers("service")
 	for _, container := range serviceContainers {
-		s := ServiceEnv{UID: container.Config.Labels["uid"], created: true}
+		s := ServiceEnv{UID: container.Config.Labels["uid"]}
 		worker.Queue(&s)
 	}
 

@@ -41,5 +41,5 @@ func LogFatal(f string, v ...interface{}) {
 // HandleError
 func HandleError(msg string) {
 	LogError(msg)
-	config.Router.Handler = router.FailedDeploy{}
+	router.ErrorHandler = router.FailedDeploy{}
 }

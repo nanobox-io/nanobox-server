@@ -1,43 +1,56 @@
+// Copyright (C) Pagoda Box, Inc - All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
 package router
 
 import (
-	"github.com/pagodabox/golang-hatchet"
-	"net"
-	"net/http"
+	"net/http/httputil"
+	"net/url"
+	"sync"
 )
 
-// Router is the device by which you create routing rules
-type Router struct {
-	Handler  http.Handler
-	log      hatchet.Logger
-	Targets  map[string]string
-	Port     string
-	Forwards map[string]*net.TCPListener
+// A route object from the api
+type Route struct {
+	Name, Path string
+	URLs       []string
 }
 
-// New creates a new router sets its logger and returns a pointer to the Router
-// object
-func New(port string, logger hatchet.Logger) *Router {
+var domainLock = sync.Mutex{}
 
-	if logger == nil {
-		logger = hatchet.DevNullLogger{}
-	}
+var domains = []Domain{}
 
-	r := &Router{
-		log:      logger,
-		Port:     port,
-		Targets:  make(map[string]string),
-		Forwards: make(map[string]*net.TCPListener),
-	}
-
-	r.start()
-
-	return r
+// A Domain representation 
+// used for matching routes to web requests.
+// It also knows how to forward requests to the appropriate servers.
+type Domain struct {
+	Name    string
+	Path    string
+	proxies []*Proxy
 }
 
-// handleError handle errors and log data It does not stop execution
-func (r *Router) handleError(err error) {
+// Simple Ip storage for creating Reverse Proxies
+type Proxy struct {
+	URL          string
+	reverseProxy *httputil.ReverseProxy
+}
+
+// Establish the ReverseProxy
+func (self *Proxy) initProxy() error {
+	if self.reverseProxy == nil {
+		url, err := url.Parse(self.URL)
+		if err != nil {
+			return err
+		}
+		self.reverseProxy = httputil.NewSingleHostReverseProxy(url)
+	}
+	return nil
+}
+
+// Start both http and tls servers
+func Start(httpAddress, tlsAddress string) error {
+	err := StartHTTP(httpAddress)
 	if err != nil {
-		r.log.Error(err.Error())
+		return err
 	}
+	return StartTLS(tlsAddress)
 }
