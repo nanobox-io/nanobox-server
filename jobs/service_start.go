@@ -60,11 +60,12 @@ func (j *ServiceStart) Process() {
 	util.LogDebug(stylish.Bullet("image name: %v", createConfig.Image))
 
 	fmt.Println(createConfig)
+
 	// start the container
 	_, err = util.CreateContainer(createConfig)
 	if err != nil {
-		fmt.Println(err)
-		util.HandleError(fmt.Sprintf("Failed to create %v", j.UID))
+		util.HandleError(stylish.ErrorHeading("Failed to create %v container", j.UID))
+		util.HandleError(stylish.ErrorBody(err.Error()))
 		util.UpdateStatus(&j.deploy, "errored")
 		return
 	}
@@ -113,7 +114,7 @@ func (j *ServiceStart) Process() {
 	// run configure hook (blocking)
 	if data, err := util.ExecHook("default-configure", j.UID, payload); err != nil {
 		util.LogDebug("Failed Hook Output:\n%s\n", data)
-		util.HandleError(fmt.Sprintf("ERROR configure %v\n", err))
+		util.HandleError(stylish.Error("Configure hook failed", err.Error()))
 		util.UpdateStatus(&j.deploy, "errored")
 		return
 	}
@@ -121,7 +122,7 @@ func (j *ServiceStart) Process() {
 	// run start hook (blocking)
 	if data, err := util.ExecHook("default-start", j.UID, payload); err != nil {
 		util.LogDebug("Failed Hook Output:\n%s\n", data)
-		util.HandleError(fmt.Sprintf("ERROR start %v\n", err))
+		util.HandleError(stylish.Error("Start hook failed", err.Error()))
 		util.UpdateStatus(&j.deploy, "errored")
 		return
 	}
