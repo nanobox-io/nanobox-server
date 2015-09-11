@@ -2,7 +2,7 @@ package jobs
 
 import (
 	"strings"
-	"regexp"
+	"fmt"
 
 	"github.com/pagodabox/nanobox-boxfile"
 	"github.com/pagodabox/nanobox-router"
@@ -52,7 +52,7 @@ func configureRoutes(box boxfile.Boxfile) error {
 			newRoutes = append(newRoutes, router.Route{Name: config.App+".nano.dev", Path: "/", URLs: []string{"http://"+web1.NetworkSettings.IPAddress+":8080"}})
 		}
 	}
-
+	fmt.Println("newRoutes:", newRoutes)
 	router.UpdateRoutes(newRoutes)
 	router.ErrorHandler = nil
 	return nil
@@ -86,10 +86,6 @@ func configurePorts(box boxfile.Boxfile) error {
 		}
 		ip := container.NetworkSettings.IPAddress
 		for from, to := range ports(b) {
-			// if its a web set the to the routers port
-			if regexp.MustCompile(`web\d+`).MatchString(node) {
-				to = config.Ports["router"]
-			}
 			util.AddForward(from, ip, to)
 		}
 
