@@ -100,6 +100,9 @@ func handleConnection(conn net.Conn, kind string, l *logtap.Logtap) {
 		}
 
 		line = strings.TrimSuffix(line, "\n")
+		if line == "" {
+			continue
+		}
 		msg := parseMessage([]byte(line))
 		msg.Type = kind
 		l.WriteMessage(msg)
