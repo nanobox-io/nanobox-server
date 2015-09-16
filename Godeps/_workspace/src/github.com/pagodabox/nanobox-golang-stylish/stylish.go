@@ -160,15 +160,15 @@ func Warning(body string, v ...interface{}) string {
 `, wordwrap.WrapString(fmt.Sprintf(body, v...), 70))
 }
 
-// ErrorHeading styles and prints an error heading as outlined at:
+// ErrorHead styles and prints an error heading as outlined at:
 // http://nanodocs.gopagoda.io/engines/style-guide#fatal_errors
 //
 // Usage:
-// ErrorHeading "nuclear launch detected"
+// ErrorHead "nuclear launch detected"
 //
 // Output:
 // ! NUCLEAR LAUNCH DETECTED !
-func ErrorHeading(heading string, v ...interface{}) string {
+func ErrorHead(heading string, v ...interface{}) string {
 	return fmt.Sprintf("\n! %s !\n", strings.ToUpper(fmt.Sprintf(heading, v...)))
 }
 
@@ -195,5 +195,5 @@ func ErrorBody(body string, v ...interface{}) string {
 //
 // All your base are belong to us
 func Error(heading, body string) string {
-	return fmt.Sprintf("%s%s", ErrorHeading(heading), ErrorBody(body))
+	return fmt.Sprintf("%s%s", ErrorHead(heading), ErrorBody(body))
 }

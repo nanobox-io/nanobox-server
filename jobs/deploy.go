@@ -209,7 +209,7 @@ func (j *Deploy) Process() {
 	// ensure all services started correctly before continuing
 	for _, starts := range serviceStarts {
 		if !starts.Success {
-			util.HandleError(stylish.ErrorHeading("Failed to start %v", starts.UID))
+			util.HandleError(stylish.ErrorHead("Failed to start %v", starts.UID))
 			util.HandleError(stylish.ErrorBody(""))
 			util.UpdateStatus(j, "errored")
 			return
@@ -246,7 +246,7 @@ func (j *Deploy) Process() {
 
 	for _, env := range serviceEnvs {
 		if !env.Success {
-			util.HandleError(stylish.ErrorHeading("Failed to configure %v's environment variables", env.UID))
+			util.HandleError(stylish.ErrorHead("Failed to configure %v's environment variables", env.UID))
 			util.HandleError(stylish.ErrorBody(""))
 			util.UpdateStatus(j, "errored")
 			return

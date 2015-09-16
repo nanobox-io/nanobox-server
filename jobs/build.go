@@ -94,7 +94,7 @@ func (j *Build) Process() {
 	// ensure all services started correctly before continuing
 	for _, restart := range restarts {
 		if !restart.Success {
-			util.HandleError(stylish.ErrorHeading("Failed to restart %v", restart.UID))
+			util.HandleError(stylish.ErrorHead("Failed to restart %v", restart.UID))
 			util.HandleError(stylish.ErrorBody("unsuccessful restart"))
 			util.UpdateStatus(j, "errored")
 			return

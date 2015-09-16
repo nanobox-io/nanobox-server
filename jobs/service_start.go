@@ -63,7 +63,7 @@ func (j *ServiceStart) Process() {
 
 	// start the container
 	if _, err = util.CreateContainer(createConfig); err != nil {
-		util.HandleError(stylish.ErrorHeading("Failed to create %v container", j.UID))
+		util.HandleError(stylish.ErrorHead("Failed to create %v container", j.UID))
 		util.HandleError(stylish.ErrorBody(err.Error()))
 		util.UpdateStatus(&j.deploy, "errored")
 		return
