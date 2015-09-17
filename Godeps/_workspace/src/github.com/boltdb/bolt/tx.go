@@ -127,8 +127,7 @@ func (tx *Tx) OnCommit(fn func()) {
 }
 
 // Commit writes all changes to disk and updates the meta page.
-// Returns an error if a disk write error occurs, or if Commit is
-// called on a read-only transaction.
+// Returns an error if a disk write error occurs.
 func (tx *Tx) Commit() error {
 	_assert(!tx.managed, "managed tx commit not allowed")
 	if tx.db == nil {
@@ -204,8 +203,7 @@ func (tx *Tx) Commit() error {
 	return nil
 }
 
-// Rollback closes the transaction and ignores all previous updates. Read-only
-// transactions must be rolled back and not committed.
+// Rollback closes the transaction and ignores all previous updates.
 func (tx *Tx) Rollback() error {
 	_assert(!tx.managed, "managed tx rollback not allowed")
 	if tx.db == nil {
@@ -254,42 +252,37 @@ func (tx *Tx) close() {
 }
 
 // Copy writes the entire database to a writer.
-// This function exists for backwards compatibility. Use WriteTo() in
+// A reader transaction is maintained during the copy so it is safe to continue
+// using the database while a copy is in progress.
+// Copy will write exactly tx.Size() bytes into the writer.
 func (tx *Tx) Copy(w io.Writer) error {
-	_, err := tx.WriteTo(w)
-	return err
-}
-
-// WriteTo writes the entire database to a writer.
-// If err == nil then exactly tx.Size() bytes will be written into the writer.
-func (tx *Tx) WriteTo(w io.Writer) (n int64, err error) {
-	// Attempt to open reader directly.
 	var f *os.File
+	var err error
+
+	// Attempt to open reader directly.
 	if f, err = os.OpenFile(tx.db.path, os.O_RDONLY|odirect, 0); err != nil {
 		// Fallback to a regular open if that doesn't work.
 		if f, err = os.OpenFile(tx.db.path, os.O_RDONLY, 0); err != nil {
-			return 0, err
+			return err
 		}
 	}
 
 	// Copy the meta pages.
 	tx.db.metalock.Lock()
-	n, err = io.CopyN(w, f, int64(tx.db.pageSize*2))
+	_, err = io.CopyN(w, f, int64(tx.db.pageSize*2))
 	tx.db.metalock.Unlock()
 	if err != nil {
 		_ = f.Close()
-		return n, fmt.Errorf("meta copy: %s", err)
+		return fmt.Errorf("meta copy: %s", err)
 	}
 
 	// Copy data pages.
-	wn, err := io.CopyN(w, f, tx.Size()-int64(tx.db.pageSize*2))
-	n += wn
-	if err != nil {
+	if _, err := io.CopyN(w, f, tx.Size()-int64(tx.db.pageSize*2)); err != nil {
 		_ = f.Close()
-		return n, err
+		return err
 	}
 
-	return n, f.Close()
+	return f.Close()
 }
 
 // CopyFile copies the entire database to file at the given path.
@@ -423,39 +416,15 @@ func (tx *Tx) write() error {
 	// Write pages to disk in order.
 	for _, p := range pages {
 		size := (int(p.overflow) + 1) * tx.db.pageSize
+		buf := (*[maxAllocSize]byte)(unsafe.Pointer(p))[:size]
 		offset := int64(p.id) * int64(tx.db.pageSize)
-
-		// Write out page in "max allocation" sized chunks.
-		ptr := (*[maxAllocSize]byte)(unsafe.Pointer(p))
-		for {
-			// Limit our write to our max allocation size.
-			sz := size
-			if sz > maxAllocSize-1 {
-				sz = maxAllocSize - 1
-			}
-
-			// Write chunk to disk.
-			buf := ptr[:sz]
-			if _, err := tx.db.ops.writeAt(buf, offset); err != nil {
-				return err
-			}
-
-			// Update statistics.
-			tx.stats.Write++
-
-			// Exit inner for loop if we've written all the chunks.
-			size -= sz
-			if size == 0 {
-				break
-			}
-
-			// Otherwise move offset forward and move pointer to next chunk.
-			offset += int64(sz)
-			ptr = (*[maxAllocSize]byte)(unsafe.Pointer(&ptr[sz]))
+		if _, err := tx.db.ops.writeAt(buf, offset); err != nil {
+			return err
 		}
-	}
 
-	// Ignore file sync if flag is set on DB.
+		// Update statistics.
+		tx.stats.Write++
+	}
 	if !tx.db.NoSync || IgnoreNoSync {
 		if err := fdatasync(tx.db); err != nil {
 			return err

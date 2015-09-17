@@ -14,6 +14,7 @@ import (
 var robiner = uint32(0)
 
 type handler struct {
+	https bool
 }
 
 // Implement the http.Handler interface. Also let clients know when I have 
@@ -22,6 +23,9 @@ func (self handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	if ErrorHandler != nil {
 		ErrorHandler.ServeHTTP(rw, req)
 		return
+	}
+	if self.https {
+		req.Header.Set("X-Forwarded-Proto", "https")
 	}
 
 	re := regexp.MustCompile(`:\d+`) // used to remove the port from the host

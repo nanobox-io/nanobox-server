@@ -10,6 +10,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
+
+	"github.com/pagodabox/nanobox-server/config"
 )
 
 var dirs []string = []string{"cache", "deploy", "build"}
@@ -33,6 +36,26 @@ func Clean() error {
 	}
 	return CreateDirs()
 }
+
+func Touch(file string) {
+	file = "/vagrant/code/" + config.App + file
+	exec.Command("touch", "-c", file).Output()
+}
+
+func LibDirs() (rtn []string) {
+	files, err := ioutil.ReadDir("/mnt/sda/var/nanobox/cache/lib_dirs/")
+	if err != nil {
+		return
+	}
+	for _, file := range files {
+		if file.IsDir() {
+			rtn = append(rtn, file.Name())
+		}
+	}
+	return rtn
+	
+}
+
 
 func libDirs() (rtn []string) {
 	files, err := ioutil.ReadDir("/mnt/sda/var/nanobox/cache/lib_dirs/")

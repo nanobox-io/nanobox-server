@@ -14,7 +14,6 @@ type Parser struct {
 	version  int
 	header   header
 	message  rfc3164message
-	location *time.Location
 }
 
 type header struct {
@@ -29,15 +28,10 @@ type rfc3164message struct {
 
 func NewParser(buff []byte) *Parser {
 	return &Parser{
-		buff:     buff,
-		cursor:   0,
-		l:        len(buff),
-		location: time.UTC,
+		buff:   buff,
+		cursor: 0,
+		l:      len(buff),
 	}
-}
-
-func (p *Parser) Location(location *time.Location) {
-	p.location = location
 }
 
 func (p *Parser) Parse() error {
@@ -143,7 +137,7 @@ func (p *Parser) parseTimestamp() (time.Time, error) {
 		}
 
 		sub = p.buff[p.cursor : tsFmtLen+p.cursor]
-		ts, err = time.ParseInLocation(tsFmt, string(sub), p.location)
+		ts, err = time.Parse(tsFmt, string(sub))
 		if err == nil {
 			found = true
 			break

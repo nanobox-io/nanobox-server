@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 )
 
 const (
@@ -33,7 +32,6 @@ var (
 type LogParser interface {
 	Parse() error
 	Dump() LogParts
-	Location(*time.Location)
 }
 
 type ParserError struct {

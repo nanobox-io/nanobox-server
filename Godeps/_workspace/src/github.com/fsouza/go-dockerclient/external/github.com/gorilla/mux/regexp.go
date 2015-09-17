@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
-	"strconv"
 	"strings"
 )
 
@@ -73,14 +72,13 @@ func newRouteRegexp(tpl string, matchHost, matchPrefix, matchQuery, strictSlash 
 				tpl[idxs[i]:end])
 		}
 		// Build the regexp pattern.
-		varIdx := i / 2
-		fmt.Fprintf(pattern, "%s(?P<%s>%s)", regexp.QuoteMeta(raw), varGroupName(varIdx), patt)
+		fmt.Fprintf(pattern, "%s(%s)", regexp.QuoteMeta(raw), patt)
 		// Build the reverse template.
 		fmt.Fprintf(reverse, "%s%%s", raw)
 
 		// Append variable name and compiled pattern.
-		varsN[varIdx] = name
-		varsR[varIdx], err = regexp.Compile(fmt.Sprintf("^%s$", patt))
+		varsN[i/2] = name
+		varsR[i/2], err = regexp.Compile(fmt.Sprintf("^%s$", patt))
 		if err != nil {
 			return nil, err
 		}
@@ -226,11 +224,6 @@ func braceIndices(s string) ([]int, error) {
 	return idxs, nil
 }
 
-// varGroupName builds a capturing group name for the indexed variable.
-func varGroupName(idx int) string {
-	return "v" + strconv.Itoa(idx)
-}
-
 // ----------------------------------------------------------------------------
 // routeRegexpGroup
 // ----------------------------------------------------------------------------
@@ -248,13 +241,8 @@ func (v *routeRegexpGroup) setMatch(req *http.Request, m *RouteMatch, r *Route) 
 	if v.host != nil {
 		hostVars := v.host.regexp.FindStringSubmatch(getHost(req))
 		if hostVars != nil {
-			subexpNames := v.host.regexp.SubexpNames()
-			varName := 0
-			for i, name := range subexpNames[1:] {
-				if name != "" && name == varGroupName(varName) {
-					m.Vars[v.host.varsN[varName]] = hostVars[i+1]
-					varName++
-				}
+			for k, v := range v.host.varsN {
+				m.Vars[v] = hostVars[k+1]
 			}
 		}
 	}
@@ -262,13 +250,8 @@ func (v *routeRegexpGroup) setMatch(req *http.Request, m *RouteMatch, r *Route) 
 	if v.path != nil {
 		pathVars := v.path.regexp.FindStringSubmatch(req.URL.Path)
 		if pathVars != nil {
-			subexpNames := v.path.regexp.SubexpNames()
-			varName := 0
-			for i, name := range subexpNames[1:] {
-				if name != "" && name == varGroupName(varName) {
-					m.Vars[v.path.varsN[varName]] = pathVars[i+1]
-					varName++
-				}
+			for k, v := range v.path.varsN {
+				m.Vars[v] = pathVars[k+1]
 			}
 			// Check if we should redirect.
 			if v.path.strictSlash {
@@ -290,13 +273,8 @@ func (v *routeRegexpGroup) setMatch(req *http.Request, m *RouteMatch, r *Route) 
 	for _, q := range v.queries {
 		queryVars := q.regexp.FindStringSubmatch(q.getUrlQuery(req))
 		if queryVars != nil {
-			subexpNames := q.regexp.SubexpNames()
-			varName := 0
-			for i, name := range subexpNames[1:] {
-				if name != "" && name == varGroupName(varName) {
-					m.Vars[q.varsN[varName]] = queryVars[i+1]
-					varName++
-				}
+			for k, v := range q.varsN {
+				m.Vars[v] = queryVars[k+1]
 			}
 		}
 	}

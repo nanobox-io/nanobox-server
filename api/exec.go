@@ -21,15 +21,21 @@ import (
 var execKeys = map[string]string{}
 
 func (api *API) Run(rw http.ResponseWriter, req *http.Request) {
-	fmt.Printf("RUN: %#v\n", req)
 	name := req.FormValue("container")
 	if name != "" {
-		fmt.Println("name:",name)
 		api.Exec(rw, req)
 		return
 	}
-	fmt.Println("no name")
-	util.RemoveContainer("exec1")
+
+	// if an exec1 already exists we need to drop into that
+	// container instead of failing or destroying the existing
+	// container
+	container, err := util.GetContainer("exec1")
+	if err == nil {
+		api.Exec(rw, req)
+		return
+	}	
+
 	conn, _, err := rw.(http.Hijacker).Hijack()
 	if err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)
@@ -44,7 +50,7 @@ func (api *API) Run(rw http.ResponseWriter, req *http.Request) {
 		cmd = append(cmd, "-c", additionalCmd)
 	}
 
-	container, err := util.CreateContainer(util.CreateConfig{Image: "nanobox/build", Category: "exec", Name: "exec1", Cmd: cmd})
+	container, err = util.CreateContainer(util.CreateConfig{Image: "nanobox/build", Category: "exec", Name: "exec1", Cmd: cmd})
 	if err != nil {
 		conn.Write([]byte(err.Error()))
 		return
@@ -95,6 +101,15 @@ func (api *API) Run(rw http.ResponseWriter, req *http.Request) {
 	util.RemoveContainer(container.ID)
 }
 
+func (api *API) LibDirs(rw http.ResponseWriter, req *http.Request) {
+	writeBody(util.LibDirs(), rw, http.StatusOK)
+}
+
+func (api *API) FileChange(rw http.ResponseWriter, req *http.Request) {
+	util.Touch(req.FormValue("filename"))
+	writeBody(nil, rw, http.StatusOK)
+}
+
 func (api *API) KillRun(rw http.ResponseWriter, req *http.Request) {
 	fmt.Printf("signal recieved: %s\n", req.FormValue("signal"))
 	err := util.KillContainer("exec1", req.FormValue("signal"))
@@ -119,6 +134,9 @@ func (api *API) ResizeRun(rw http.ResponseWriter, req *http.Request) {
 // exec power but with added security.
 func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 	name := req.FormValue("container")
+	if name == "" {
+		name = "exec1"
+	}
 
 	conn, _, err := rw.(http.Hijacker).Hijack()
 	if err != nil {

@@ -63,7 +63,7 @@ func (archive *BoltArchive) Slice(name string, offset, limit uint64, level int) 
 			if err := json.Unmarshal(v, &msg); err != nil {
 				return err
 			}
-			if msg.Priority >= level {
+			if level >= msg.Priority {
 				limit--
 				messages = append(messages, msg)
 			}

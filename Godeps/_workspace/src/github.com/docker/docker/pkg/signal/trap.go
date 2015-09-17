@@ -55,7 +55,6 @@ func Trap(cleanup func()) {
 	}()
 }
 
-// DumpStacks dumps the runtime stack.
 func DumpStacks() {
 	buf := make([]byte, 16384)
 	buf = buf[:runtime.Stack(buf, true)]

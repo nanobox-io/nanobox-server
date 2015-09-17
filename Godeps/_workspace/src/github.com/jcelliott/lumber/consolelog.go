@@ -13,32 +13,24 @@ type ConsoleLogger struct {
 	timeFormat string
 	prefix     string
 	levels     []string
-	closed     bool
 }
 
 // Create a new console logger with output level o, and an empty prefix
 func NewConsoleLogger(o int) *ConsoleLogger {
-	return &ConsoleLogger{
-		out:        os.Stdout,
-		outLevel:   o,
-		timeFormat: TIMEFORMAT,
-		prefix:     "",
-		levels:     levels,
-	}
+	return &ConsoleLogger{os.Stdout, o, TIMEFORMAT, "", levels}
 }
 
 func NewBasicLogger(f io.WriteCloser, level int) *ConsoleLogger {
-	return &ConsoleLogger{
-		out:        f,
-		outLevel:   level,
-		timeFormat: TIMEFORMAT,
-		prefix:     "",
-		levels:     levels,
-	}
+	return &ConsoleLogger{f, level, TIMEFORMAT, "", levels}
 }
 
-// Generic output function. If msg does not end with a newline, one will be appended.
+// Generic output function. Outputs messages if they are higher level than outLevel for this
+// specific logger. If msg does not end with a newline, one will be appended.
 func (l *ConsoleLogger) output(msg *Message) {
+	if msg.level < l.outLevel {
+		return
+	}
+
 	buf := []byte{}
 	buf = append(buf, msg.time.Format(l.timeFormat)...)
 	if l.prefix != "" {
@@ -82,44 +74,33 @@ func (l *ConsoleLogger) TimeFormat(f string) {
 
 // Close the logger
 func (l *ConsoleLogger) Close() {
-	l.closed = true
 	l.output(&Message{len(l.levels) - 1, "Closing log now", time.Now()})
 	l.out.Close()
 }
 
-func (l *ConsoleLogger) log(lvl int, format string, v ...interface{}) {
-	if lvl < l.outLevel || l.closed {
-		return
-	}
-	// recover in case the channel has already been closed (unlikely race condition)
-	// this could also be solved with a lock, but would cause a performance hit
-	defer recover()
-	l.output(&Message{lvl, fmt.Sprintf(format, v...), time.Now()})
-}
-
 // Logging functions
 func (l *ConsoleLogger) Fatal(format string, v ...interface{}) {
-	l.log(FATAL, format, v...)
+	l.output(&Message{FATAL, fmt.Sprintf(format, v...), time.Now()})
 }
 
 func (l *ConsoleLogger) Error(format string, v ...interface{}) {
-	l.log(ERROR, format, v...)
+	l.output(&Message{ERROR, fmt.Sprintf(format, v...), time.Now()})
 }
 
 func (l *ConsoleLogger) Warn(format string, v ...interface{}) {
-	l.log(WARN, format, v...)
+	l.output(&Message{WARN, fmt.Sprintf(format, v...), time.Now()})
 }
 
 func (l *ConsoleLogger) Info(format string, v ...interface{}) {
-	l.log(INFO, format, v...)
+	l.output(&Message{INFO, fmt.Sprintf(format, v...), time.Now()})
 }
 
 func (l *ConsoleLogger) Debug(format string, v ...interface{}) {
-	l.log(DEBUG, format, v...)
+	l.output(&Message{DEBUG, fmt.Sprintf(format, v...), time.Now()})
 }
 
 func (l *ConsoleLogger) Trace(format string, v ...interface{}) {
-	l.log(TRACE, format, v...)
+	l.output(&Message{TRACE, fmt.Sprintf(format, v...), time.Now()})
 }
 
 func (l *ConsoleLogger) Print(lvl int, v ...interface{}) {

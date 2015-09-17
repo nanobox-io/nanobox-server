@@ -120,6 +120,18 @@ func Fail() string {
 	return fmt.Sprintf("   [!] FAILED\n")
 }
 
+// Marker is the root for Bullet/SubBullet; used alone, it allows for a custom
+// mark to be specified
+//
+// Usage:
+// Maker "*",  "i am a marker"
+//
+// Output:
+// * i am a marker
+func Marker(mark, msg string, v ...interface{}) string {
+	return fmt.Sprintf("%s %s\n", mark, fmt.Sprintf(msg, v...))
+}
+
 // Bullet styles and prints a message as outlined at:
 // http://nanodocs.gopagoda.io/engines/style-guide#bullet-points
 //
@@ -129,7 +141,18 @@ func Fail() string {
 // Output:
 // +> i am a bullet
 func Bullet(msg string, v ...interface{}) string {
-	return fmt.Sprintf("+> %s\n", fmt.Sprintf(msg, v...))
+	return Marker("+>", fmt.Sprintf(msg, v...))
+}
+
+// ErrBullet is a Bullet to be used for quick inline failure messsages
+//
+// Usage:
+// ErrBullet "i am an errBullet"
+//
+// Output:
+// -> i am an errBullet
+func ErrBullet(msg string, v ...interface{}) string {
+	return Marker("->", fmt.Sprintf(msg, v...))
 }
 
 // SubBullet styles and prints a message as outlined at:
@@ -141,7 +164,7 @@ func Bullet(msg string, v ...interface{}) string {
 // Output:
 //    i am a sub bullet
 func SubBullet(msg string, v ...interface{}) string {
-	return fmt.Sprintf("   %s\n", fmt.Sprintf(msg, v...))
+	return Marker("  ", fmt.Sprintf(msg, v...))
 }
 
 // Warning styles and prints a message as outlined at:

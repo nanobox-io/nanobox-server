@@ -4,39 +4,39 @@
 	"Deps": [
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
-			"Comment": "v0.8.6-1-g8bca266",
-			"Rev": "8bca2664072173a3c71db4c28ca8d304079b1787"
+			"Comment": "v0.8.5-1-g11538ee",
+			"Rev": "11538ee6888f72d4ab44a1aeba06b9bc4cb134a1"
 		},
 		{
 			"ImportPath": "github.com/boltdb/bolt",
-			"Comment": "v1.0-119-g90fef38",
-			"Rev": "90fef389f98027ca55594edd7dbd6e7f3926fdad"
+			"Comment": "v1.0-4-g293da01",
+			"Rev": "293da013aec93d4d96c702cc5ddf1aae17ef0bc3"
 		},
 		{
 			"ImportPath": "github.com/deckarep/golang-set",
-			"Comment": "v1-26-gef32fa3",
-			"Rev": "ef32fa3046d9f249d399f98ebaf9be944430fd1d"
+			"Comment": "v1-28-g52ba7f2",
+			"Rev": "52ba7f28f319e9d560acbf47c7fcf9b9ee7aa7d3"
 		},
 		{
 			"ImportPath": "github.com/docker/docker/pkg/signal",
-			"Comment": "v1.4.1-5228-g5c9e5bf",
-			"Rev": "5c9e5bfb0f9006f6c7ec98bc26cfd9f6889b459a"
+			"Comment": "v1.4.1-5087-g542de78",
+			"Rev": "542de786c2600f5936224308d293d25a588513a4"
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient",
-			"Rev": "277414e6cf038962ead800e71f3451c01170bffb"
+			"Rev": "933433faa3e1c0bbc825b251143f8e77affbf797"
 		},
 		{
 			"ImportPath": "github.com/gorilla/context",
-			"Rev": "1c83b3eabd45b6d76072b66b746c20815fb2872d"
+			"Rev": "14f550f51af52180c2eefed15e5fd18d63c0a64a"
 		},
 		{
 			"ImportPath": "github.com/gorilla/mux",
-			"Rev": "ee1815431e497d3850809578c93ab6705f1a19f7"
+			"Rev": "e444e69cbd2e2e3e0749a2f3c717cec491552bbf"
 		},
 		{
 			"ImportPath": "github.com/gorilla/pat",
-			"Rev": "e3ceaad21981965be815a74ec833802d74e52947"
+			"Rev": "ae2e162c4b2ae96aa66b596b2c18f17834299ed0"
 		},
 		{
 			"ImportPath": "github.com/gorilla/websocket",
@@ -44,11 +44,11 @@
 		},
 		{
 			"ImportPath": "github.com/jcelliott/lumber",
-			"Rev": "b31b66b90991ff0e9e292dae147f94e4b87fcdf7"
+			"Rev": "b3aa8d335513329fefdb0b7422251a6113ca8ea2"
 		},
 		{
 			"ImportPath": "github.com/jeromer/syslogparser",
-			"Rev": "ff71fe7a7d5279df4b964b31f7ee4adf117277f6"
+			"Rev": "812866d0389ae7e1f5a0110d47dea20224fc776f"
 		},
 		{
 			"ImportPath": "github.com/mitchellh/go-wordwrap",
@@ -60,7 +60,7 @@
 		},
 		{
 			"ImportPath": "github.com/pagodabox/golang-mist",
-			"Rev": "27db5972ced4c9280ac90810a43a29ec7edebbf5"
+			"Rev": "099b4b6ce3f7fe4f19344e9b26eda84a24b388c9"
 		},
 		{
 			"ImportPath": "github.com/pagodabox/nanobox-boxfile",
@@ -68,11 +68,11 @@
 		},
 		{
 			"ImportPath": "github.com/pagodabox/nanobox-golang-stylish",
-			"Rev": "ca033f3662eac67c4b31003400c592307c6abbd8"
+			"Rev": "16111aa16553942a6842410828bcce57eb3e665f"
 		},
 		{
 			"ImportPath": "github.com/pagodabox/nanobox-logtap",
-			"Rev": "87c9831a8d763c22101967e3cb1e38cb4b2b04c9"
+			"Rev": "7e9c076d8b561ad39d8b0e98108acb36bee3e374"
 		},
 		{
 			"ImportPath": "github.com/pagodabox/nanobox-lvs",
@@ -80,7 +80,7 @@
 		},
 		{
 			"ImportPath": "github.com/pagodabox/nanobox-router",
-			"Rev": "7a4a67b10f85676a7022c1f45be26eeb8a41f576"
+			"Rev": "9cc458fba85fdbe74b7fbd1f6e608d1cc3d2f1b9"
 		},
 		{
 			"ImportPath": "github.com/pborman/uuid",

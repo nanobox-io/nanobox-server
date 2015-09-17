@@ -41,7 +41,7 @@ func StartTLS(addr string) error {
 			return err
 		}
 
-		go http.Serve(tlsListener, handler{})
+		go http.Serve(tlsListener, handler{https: true})
 
 	}
 

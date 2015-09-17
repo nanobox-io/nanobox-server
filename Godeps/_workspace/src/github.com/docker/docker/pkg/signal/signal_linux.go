@@ -4,7 +4,6 @@ import (
 	"syscall"
 )
 
-// SignalMap is a map of Linux signals.
 var SignalMap = map[string]syscall.Signal{
 	"ABRT":   syscall.SIGABRT,
 	"ALRM":   syscall.SIGALRM,
