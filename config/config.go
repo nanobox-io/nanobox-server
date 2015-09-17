@@ -72,11 +72,11 @@ func init() {
 	}
 
 	// create new router
-	err = router.StartHTTP(":"+Ports["router"])
+	err = router.StartHTTP(":" + Ports["router"])
 	if err != nil {
 		Log.Error("error: %s\n", err.Error())
 	}
-	
+
 	// create a new mist and start listening for messages at *:1445
 	Mist = mist.New()
 	Mist.Listen(Ports["mist"])

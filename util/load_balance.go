@@ -12,11 +12,11 @@ import (
 func init() {
 	err := AddForward("80", config.IP, config.Ports["router"])
 	if err != nil {
-		config.Log.Error("load balancer error: "+ err.Error())
+		config.Log.Error("load balancer error: " + err.Error())
 	}
 	err = AddForward("443", config.IP, config.Ports["router"])
 	if err != nil {
-		config.Log.Error("load balancer error: "+ err.Error())
+		config.Log.Error("load balancer error: " + err.Error())
 	}
 }
 

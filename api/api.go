@@ -81,7 +81,6 @@ func (api *API) registerRoutes() (*pat.Router, error) {
 	router.Get("/libdirs", api.handleRequest(api.LibDirs))
 	router.Post("/file-change", api.handleRequest(api.FileChange))
 
-
 	router.Post("/bootstrap", api.handleRequest(api.CreateBootstrap))
 	router.Post("/builds", api.handleRequest(api.CreateBuild))
 	router.Post("/deploys", api.handleRequest(api.CreateDeploy))

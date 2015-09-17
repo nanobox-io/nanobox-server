@@ -21,7 +21,7 @@ type Service struct {
 	CreatedAt time.Time
 	IP        string
 	Name      string
-	Ports      []int
+	Ports     []int
 	Username  string `json:"omitempty"`
 	Password  string `json:"omitempty"`
 }

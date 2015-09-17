@@ -21,8 +21,8 @@ type Startup struct{}
 func (j *Startup) Process() {
 	config.Log.Info("starting startup job")
 
-// TODO get the boxfile. merge with build boxfile(if any) and call:
-  // configureRoutes(box)
+	// TODO get the boxfile. merge with build boxfile(if any) and call:
+	// configureRoutes(box)
 	// configurePorts(box)
 	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
 

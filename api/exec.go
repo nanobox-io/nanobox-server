@@ -34,7 +34,7 @@ func (api *API) Run(rw http.ResponseWriter, req *http.Request) {
 	if err == nil {
 		api.Exec(rw, req)
 		return
-	}	
+	}
 
 	conn, _, err := rw.(http.Hijacker).Hijack()
 	if err != nil {

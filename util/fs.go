@@ -53,9 +53,8 @@ func LibDirs() (rtn []string) {
 		}
 	}
 	return rtn
-	
-}
 
+}
 
 func libDirs() (rtn []string) {
 	files, err := ioutil.ReadDir("/mnt/sda/var/nanobox/cache/lib_dirs/")

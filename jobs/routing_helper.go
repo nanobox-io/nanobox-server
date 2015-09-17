@@ -1,8 +1,8 @@
 package jobs
 
 import (
-	"strings"
 	"fmt"
+	"strings"
 
 	"github.com/pagodabox/nanobox-boxfile"
 	"github.com/pagodabox/nanobox-router"
@@ -13,7 +13,7 @@ import (
 
 // grab the original boxfile and loop through the webs
 // find all routes and regsiter the routes with the router
-// 
+//
 func configureRoutes(box boxfile.Boxfile) error {
 	newRoutes := []router.Route{}
 	webs := box.Nodes("web")
@@ -29,11 +29,11 @@ func configureRoutes(box boxfile.Boxfile) error {
 		ip := container.NetworkSettings.IPAddress
 		for _, route := range routes(b) {
 			if len(ports(b)) == 0 {
-				route.URLs = []string{"http://"+ip+":8080"}
+				route.URLs = []string{"http://" + ip + ":8080"}
 				newRoutes = append(newRoutes, route)
 			}
 			for _, to := range ports(b) {
-				route.URLs = []string{"http://"+ip+":"+to}
+				route.URLs = []string{"http://" + ip + ":" + to}
 				newRoutes = append(newRoutes, route)
 			}
 		}
@@ -49,7 +49,7 @@ func configureRoutes(box boxfile.Boxfile) error {
 	}
 	if !defaulted {
 		if web1, err := util.GetContainer("web1"); err == nil {
-			newRoutes = append(newRoutes, router.Route{Name: config.App+".nano.dev", Path: "/", URLs: []string{"http://"+web1.NetworkSettings.IPAddress+":8080"}})
+			newRoutes = append(newRoutes, router.Route{Name: config.App + ".nano.dev", Path: "/", URLs: []string{"http://" + web1.NetworkSettings.IPAddress + ":8080"}})
 		}
 	}
 	fmt.Println("newRoutes:", newRoutes)
@@ -111,10 +111,10 @@ func routes(box boxfile.Boxfile) (rtn []router.Route) {
 		routeParts := strings.Split(route, ":")
 		switch len(routeParts) {
 		case 1:
-			rtn = append(rtn, router.Route{Name: config.App+".nano.dev", Path: routeParts[0]})
+			rtn = append(rtn, router.Route{Name: config.App + ".nano.dev", Path: routeParts[0]})
 		case 2:
 			subDomain := strings.Trim(routeParts[0], ".")
-			rtn = append(rtn, router.Route{Name: subDomain+"."+config.App+".nano.dev", Path: routeParts[0]})
+			rtn = append(rtn, router.Route{Name: subDomain + "." + config.App + ".nano.dev", Path: routeParts[0]})
 		}
 
 	}
@@ -122,7 +122,7 @@ func routes(box boxfile.Boxfile) (rtn []router.Route) {
 	return
 }
 
-func ports(box boxfile.Boxfile) (map[string]string) {
+func ports(box boxfile.Boxfile) map[string]string {
 	rtn := map[string]string{}
 	ports, ok := box.Value("ports").([]string)
 	if !ok {
