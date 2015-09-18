@@ -71,26 +71,10 @@ func (j *ServiceStart) Process() {
 
 	// payload
 	payload := map[string]interface{}{
+		"platform":    "local",
 		"boxfile":     j.Boxfile.Parsed,
 		"logtap_host": config.LogtapHost,
 		"uid":         j.UID,
-
-		// service hooks needed a reasonable default[:member][:schema][:meta][:ram]
-		"member": map[string]interface{}{
-			"schema": map[string]interface{}{
-				"meta": map[string]interface{}{
-					"ram": 128000000, // bytes
-				},
-			},
-		},
-
-		// service hooks need a reasonable default for [:ssh][:admin_key][:private_key]
-		"ssh": map[string]interface{}{
-			"admin_key": map[string]interface{}{
-				"private_key": "notarealkey",
-				"public_key":  "notarealkey",
-			},
-		},
 	}
 
 	// adds to the payload storage information if storage is required

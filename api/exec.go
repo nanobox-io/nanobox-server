@@ -12,11 +12,14 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"sync"
 
 	"github.com/pagodabox/nanobox-boxfile"
 	"github.com/pagodabox/nanobox-server/config"
 	"github.com/pagodabox/nanobox-server/util"
 )
+
+var execWait = sync.WaitGroup{}
 
 var execKeys = map[string]string{}
 
@@ -27,36 +30,20 @@ func (api *API) Run(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// if an exec1 already exists we need to drop into that
-	// container instead of failing or destroying the existing
-	// container
+	containerControl := false
+	// if there is no exec 1 it needs to be created and this thread needs to remember
+	// to shut it down when its done conatinerControl is used for that purpose
 	container, err := util.GetContainer("exec1")
-	if err == nil {
-		api.Exec(rw, req)
-		return
-	}
-
-	conn, _, err := rw.(http.Hijacker).Hijack()
 	if err != nil {
-		rw.WriteHeader(http.StatusInternalServerError)
-		rw.Write([]byte(err.Error()))
-		return
-	}
-	defer conn.Close()
+		containerControl = true
+		cmd := []string{"/bin/sleep", "365d"}
 
-	cmd := []string{"/bin/bash"}
-	additionalCmd := req.FormValue("cmd")
-	if additionalCmd != "" {
-		cmd = append(cmd, "-c", additionalCmd)
+		container, err = util.CreateContainer(util.CreateConfig{Image: "nanobox/build", Category: "exec", Name: "exec1", Cmd: cmd})
+		if err != nil {
+			rw.Write([]byte(err.Error()))
+			return
+		}
 	}
-
-	container, err = util.CreateContainer(util.CreateConfig{Image: "nanobox/build", Category: "exec", Name: "exec1", Cmd: cmd})
-	if err != nil {
-		conn.Write([]byte(err.Error()))
-		return
-	}
-
-	go util.AttachToContainer(container.ID, conn, conn, conn)
 
 	forwards := []string{}
 	if req.FormValue("forward") != "" {
@@ -80,25 +67,26 @@ func (api *API) Run(rw http.ResponseWriter, req *http.Request) {
 			// fromPort, toIp, toPort string
 			err := util.AddForward(strSlice[0], container.NetworkSettings.IPAddress, strSlice[0])
 			if err != nil {
-				fmt.Fprintf(conn, "could not establish forward: %s\r\n", rule)
+				fmt.Fprintf(rw, "could not establish forward: %s\r\n", rule)
 				continue
 			}
 			defer util.RemoveForward(container.NetworkSettings.IPAddress)
 		case 2:
 			err := util.AddForward(strSlice[0], container.NetworkSettings.IPAddress, strSlice[1])
 			if err != nil {
-				fmt.Fprintf(conn, "could not establish forward: %s\r\n", rule)
+				fmt.Fprintf(rw, "could not establish forward: %s\r\n", rule)
 				continue
 			}
 			defer util.RemoveForward(container.NetworkSettings.IPAddress)
 		}
 	}
 
-	// Flush the options to make sure the client sets the raw mode
-	conn.Write([]byte{})
+	api.Exec(rw, req)
 
-	util.WaitContainer(container.ID)
-	util.RemoveContainer(container.ID)
+	if containerControl {
+		execWait.Wait()
+		util.RemoveContainer(container.ID)
+	}
 }
 
 func (api *API) LibDirs(rw http.ResponseWriter, req *http.Request) {
@@ -133,6 +121,8 @@ func (api *API) ResizeRun(rw http.ResponseWriter, req *http.Request) {
 // proxy an exec request to docker. This allows us to have the same
 // exec power but with added security.
 func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
+	execWait.Add(1)
+	defer execWait.Done()
 	name := req.FormValue("container")
 	if name == "" {
 		name = "exec1"

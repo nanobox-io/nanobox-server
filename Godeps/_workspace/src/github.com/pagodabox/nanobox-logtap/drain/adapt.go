@@ -7,6 +7,7 @@
 package drain
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/jcelliott/lumber"
 	"github.com/pagodabox/golang-hatchet"
@@ -37,7 +38,11 @@ func AdaptPublisher(publisher Publisher) logtap.Drain {
 		tags := []string{"log", msg.Type}
 		severities := []string{"trace", "debug", "info", "warn", "error", "fatal"}
 		tags = append(tags, severities[:((msg.Priority+1)%6)]...)
-		publisher.Publish(tags, fmt.Sprintf("{\"time\":\"%s\",\"log\":%q}", msg.Time, msg.Content))
+		data, err := json.Marshal(msg)
+		if err != nil {
+			return
+		}
+		publisher.Publish(tags, string(data))
 	}
 }
 

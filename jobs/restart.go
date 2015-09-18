@@ -28,6 +28,7 @@ func (j *Restart) Process() {
 	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
 	// restart payload
 	payload := map[string]interface{}{
+		"platform":    "local",
 		"boxfile":     box.Node(j.UID).Parsed,
 		"logtap_host": config.LogtapHost,
 		"uid":         j.UID,

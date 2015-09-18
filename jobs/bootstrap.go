@@ -47,6 +47,7 @@ func (j *Bootstrap) Process() {
 
 	// define the deploy payload
 	payload := map[string]interface{}{
+		"platform":    "local",
 		"engine":      j.Engine,
 		"logtap_host": config.LogtapHost,
 	}

@@ -72,7 +72,7 @@
 		},
 		{
 			"ImportPath": "github.com/pagodabox/nanobox-logtap",
-			"Rev": "7e9c076d8b561ad39d8b0e98108acb36bee3e374"
+			"Rev": "87c9831a8d763c22101967e3cb1e38cb4b2b04c9"
 		},
 		{
 			"ImportPath": "github.com/pagodabox/nanobox-lvs",
