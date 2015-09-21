@@ -160,10 +160,7 @@ func (j *Deploy) Process() {
 			// if the hook runs succesfully merge the boxfiles
 		} else {
 			util.LogDebug(stylish.Bullet("Merging Boxfiles..."))
-			util.LogDebug("boxfile yaml: \n %s", out)
 			box.Merge(boxfile.New([]byte(out)))
-			util.LogDebug(stylish.Bullet("New Boxfile: \n %#v", boxfile.New([]byte(out)).Parsed))
-			util.LogDebug(stylish.Bullet("Boxfile after Merge: \n %#v", &box.Parsed))
 		}
 	}
 
@@ -295,7 +292,6 @@ func (j *Deploy) Process() {
 	// we will only create new code nodes if we are not
 	// in a sandbox environment
 	if !j.Sandbox {
-		util.LogDebug(stylish.Bullet("New Boxfile before starting service: \n %#v", box.Parsed))
 		// build new code containers
 		codeServices := []*ServiceStart{}
 		for _, node := range box.Nodes("code") {

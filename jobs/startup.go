@@ -21,6 +21,7 @@ type Startup struct{}
 func (j *Startup) Process() {
 	config.Log.Info("starting startup job")
 
+	util.RemoveContainer("exec1")
 	// TODO get the boxfile. merge with build boxfile(if any) and call:
 	// configureRoutes(box)
 	// configurePorts(box)

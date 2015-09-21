@@ -30,6 +30,24 @@ func (api *API) Run(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	forwards := []string{}
+	if req.FormValue("forward") != "" {
+		forwards = append(forwards, strings.Split(req.FormValue("forward"), ",")...)
+	}
+
+	fmt.Printf("forwards from request: %v", forwards)
+	box := mergedBox()
+	fmt.Println("box: %#v", box)
+	if boxForwards, ok := box.Node("console").Value("forwards").([]interface{}); ok {
+		for _, boxFInterface := range boxForwards {
+			if boxForward, ok := boxFInterface.(string); ok {
+				forwards = append(forwards, boxForward)
+			}
+		}
+	}
+
+	fmt.Printf("forwards from boxfile: %v", forwards)
+
 	containerControl := false
 	// if there is no exec 1 it needs to be created and this thread needs to remember
 	// to shut it down when its done conatinerControl is used for that purpose
@@ -38,24 +56,15 @@ func (api *API) Run(rw http.ResponseWriter, req *http.Request) {
 		containerControl = true
 		cmd := []string{"/bin/sleep", "365d"}
 
-		container, err = util.CreateContainer(util.CreateConfig{Image: "nanobox/build", Category: "exec", Name: "exec1", Cmd: cmd})
+		image := "nanobox/build"
+		if stab := box.Node("build").StringValue("stability"); stab != "" {
+			image = image + ":" + stab
+		}
+
+		container, err = util.CreateContainer(util.CreateConfig{Image: image, Category: "exec", Name: "exec1", Cmd: cmd})
 		if err != nil {
 			rw.Write([]byte(err.Error()))
 			return
-		}
-	}
-
-	forwards := []string{}
-	if req.FormValue("forward") != "" {
-		forwards = append(forwards, strings.Split(req.FormValue("forward"), ",")...)
-	}
-
-	box := mergedBox()
-	if boxForwards, ok := box.Node("console").Value("forwards").([]interface{}); ok {
-		for _, boxFInterface := range boxForwards {
-			if boxForward, ok := boxFInterface.(string); ok {
-				forwards = append(forwards, boxForward)
-			}
 		}
 	}
 

@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	// "github.com/fsouza/go-dockerclient"
 
 	"github.com/pagodabox/nanobox-boxfile"
 	"github.com/pagodabox/nanobox-golang-stylish"
@@ -30,8 +29,6 @@ type ServiceStart struct {
 
 //
 func (j *ServiceStart) Process() {
-
-	util.LogDebug(stylish.Bullet("New Boxfile in serivce start: \n %#v", j.Boxfile.Parsed))
 	// var ci *docker.Container
 	var err error
 

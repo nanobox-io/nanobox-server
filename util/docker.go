@@ -58,9 +58,11 @@ func addCategoryConfig(category string, cConfig *docker.CreateContainerOptions) 
 		cConfig.Config.WorkingDir = "/code"
 		cConfig.Config.User = "gonano"
 		cConfig.HostConfig.Binds = append([]string{
-			"/mnt/sda/var/nanobox/deploy/:/data/",
 			"/vagrant/code/" + config.App + "/:/code/",
 		}, libDirs()...)
+		if container, err :=  GetContainer("build1"); err == nil {
+			cConfig.HostConfig.Binds = append(cConfig.HostConfig.Binds, fmt.Sprintf("/mnt/sda/var/lib/docker/aufs/mnt/%s/data/:/data/", container.ID))			
+		}
 	case "build":
 		cConfig.Config.Cmd = []string{"/bin/sleep", "365d"}
 		cConfig.HostConfig.Binds = []string{
