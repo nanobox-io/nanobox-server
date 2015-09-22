@@ -27,8 +27,7 @@ func (j *Build) Process() {
 
 	_, err := util.InspectContainer("build1")
 	if err != nil {
-		util.LogError("you cannot build without having run a deploy first")
-		util.UpdateStatus(j, "errored")
+		util.UpdateStatus(j, "unavailable")
 		return
 	}
 
