@@ -217,15 +217,8 @@ func (j *Deploy) Process() {
 	// grab the environment data from all service containers
 	evars := j.payload["env"].(map[string]string)
 
-	// we configure ports before we run the service env
-	// because service env will add tunnels for the services
-	// seperate from the boxfile specific ports
-	err = configurePorts(box)
-	if err != nil {
-		util.HandleError(stylish.Error("Failed to configure Ports", err.Error()))
-		util.UpdateStatus(j, "errored")
-		return
-	}
+	// clear out the old ports from the previous deploy
+	clearPorts()
 
 	//
 	serviceEnvs := []*ServiceEnv{}
@@ -338,6 +331,15 @@ func (j *Deploy) Process() {
 		}
 	}
 
+	// configure the port forwards per service
+	err = configurePorts(box)
+	if err != nil {
+		util.HandleError(stylish.Error("Failed to configure Ports", err.Error()))
+		util.UpdateStatus(j, "errored")
+		return
+	}
+
+	// configure the routing mesh for any web services
 	err = configureRoutes(box)
 	if err != nil {
 		util.HandleError(stylish.Error("Failed to configure Routes", err.Error()))

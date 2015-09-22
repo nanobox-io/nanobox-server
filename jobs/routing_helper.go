@@ -58,12 +58,12 @@ func configureRoutes(box boxfile.Boxfile) error {
 	return nil
 }
 
-func configurePorts(box boxfile.Boxfile) error {
+func clearPorts() {
 	vips, err := util.ListVips()
 	if err != nil {
-		return err
+		return
 	}
-
+	
 	// remove all old forwards
 	for _, vip := range vips {
 		if vip.Port != 80 && vip.Port != 443 {
@@ -71,7 +71,10 @@ func configurePorts(box boxfile.Boxfile) error {
 				util.RemoveForward(server.Host)
 			}
 		}
-	}
+	}	
+}
+
+func configurePorts(box boxfile.Boxfile) error {
 
 	// loop through the boxfile container nodes
 	// and add in any new port maps
