@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 	"sync"
+	"sync/atomic"
 
 	"github.com/pagodabox/nanobox-boxfile"
 	"github.com/pagodabox/nanobox-server/config"
@@ -20,8 +20,17 @@ import (
 )
 
 var execWait = sync.WaitGroup{}
+var waiting = int64(0)
 
 var execKeys = map[string]string{}
+
+func (api *API) Suspend(rw http.ResponseWriter, req *http.Request) {
+	if waiting == 0 {
+		return
+	}
+
+	writeBody(map[string]string{"error": fmt.Sprintf("still have %d connected consoles", waiting)}, rw, http.StatusNotAcceptable)
+}
 
 func (api *API) Run(rw http.ResponseWriter, req *http.Request) {
 	name := req.FormValue("container")
@@ -30,23 +39,7 @@ func (api *API) Run(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	forwards := []string{}
-	if req.FormValue("forward") != "" {
-		forwards = append(forwards, strings.Split(req.FormValue("forward"), ",")...)
-	}
-
-	fmt.Printf("forwards from request: %v", forwards)
 	box := mergedBox()
-	fmt.Println("box: %#v", box)
-	if boxForwards, ok := box.Node("console").Value("forwards").([]interface{}); ok {
-		for _, boxFInterface := range boxForwards {
-			if boxForward, ok := boxFInterface.(string); ok {
-				forwards = append(forwards, boxForward)
-			}
-		}
-	}
-
-	fmt.Printf("forwards from boxfile: %v", forwards)
 
 	containerControl := false
 	// if there is no exec 1 it needs to be created and this thread needs to remember
@@ -65,28 +58,6 @@ func (api *API) Run(rw http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			rw.Write([]byte(err.Error()))
 			return
-		}
-	}
-
-	// maybe add a forward port mapping
-	for _, rule := range forwards {
-		strSlice := strings.Split(rule, ":")
-		switch len(strSlice) {
-		case 1:
-			// fromPort, toIp, toPort string
-			err := util.AddForward(strSlice[0], container.NetworkSettings.IPAddress, strSlice[0])
-			if err != nil {
-				fmt.Fprintf(rw, "could not establish forward: %s\r\n", rule)
-				continue
-			}
-			defer util.RemoveForward(container.NetworkSettings.IPAddress)
-		case 2:
-			err := util.AddForward(strSlice[0], container.NetworkSettings.IPAddress, strSlice[1])
-			if err != nil {
-				fmt.Fprintf(rw, "could not establish forward: %s\r\n", rule)
-				continue
-			}
-			defer util.RemoveForward(container.NetworkSettings.IPAddress)
 		}
 	}
 
@@ -131,7 +102,9 @@ func (api *API) ResizeRun(rw http.ResponseWriter, req *http.Request) {
 // exec power but with added security.
 func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 	execWait.Add(1)
+	atomic.AddInt64(&waiting, 1)
 	defer execWait.Done()
+	defer atomic.AddInt64(&waiting, -1)
 	name := req.FormValue("container")
 	if name == "" {
 		name = "exec1"

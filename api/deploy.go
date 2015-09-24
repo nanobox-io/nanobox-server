@@ -19,7 +19,7 @@ func (api *API) CreateDeploy(rw http.ResponseWriter, req *http.Request) {
 	deploy := jobs.Deploy{
 		ID:      newUUID(),
 		Reset:   (req.FormValue("reset") == "true"),
-		Sandbox: (req.FormValue("sandbox") == "true"),
+		Run:     (req.FormValue("run") == "true"),
 	}
 
 	//

@@ -42,14 +42,14 @@ func configureRoutes(box boxfile.Boxfile) error {
 	// add the default route if we dont have one
 	defaulted := false
 	for _, route := range newRoutes {
-		if route.Name == config.App+".nano.dev" && route.Path == "/" {
+		if route.Name == config.App+".dev" && route.Path == "/" {
 			defaulted = true
 			break
 		}
 	}
 	if !defaulted {
 		if web1, err := util.GetContainer("web1"); err == nil {
-			newRoutes = append(newRoutes, router.Route{Name: config.App + ".nano.dev", Path: "/", URLs: []string{"http://" + web1.NetworkSettings.IPAddress + ":8080"}})
+			newRoutes = append(newRoutes, router.Route{Name: config.App + ".dev", Path: "/", URLs: []string{"http://" + web1.NetworkSettings.IPAddress + ":8080"}})
 		}
 	}
 	fmt.Println("newRoutes:", newRoutes)
@@ -114,10 +114,10 @@ func routes(box boxfile.Boxfile) (rtn []router.Route) {
 		routeParts := strings.Split(route, ":")
 		switch len(routeParts) {
 		case 1:
-			rtn = append(rtn, router.Route{Name: config.App + ".nano.dev", Path: routeParts[0]})
+			rtn = append(rtn, router.Route{Name: config.App + ".dev", Path: routeParts[0]})
 		case 2:
 			subDomain := strings.Trim(routeParts[0], ".")
-			rtn = append(rtn, router.Route{Name: subDomain + "." + config.App + ".nano.dev", Path: routeParts[0]})
+			rtn = append(rtn, router.Route{Name: subDomain + "." + config.App + ".dev", Path: routeParts[0]})
 		}
 
 	}

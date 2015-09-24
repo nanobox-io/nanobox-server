@@ -39,7 +39,7 @@ func (j *Build) Process() {
 	j.payload = map[string]interface{}{
 		"platform":   "local",
 		"app":         config.App,
-		"dns":         []string{config.App + ".nano.dev"},
+		"dns":         []string{config.App + ".dev"},
 		"port":        "8080",
 		"boxfile":     box.Node("build").Parsed,
 		"logtap_host": config.LogtapHost,

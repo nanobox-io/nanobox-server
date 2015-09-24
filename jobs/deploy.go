@@ -23,7 +23,7 @@ import (
 type Deploy struct {
 	ID      string
 	Reset   bool
-	Sandbox bool
+	Run     bool
 
 	payload map[string]interface{}
 }
@@ -35,11 +35,10 @@ func (j *Deploy) Process() {
 	// config.Logtap.Drains["history"].(*logtap.HistoricalDrain).ClearDeploy()
 
 	// set routing to watch logs
-	util.LogDebug(stylish.Bullet("Watching logs at /deploys..."))
 	router.ErrorHandler = router.DeployInProgress{}
 
 	// remove all code containers
-	util.LogInfo(stylish.Bullet("Removing containers from previous deploy..."))
+	util.LogInfo(stylish.Bullet("Cleaning Containers"))
 
 	// might as well remove bootstraps and execs too
 	containers, _ := util.ListContainers("code", "build", "bootstrap", "exec", "tcp", "udp")
@@ -53,7 +52,6 @@ func (j *Deploy) Process() {
 	}
 
 	// Make sure we have the directories
-	util.LogDebug(stylish.Bullet("Ensure directories exist on host..."))
 	if err := util.CreateDirs(); err != nil {
 		util.HandleError(stylish.Error("Failed to create dirs", err.Error()))
 		util.UpdateStatus(j, "errored")
@@ -62,14 +60,14 @@ func (j *Deploy) Process() {
 
 	// wipe the previous deploy data if reset == true
 	if j.Reset {
-		util.LogInfo(stylish.Bullet("Resetting cache and code directories"))
+		util.LogInfo(stylish.Bullet("Emptying cache"))
 		if err := util.Clean(); err != nil {
-			util.LogInfo(stylish.Warning("Failed to reset cache and code directories:\n%v", err.Error()))
+			util.HandleError(stylish.Warning("Failed to reset cache and code directories:\n%v", err.Error()))
 		}
 	}
 
 	// parse the boxfile
-	util.LogDebug(stylish.Bullet("Parsing Boxfile..."))
+	util.LogDebug(stylish.Bullet("Parsing Boxfile"))
 	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
 
 	image := "nanobox/build"
@@ -86,7 +84,7 @@ func (j *Deploy) Process() {
 	}
 
 	// create a build container
-	util.LogInfo(stylish.Bullet("Creating build container..."))
+	util.LogInfo(stylish.Bullet("Creating build container"))
 
 	_, err := util.CreateContainer(util.CreateConfig{Image: image, Category: "build", Name: "build1"})
 	if err != nil {
@@ -99,7 +97,7 @@ func (j *Deploy) Process() {
 	j.payload = map[string]interface{}{
 		"platform":   "local",
 		"app":         config.App,
-		"dns":         []string{config.App + ".nano.dev"},
+		"dns":         []string{config.App + ".dev"},
 		"port":        "8080",
 		"boxfile":     box.Node("build").Parsed,
 		"logtap_host": config.LogtapHost,
@@ -185,7 +183,6 @@ func (j *Deploy) Process() {
 	serviceStarts := []*ServiceStart{}
 
 	// build service containers according to boxfile
-	util.LogInfo(stylish.Bullet("Creating new services..."))
 	for _, node := range box.Nodes("service") {
 		if _, err := util.GetContainer(node); err != nil {
 			// container doesn't exist so we need to create it
@@ -201,7 +198,7 @@ func (j *Deploy) Process() {
 		}
 	}
 
-	util.LogInfo(stylish.Bullet("Starting services"))
+	util.LogInfo(stylish.Bullet("Launching Requested services"))
 	worker.Process()
 
 	// ensure all services started correctly before continuing
@@ -223,7 +220,6 @@ func (j *Deploy) Process() {
 	//
 	serviceEnvs := []*ServiceEnv{}
 
-	util.LogDebug(stylish.Bullet("Creating new services..."))
 	serviceContainers, _ = util.ListContainers("service")
 	for _, container := range serviceContainers {
 
@@ -258,21 +254,24 @@ func (j *Deploy) Process() {
 		return
 	}
 
-	// run build hook (blocking)
-	if out, err := util.ExecHook("default-build", "build1", j.payload); err != nil {
-		util.LogDebug("Failed Hook Output: \n %s", out)
-		util.HandleError(stylish.Error("Failed to run build hook", err.Error()))
-		util.UpdateStatus(j, "errored")
-		return
+	if j.Run {
+		// run build hook (blocking)
+		if out, err := util.ExecHook("default-build", "build1", j.payload); err != nil {
+			util.LogDebug("Failed Hook Output: \n %s", out)
+			util.HandleError(stylish.Error("Failed to run build hook", err.Error()))
+			util.UpdateStatus(j, "errored")
+			return
+		}
+
+		// run publish hook (blocking)
+		if out, err := util.ExecHook("default-publish", "build1", j.payload); err != nil {
+			util.LogDebug("Failed Hook Output: \n %s", out)
+			util.HandleError(stylish.Error("Failed to run publish hook", err.Error()))
+			util.UpdateStatus(j, "errored")
+			return
+		}
 	}
 
-	// run publish hook (blocking)
-	if out, err := util.ExecHook("default-publish", "build1", j.payload); err != nil {
-		util.LogDebug("Failed Hook Output: \n %s", out)
-		util.HandleError(stylish.Error("Failed to run publish hook", err.Error()))
-		util.UpdateStatus(j, "errored")
-		return
-	}
 
 	// run cleanup hook (blocking)
 	if out, err := util.ExecHook("default-cleanup", "build1", j.payload); err != nil {
@@ -282,9 +281,9 @@ func (j *Deploy) Process() {
 		return
 	}
 
-	// we will only create new code nodes if we are not
-	// in a sandbox environment
-	if !j.Sandbox {
+	// we will only create new code nodes if we are
+	// supposed to be running
+	if j.Run {
 		// build new code containers
 		codeServices := []*ServiceStart{}
 		for _, node := range box.Nodes("code") {
