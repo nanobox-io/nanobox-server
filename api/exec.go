@@ -29,7 +29,7 @@ func (api *API) Suspend(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	writeBody(map[string]string{"error": fmt.Sprintf("still have %d connected consoles", waiting)}, rw, http.StatusNotAcceptable)
+	writeBody(map[string]string{"error": fmt.Sprintf("Still have %d connected consoles", waiting)}, rw, http.StatusNotAcceptable)
 }
 
 func (api *API) Run(rw http.ResponseWriter, req *http.Request) {
