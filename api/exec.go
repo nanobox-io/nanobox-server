@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"time"
 	"sync"
-	"sync/atomic"
 
 	"github.com/pagodabox/nanobox-boxfile"
 	"github.com/pagodabox/nanobox-server/config"
@@ -20,17 +19,8 @@ import (
 )
 
 var execWait = sync.WaitGroup{}
-var waiting = int64(0)
 
 var execKeys = map[string]string{}
-
-func (api *API) Suspend(rw http.ResponseWriter, req *http.Request) {
-	if waiting == 0 {
-		return
-	}
-
-	writeBody(map[string]string{"error": fmt.Sprintf("Still have %d connected consoles", waiting)}, rw, http.StatusNotAcceptable)
-}
 
 func (api *API) Run(rw http.ResponseWriter, req *http.Request) {
 	name := req.FormValue("container")
@@ -102,9 +92,9 @@ func (api *API) ResizeRun(rw http.ResponseWriter, req *http.Request) {
 // exec power but with added security.
 func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 	execWait.Add(1)
-	atomic.AddInt64(&waiting, 1)
+	util.Lock()
 	defer execWait.Done()
-	defer atomic.AddInt64(&waiting, -1)
+	defer util.Unlock()
 	name := req.FormValue("container")
 	if name == "" {
 		name = "exec1"

@@ -34,7 +34,7 @@ func (j *ServiceStart) Process() {
 
 	j.Success = false
 
-	util.LogInfo(stylish.SubBullet("Creating %v container", j.UID))
+	util.LogInfo(stylish.SubBullet("- Creating %v container", j.UID))
 
 	createConfig := util.CreateConfig{Name: j.UID}
 
@@ -54,7 +54,7 @@ func (j *ServiceStart) Process() {
 
 	createConfig.Image = "nanobox/" + image
 
-	util.LogDebug(stylish.SubBullet("image name: %v", createConfig.Image))
+	util.LogDebug(stylish.SubBullet("- image name: %v", createConfig.Image))
 
 	fmt.Println(createConfig)
 
@@ -99,7 +99,7 @@ func (j *ServiceStart) Process() {
 		return
 	}
 
-	util.LogInfo(stylish.Bullet("Starting %v service", j.UID))
+	util.LogInfo(stylish.SubBullet("- Starting %v service", j.UID))
 	
 	// run start hook (blocking)
 	if data, err := util.ExecHook("default-start", j.UID, payload); err != nil {

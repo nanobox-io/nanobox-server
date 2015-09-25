@@ -30,6 +30,9 @@ type Deploy struct {
 
 // Proccess syncronies your docker containers with the boxfile specification
 func (j *Deploy) Process() {
+	// add a lock so the service wont go down whil im running
+	util.Lock()
+	defer util.Unlock()
 
 	// clear the deploy log
 	// config.Logtap.Drains["history"].(*logtap.HistoricalDrain).ClearDeploy()
@@ -71,17 +74,18 @@ func (j *Deploy) Process() {
 	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
 
 	image := "nanobox/build"
-	if stab := box.Node("build").StringValue("stability"); stab != "" {
-		image = image + ":" + stab
-	}
-
-	util.LogDebug(stylish.Bullet("image name: %v", image))
 
 	// if the build image doesn't exist it needs to be downloaded
 	if !util.ImageExists(image) {
 		util.LogInfo(stylish.Bullet("Pulling the latest build image (this will take awhile)... "))
 		util.InstallImage(image)
 	}
+
+	if stab := box.Node("build").StringValue("stability"); stab != "" {
+		image = image + ":" + stab
+	}
+
+	util.LogDebug(stylish.Bullet("image name: %v", image))
 
 	// create a build container
 	util.LogInfo(stylish.Bullet("Creating build container"))
@@ -198,7 +202,9 @@ func (j *Deploy) Process() {
 		}
 	}
 
-	util.LogInfo(stylish.Bullet("Launching Requested services"))
+	if worker.Count() > 0 {
+		util.LogInfo(stylish.Bullet("Launching Data services"))
+	}
 	worker.Process()
 
 	// ensure all services started correctly before continuing
@@ -284,6 +290,7 @@ func (j *Deploy) Process() {
 	// we will only create new code nodes if we are
 	// supposed to be running
 	if j.Run {
+		
 		// build new code containers
 		codeServices := []*ServiceStart{}
 		for _, node := range box.Nodes("code") {
@@ -298,6 +305,9 @@ func (j *Deploy) Process() {
 				codeServices = append(codeServices, &s)
 
 				worker.Queue(&s)
+			}
+			if worker.Count() > 0 {
+				util.LogInfo(stylish.Bullet("Launching Code services"))
 			}
 		}
 

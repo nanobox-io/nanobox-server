@@ -49,6 +49,10 @@ func NewWorker() *Worker {
 	}
 }
 
+
+func (w *Worker) Count() int{
+	return len(w.queue)
+}
 //
 func (w *Worker) Queue(job Job) {
 	w.queueTex.Lock()

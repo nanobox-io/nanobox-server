@@ -24,6 +24,9 @@ type Build struct {
 
 // Proccess syncronies your docker containers with the boxfile specification
 func (j *Build) Process() {
+	// add a lock so the service wont go down whil im running
+	util.Lock()
+	defer util.Unlock()
 
 	_, err := util.InspectContainer("build1")
 	if err != nil {

@@ -74,9 +74,12 @@ func (api *API) registerRoutes() (*pat.Router, error) {
 		rw.Write([]byte("pong"))
 	})
 
-	router.Get("/logs", config.LogHandler)
-
 	router.Put("/suspend", api.handleRequest(api.Suspend))
+	router.Put("/lock", api.handleRequest(api.Lock))
+	router.Get("/lock-count", api.handleRequest(api.LockCount))
+
+	router.Get("/logs", config.LogHandler)
+	
 	router.Post("/exec", api.handleRequest(api.Run))
 	router.Post("/killexec", api.handleRequest(api.KillRun))
 	router.Post("/resizeexec", api.handleRequest(api.ResizeRun))

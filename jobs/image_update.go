@@ -28,7 +28,7 @@ func (j *ImageUpdate) Process() {
 
 	//
 	if len(images) == 0 {
-		util.LogInfo(stylish.Bullet("No images available for update..."))
+		util.LogInfo(stylish.SubBullet("- No images available for update..."))
 	}
 
 	//
@@ -37,7 +37,7 @@ func (j *ImageUpdate) Process() {
 
 			//
 			if strings.HasPrefix(tag, "nanobox") {
-				util.LogInfo(stylish.Bullet("Updating image: %s", tag))
+				util.LogInfo(stylish.SubBullet("- Updating image: %s", tag))
 				if err := util.UpdateImage(tag); err != nil {
 					util.HandleError("Unable to update image:" + err.Error())
 					util.UpdateStatus(j, "errored")
@@ -47,5 +47,6 @@ func (j *ImageUpdate) Process() {
 		}
 	}
 
+	util.LogInfo(stylish.SubBullet("- Update complete"))
 	util.UpdateStatus(j, "complete")
 }

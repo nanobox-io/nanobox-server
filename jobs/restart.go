@@ -22,6 +22,10 @@ type Restart struct {
 
 // Proccess syncronies your docker containers with the boxfile specification
 func (j *Restart) Process() {
+	// add a lock so the service wont go down whil im running
+	util.Lock()
+	defer util.Unlock()
+	
 	j.Success = false
 
 	util.LogInfo(stylish.Bullet("Restarting app in %s container...", j.UID))
