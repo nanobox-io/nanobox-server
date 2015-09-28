@@ -35,7 +35,6 @@ func (j *Build) Process() {
 	}
 
 	// parse the boxfile
-	util.LogInfo(stylish.Bullet("Parsing Boxfile..."))
 	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
 
 	// define the build payload

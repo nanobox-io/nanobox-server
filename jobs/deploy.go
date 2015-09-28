@@ -41,7 +41,7 @@ func (j *Deploy) Process() {
 	router.ErrorHandler = router.DeployInProgress{}
 
 	// remove all code containers
-	util.LogInfo(stylish.Bullet("Cleaning Containers"))
+	util.LogInfo(stylish.Bullet("Cleaning containers"))
 
 	// might as well remove bootstraps and execs too
 	containers, _ := util.ListContainers("code", "build", "bootstrap", "exec", "tcp", "udp")
@@ -121,45 +121,45 @@ func (j *Deploy) Process() {
 
 	// run configure hook (blocking)
 	if out, err := util.ExecHook("default-configure", "build1", j.payload); err != nil {
-		util.LogDebug("Failed Hook Output: \n %s", out)
-		util.HandleError(stylish.Error("Failed to run configure hook", err.Error()))
+		util.LogDebug("Failed script output: \n %s", out)
+		util.HandleError(stylish.Error("Failed to run configure script", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
 	}
 
-	// run detect hook (blocking)
+	// run detect script (blocking)
 	if out, err := util.ExecHook("default-detect", "build1", j.payload); err != nil {
-		util.LogDebug("Failed Hook Output: \n %s", out)
-		util.HandleError(stylish.Error("Failed to run detect hook", err.Error()))
+		util.LogDebug("Failed script output: \n %s", out)
+		util.HandleError(stylish.Error("Failed to run detect script", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
 	}
 
-	// run sync hook (blocking)
+	// run sync script (blocking)
 	if out, err := util.ExecHook("default-sync", "build1", j.payload); err != nil {
-		util.LogDebug("Failed Hook Output: \n %s", out)
-		util.HandleError(stylish.Error("Failed to run sync hook", err.Error()))
+		util.LogDebug("Failed script output: \n %s", out)
+		util.HandleError(stylish.Error("Failed to run sync script", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
 	}
 
-	// run setup hook (blocking)
+	// run setup script (blocking)
 	if out, err := util.ExecHook("default-setup", "build1", j.payload); err != nil {
-		util.LogDebug("Failed Hook Output: \n %s", out)
-		util.HandleError(stylish.Error("Failed to run setup hook", err.Error()))
+		util.LogDebug("Failed script output: \n %s", out)
+		util.HandleError(stylish.Error("Failed to run setup script", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
 	}
 
-	// run boxfile hook (blocking)
+	// run boxfile script (blocking)
 	if !box.Node("build").BoolValue("disable_engine_boxfile") {
 		if out, err := util.ExecHook("default-boxfile", "build1", j.payload); err != nil {
-			util.LogDebug("Failed Hook Output: \n %s", out)
-			util.HandleError(stylish.Error("Failed to run boxfile hook", err.Error()))
+			util.LogDebug("Failed script output: \n %s", out)
+			util.HandleError(stylish.Error("Failed to run boxfile script", err.Error()))
 			util.UpdateStatus(j, "errored")
 			return
 
-			// if the hook runs succesfully merge the boxfiles
+			// if the script runs succesfully merge the boxfiles
 		} else {
 			util.LogDebug(stylish.Bullet("Merging Boxfiles..."))
 			box.Merge(boxfile.New([]byte(out)))
@@ -203,7 +203,7 @@ func (j *Deploy) Process() {
 	}
 
 	if worker.Count() > 0 {
-		util.LogInfo(stylish.Bullet("Launching Data services"))
+		util.LogInfo(stylish.Bullet("Launching data services"))
 	}
 	worker.Process()
 
@@ -252,37 +252,37 @@ func (j *Deploy) Process() {
 
 	j.payload["env"] = evars
 
-	// run prepare hook (blocking)
+	// run prepare script (blocking)
 	if out, err := util.ExecHook("default-prepare", "build1", j.payload); err != nil {
-		util.LogDebug("Failed Hook Output: \n %s", out)
-		util.HandleError(stylish.Error("Failed to run prepare hook", err.Error()))
+		util.LogDebug("Failed script output: \n %s", out)
+		util.HandleError(stylish.Error("Failed to run prepare script", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
 	}
 
 	if j.Run {
-		// run build hook (blocking)
+		// run build script (blocking)
 		if out, err := util.ExecHook("default-build", "build1", j.payload); err != nil {
-			util.LogDebug("Failed Hook Output: \n %s", out)
-			util.HandleError(stylish.Error("Failed to run build hook", err.Error()))
+			util.LogDebug("Failed script output: \n %s", out)
+			util.HandleError(stylish.Error("Failed to run build script", err.Error()))
 			util.UpdateStatus(j, "errored")
 			return
 		}
 
-		// run publish hook (blocking)
+		// run publish script (blocking)
 		if out, err := util.ExecHook("default-publish", "build1", j.payload); err != nil {
-			util.LogDebug("Failed Hook Output: \n %s", out)
-			util.HandleError(stylish.Error("Failed to run publish hook", err.Error()))
+			util.LogDebug("Failed script output: \n %s", out)
+			util.HandleError(stylish.Error("Failed to run publish script", err.Error()))
 			util.UpdateStatus(j, "errored")
 			return
 		}
 	}
 
 
-	// run cleanup hook (blocking)
+	// run cleanup script (blocking)
 	if out, err := util.ExecHook("default-cleanup", "build1", j.payload); err != nil {
-		util.LogDebug("Failed Hook Output: \n %s", out)
-		util.HandleError(stylish.Error("Failed to run cleanup hook", err.Error()))
+		util.LogDebug("Failed script output: \n %s", out)
+		util.HandleError(stylish.Error("Failed to run cleanup script", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
 	}
@@ -322,18 +322,18 @@ func (j *Deploy) Process() {
 		}
 	}
 
-	util.LogDebug(stylish.Bullet("Running before deploy hooks..."))
+	util.LogDebug(stylish.Bullet("Running before deploy scripts..."))
 
-	// run before deploy hooks
+	// run before deploy scripts
 	for _, node := range box.Nodes() {
 		bd := box.Node(node).Value("before_deploy")
 		bda := box.Node(node).Value("before_deploy_all")
 		if bd != nil || bda != nil {
 
-			// run before deploy hook (blocking)
+			// run before deploy script (blocking)
 			if out, err := util.ExecHook("default-before_deploy", node, map[string]interface{}{"before_deploy": bd, "before_deploy_all": bda}); err != nil {
-				util.LogDebug("Failed Hook Output: \n %s", out)
-				util.HandleError(stylish.Error("Failed to run before_deploy hook", err.Error()))
+				util.LogDebug("Failed script output: \n %s", out)
+				util.HandleError(stylish.Error("Failed to run before_deploy script", err.Error()))
 				util.UpdateStatus(j, "errored")
 				return
 			}
@@ -367,8 +367,8 @@ func (j *Deploy) Process() {
 
 			// run after deploy hook (blocking)
 			if out, err := util.ExecHook("default-after_deploy", node, map[string]interface{}{"after_deploy": ad, "after_deploy_all": ada}); err != nil {
-				util.LogDebug("Failed Hook Output: \n %s", out)
-				util.HandleError(stylish.Error("Failed to run after_deploy hook", err.Error()))
+				util.LogDebug("Failed script output: \n %s", out)
+				util.HandleError(stylish.Error("Failed to run after_deploy script", err.Error()))
 				util.UpdateStatus(j, "errored")
 				return
 			}
