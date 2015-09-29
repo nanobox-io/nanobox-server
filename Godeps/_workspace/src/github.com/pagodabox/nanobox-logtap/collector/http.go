@@ -8,7 +8,7 @@ package collector
 
 import (
 	"github.com/jcelliott/lumber"
-	"github.com/pagodabox/nanobox-logtap"
+	"github.com/nanobox-io/nanobox-logtap"
 	"io"
 	"io/ioutil"
 	"net"

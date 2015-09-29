@@ -11,7 +11,7 @@ import (
 	"runtime/debug"
 	"sync"
 
-	"github.com/pagodabox/nanobox-server/config"
+	"github.com/nanobox-io/nanobox-server/config"
 )
 
 // structs

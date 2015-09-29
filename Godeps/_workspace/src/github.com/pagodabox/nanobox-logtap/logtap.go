@@ -7,7 +7,7 @@
 package logtap
 
 import (
-	"github.com/pagodabox/golang-hatchet"
+	"github.com/nanobox-io/golang-hatchet"
 	"sync"
 	"time"
 )

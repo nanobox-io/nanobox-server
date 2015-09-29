@@ -9,7 +9,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/pagodabox/nanobox-server/jobs"
+	"github.com/nanobox-io/nanobox-server/jobs"
 )
 
 // CreateBuild

@@ -16,9 +16,9 @@ import (
 	"github.com/gorilla/pat"
 	"github.com/pborman/uuid"
 
-	"github.com/pagodabox/nanobox-server/config"
-	"github.com/pagodabox/nanobox-server/jobs"
-	"github.com/pagodabox/nanobox-server/util"
+	"github.com/nanobox-io/nanobox-server/config"
+	"github.com/nanobox-io/nanobox-server/jobs"
+	"github.com/nanobox-io/nanobox-server/util"
 )
 
 // structs

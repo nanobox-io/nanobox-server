@@ -16,7 +16,7 @@ import (
 
 	docksig "github.com/docker/docker/pkg/signal"
 	"github.com/fsouza/go-dockerclient"
-	"github.com/pagodabox/nanobox-server/config"
+	"github.com/nanobox-io/nanobox-server/config"
 )
 
 type CreateConfig struct {

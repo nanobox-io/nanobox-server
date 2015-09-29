@@ -9,7 +9,7 @@ package api
 import (
 	"encoding/json"
 	"github.com/jcelliott/lumber"
-	"github.com/pagodabox/nanobox-logtap"
+	"github.com/nanobox-io/nanobox-logtap"
 	"net/http"
 	"strconv"
 )

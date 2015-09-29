@@ -10,8 +10,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jcelliott/lumber"
-	"github.com/pagodabox/golang-hatchet"
-	"github.com/pagodabox/nanobox-logtap"
+	"github.com/nanobox-io/golang-hatchet"
+	"github.com/nanobox-io/nanobox-logtap"
 	"io"
 )
 

@@ -11,7 +11,7 @@ import (
 	"github.com/jeromer/syslogparser"
 	"github.com/jeromer/syslogparser/rfc3164"
 	"github.com/jeromer/syslogparser/rfc5424"
-	"github.com/pagodabox/nanobox-logtap"
+	"github.com/nanobox-io/nanobox-logtap"
 	"io"
 	"net"
 	"strings"

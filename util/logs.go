@@ -9,8 +9,8 @@ package util
 import (
 	"fmt"
 
-	"github.com/pagodabox/nanobox-router"
-	"github.com/pagodabox/nanobox-server/config"
+	"github.com/nanobox-io/nanobox-router"
+	"github.com/nanobox-io/nanobox-server/config"
 )
 
 // LogDebug

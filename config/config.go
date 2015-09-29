@@ -17,14 +17,14 @@ import (
 
 	"github.com/jcelliott/lumber"
 
-	"github.com/pagodabox/golang-hatchet"
-	"github.com/pagodabox/golang-mist"
-	"github.com/pagodabox/nanobox-logtap"
-	logapi "github.com/pagodabox/nanobox-logtap/api"
-	"github.com/pagodabox/nanobox-logtap/archive"
-	"github.com/pagodabox/nanobox-logtap/collector"
-	"github.com/pagodabox/nanobox-logtap/drain"
-	"github.com/pagodabox/nanobox-router"
+	"github.com/nanobox-io/golang-hatchet"
+	"github.com/nanobox-io/golang-mist"
+	"github.com/nanobox-io/nanobox-logtap"
+	logapi "github.com/nanobox-io/nanobox-logtap/api"
+	"github.com/nanobox-io/nanobox-logtap/archive"
+	"github.com/nanobox-io/nanobox-logtap/collector"
+	"github.com/nanobox-io/nanobox-logtap/drain"
+	"github.com/nanobox-io/nanobox-router"
 )
 
 //

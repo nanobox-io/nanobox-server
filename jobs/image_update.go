@@ -9,8 +9,8 @@ package jobs
 import (
 	"strings"
 
-	"github.com/pagodabox/nanobox-golang-stylish"
-	"github.com/pagodabox/nanobox-server/util"
+	"github.com/nanobox-io/nanobox-golang-stylish"
+	"github.com/nanobox-io/nanobox-server/util"
 )
 
 type ImageUpdate struct{}

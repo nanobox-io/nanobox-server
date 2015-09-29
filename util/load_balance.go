@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/pagodabox/nanobox-lvs"
-	"github.com/pagodabox/nanobox-server/config"
+	"github.com/nanobox-io/nanobox-lvs"
+	"github.com/nanobox-io/nanobox-server/config"
 )
 
 // make sure the router is being forwarded

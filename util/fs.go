@@ -12,7 +12,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/pagodabox/nanobox-server/config"
+	"github.com/nanobox-io/nanobox-server/config"
 )
 
 var dirs []string = []string{"cache", "deploy", "build"}

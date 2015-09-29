@@ -13,9 +13,9 @@ import (
 	"time"
 	"sync"
 
-	"github.com/pagodabox/nanobox-boxfile"
-	"github.com/pagodabox/nanobox-server/config"
-	"github.com/pagodabox/nanobox-server/util"
+	"github.com/nanobox-io/nanobox-boxfile"
+	"github.com/nanobox-io/nanobox-server/config"
+	"github.com/nanobox-io/nanobox-server/util"
 )
 
 var execWait = sync.WaitGroup{}

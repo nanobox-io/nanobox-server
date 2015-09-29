@@ -21,9 +21,9 @@ This example will create a logtap that accepts udp syslog packets and stores the
 package main
 
 import (
-  "github.com/pagodabox/nanobox-logtap"
-  "github.com/pagodabox/nanobox-logtap/drain"
-  "github.com/pagodabox/nanobox-logtap/collector"
+  "github.com/nanobox-io/nanobox-logtap"
+  "github.com/nanobox-io/nanobox-logtap/drain"
+  "github.com/nanobox-io/nanobox-logtap/collector"
   "os"
   "os/signal"
 )

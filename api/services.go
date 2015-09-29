@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pagodabox/nanobox-server/config"
-	"github.com/pagodabox/nanobox-server/util"
+	"github.com/nanobox-io/nanobox-server/config"
+	"github.com/nanobox-io/nanobox-server/util"
 )
 
 //

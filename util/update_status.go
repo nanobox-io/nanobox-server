@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/pagodabox/nanobox-server/config"
+	"github.com/nanobox-io/nanobox-server/config"
 )
 
 // due to the way this uses the reflect library there are certain assumptions made

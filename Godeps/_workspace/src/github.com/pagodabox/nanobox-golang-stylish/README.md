@@ -8,12 +8,12 @@ A stylish little library that styles output according to the nanobox style guide
 
 Frist `go get` the project...
 
-`go get github.com/pagodabox/nanobox-golang-stylish`
+`go get github.com/nanobox-io/nanobox-golang-stylish`
 
 
 ...then include the library in your project
 
-`include github.com/pagodabox/nanobox-golang-stylish`
+`include github.com/nanobox-io/nanobox-golang-stylish`
 
 
 ### Usage
@@ -29,7 +29,7 @@ Available styles:
 + Warning(body string)
 + Fatal(header, body string)
 
-For detailed information see the [complete documentation](http://godoc.org/github.com/pagodabox/nanobox-golang-stylish)
+For detailed information see the [complete documentation](http://godoc.org/github.com/nanobox-io/nanobox-golang-stylish)
 
 
 ### Examples
@@ -126,4 +126,4 @@ things are probably going to explode now
 
 ### Documentation
 
-Complete documentation is available on [godoc](http://godoc.org/github.com/pagodabox/nanobox-golang-stylish).
+Complete documentation is available on [godoc](http://godoc.org/github.com/nanobox-io/nanobox-golang-stylish).

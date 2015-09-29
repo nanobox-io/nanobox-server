@@ -11,8 +11,8 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"github.com/boltdb/bolt"
-	"github.com/pagodabox/golang-hatchet"
-	"github.com/pagodabox/nanobox-logtap"
+	"github.com/nanobox-io/golang-hatchet"
+	"github.com/nanobox-io/nanobox-logtap"
 )
 
 type (

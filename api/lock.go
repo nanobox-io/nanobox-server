@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"fmt"
 
-	"github.com/pagodabox/nanobox-server/util"
+	"github.com/nanobox-io/nanobox-server/util"
 )
 
 func (api *API) Suspend(rw http.ResponseWriter, req *http.Request) {

@@ -10,8 +10,8 @@ package main
 import (
 	"os"
 
-	"github.com/pagodabox/nanobox-server/api"
-	"github.com/pagodabox/nanobox-server/config"
+	"github.com/nanobox-io/nanobox-server/api"
+	"github.com/nanobox-io/nanobox-server/config"
 )
 
 //

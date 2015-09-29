@@ -1,6 +1,6 @@
 package main
 
-import "github.com/pagodabox/nanobox-router"
+import "github.com/nanobox-io/nanobox-router"
 import "github.com/jcelliott/lumber"
 import "time"
 import "net"

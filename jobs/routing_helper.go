@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pagodabox/nanobox-boxfile"
-	"github.com/pagodabox/nanobox-router"
+	"github.com/nanobox-io/nanobox-boxfile"
+	"github.com/nanobox-io/nanobox-router"
 
-	"github.com/pagodabox/nanobox-server/config"
-	"github.com/pagodabox/nanobox-server/util"
+	"github.com/nanobox-io/nanobox-server/config"
+	"github.com/nanobox-io/nanobox-server/util"
 )
 
 // grab the original boxfile and loop through the webs
