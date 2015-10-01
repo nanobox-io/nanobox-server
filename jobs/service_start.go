@@ -7,7 +7,6 @@
 package jobs
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -34,9 +33,7 @@ func (j *ServiceStart) Process() {
 
 	j.Success = false
 
-	util.LogInfo(stylish.SubBullet("- Creating %v container", j.UID))
-
-	createConfig := util.CreateConfig{Name: j.UID}
+	createConfig := util.CreateConfig{UID: j.UID, Name: j.Boxfile.StringValue("name")}
 
 	image := regexp.MustCompile(`\d+`).ReplaceAllString(j.UID, "")
 	if image == "web" || image == "worker" || image == "tcp" || image == "udp" {
@@ -46,7 +43,11 @@ func (j *ServiceStart) Process() {
 		createConfig.Category = "service"
 	}
 
-	fmt.Println(j.Boxfile)
+	if !util.ImageExists("nanobox/" + image) {
+		util.LogInfo(stylish.SubBullet("- Pulling the latest %s image (this may take awhile)... ", image))
+		util.InstallImage("nanobox/" + image)
+	}	
+
 	extra := strings.Trim(strings.Join([]string{j.Boxfile.VersionValue("version"), j.Boxfile.StringValue("stability")}, "-"), "-")
 	if extra != "" {
 		image = image + ":" + extra
@@ -54,9 +55,9 @@ func (j *ServiceStart) Process() {
 
 	createConfig.Image = "nanobox/" + image
 
-	util.LogDebug(stylish.SubBullet("- image name: %v", createConfig.Image))
+	util.LogDebug(stylish.SubBullet("- Image name: %v", createConfig.Image))
 
-	fmt.Println(createConfig)
+	util.LogInfo(stylish.SubBullet("- Creating %v container", j.UID))
 
 	// start the container
 	if _, err = util.CreateContainer(createConfig); err != nil {

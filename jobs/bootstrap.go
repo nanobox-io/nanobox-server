@@ -38,7 +38,7 @@ func (j *Bootstrap) Process() {
 
 	// create a build container
 	util.LogInfo(stylish.Bullet("Creating build container..."))
-	_, err := util.CreateContainer(util.CreateConfig{Image: "nanobox/build", Category: "bootstrap", Name: "bootstrap1"})
+	_, err := util.CreateContainer(util.CreateConfig{Image: "nanobox/build", Category: "bootstrap", UID: "bootstrap1"})
 	if err != nil {
 		util.HandleError(stylish.Error("Failed to create build container", err.Error()))
 		util.UpdateStatus(j, "errored")

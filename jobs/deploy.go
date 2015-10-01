@@ -77,7 +77,7 @@ func (j *Deploy) Process() {
 
 	// if the build image doesn't exist it needs to be downloaded
 	if !util.ImageExists(image) {
-		util.LogInfo(stylish.Bullet("Pulling the latest build image (this will take awhile)... "))
+		util.LogInfo(stylish.Bullet("Pulling the latest build image (this may take awhile)... "))
 		util.InstallImage(image)
 	}
 
@@ -90,7 +90,7 @@ func (j *Deploy) Process() {
 	// create a build container
 	util.LogInfo(stylish.Bullet("Creating build container"))
 
-	_, err := util.CreateContainer(util.CreateConfig{Image: image, Category: "build", Name: "build1"})
+	_, err := util.CreateContainer(util.CreateConfig{Image: image, Category: "build", UID: "build1"})
 	if err != nil {
 		util.HandleError(stylish.Error("Failed to create build container", err.Error()))
 		util.UpdateStatus(j, "errored")
@@ -118,6 +118,12 @@ func (j *Deploy) Process() {
 
 	evar["APP_NAME"] = config.App
 	j.payload["env"] = evar
+
+	// run the default-user hook to get ssh keys setup
+	out, err := util.ExecHook("default-user", "build1", util.UserPayload())
+	if err != nil {
+		util.LogDebug("Failed script output: \n %s", out)
+	}
 
 	// run configure hook (blocking)
 	if out, err := util.ExecHook("default-configure", "build1", j.payload); err != nil {
@@ -205,6 +211,7 @@ func (j *Deploy) Process() {
 	if worker.Count() > 0 {
 		util.LogInfo(stylish.Bullet("Launching data services"))
 	}
+
 	worker.Process()
 
 	// ensure all services started correctly before continuing

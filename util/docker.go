@@ -21,6 +21,7 @@ import (
 
 type CreateConfig struct {
 	Category string
+	UID      string
 	Name     string
 	Cmd      []string
 	Image    string
@@ -31,10 +32,10 @@ func CreateContainer(conf CreateConfig) (*docker.Container, error) {
 		return nil, fmt.Errorf("Cannot create a container without an image")
 	}
 	cConfig := docker.CreateContainerOptions{
-		Name: conf.Name,
+		Name: conf.UID,
 		Config: &docker.Config{
 			Tty:             true,
-			Labels:          map[string]string{conf.Category: "true", "uid": conf.Name},
+			Labels:          map[string]string{conf.Category: "true", "uid": conf.UID, "name": conf.Name},
 			NetworkDisabled: false,
 			Image:           conf.Image,
 			Cmd:             conf.Cmd,
@@ -207,14 +208,14 @@ func InspectContainer(id string) (*docker.Container, error) {
 }
 
 // GetContainer
-func GetContainer(name string) (*docker.Container, error) {
+func GetContainer(id string) (*docker.Container, error) {
 	containers, err := ListContainers()
 	if err != nil {
 		return nil, err
 	}
 
 	for _, container := range containers {
-		if container.Name == name || container.Name == ("/"+name) || container.ID == name {
+		if container.Name == id || container.Name == ("/"+id) || container.ID == id {
 			return InspectContainer(container.ID)
 		}
 	}

@@ -29,14 +29,14 @@ func (j *ServiceEnv) Process() {
 	if out, err := util.ExecHook("environment", j.UID, nil); err != nil {
 		util.HandleError(stylish.ErrorHead("Failed to configure %v's environment variables", j.UID))
 		util.HandleError(stylish.ErrorBody(err.Error()))
-		util.UpdateStatus(j.deploy, "errored")
+		util.UpdateStatus(&j.deploy, "errored")
 		return
 	} else {
 		config.Log.Info("getting port data: %s", out)
 		if err := json.Unmarshal(out, &j.EVars); err != nil {
 			util.HandleError(stylish.ErrorHead("Failed to configure %v's environment variables", j.UID))
 			util.HandleError(stylish.ErrorBody(err.Error()))
-			util.UpdateStatus(j.deploy, "errored")
+			util.UpdateStatus(&j.deploy, "errored")
 			return
 		}
 	}

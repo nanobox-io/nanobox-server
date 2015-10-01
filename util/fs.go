@@ -68,3 +68,22 @@ func libDirs() (rtn []string) {
 	}
 	return rtn
 }
+
+func UserPayload() map[string]interface{} {
+	sshFiles, err := ioutil.ReadDir("/mnt/ssh/")
+	if err != nil {
+		return map[string]interface{}{"ssh_files":map[string]string{}}
+	}
+	files := map[string]string{}
+	for _, file := range sshFiles {
+		if !file.IsDir() && file.Name() != "authorized_keys" && file.Name() != "config" && file.Name() != "known_hosts" {
+			content, err := ioutil.ReadFile("/mnt/ssh/" + file.Name())
+			if err == nil {
+				files[file.Name()] = string(content)
+			}
+		}	
+	}
+	fmt.Printf("%+v\n", map[string]interface{}{"ssh_files":files})
+	return map[string]interface{}{"ssh_files":files}
+}
+

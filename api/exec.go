@@ -44,11 +44,18 @@ func (api *API) Run(rw http.ResponseWriter, req *http.Request) {
 			image = image + ":" + stab
 		}
 
-		container, err = util.CreateContainer(util.CreateConfig{Image: image, Category: "exec", Name: "exec1", Cmd: cmd})
+		container, err = util.CreateContainer(util.CreateConfig{Image: image, Category: "exec", UID: "exec1", Cmd: cmd})
 		if err != nil {
 			rw.Write([]byte(err.Error()))
 			return
 		}
+
+		// run the default-user hook to get ssh keys setup
+		out, err := util.ExecHook("default-user", "exec1", util.UserPayload())
+		if err != nil {
+			util.LogDebug("Failed script output: \n %s", out)
+		}
+		fmt.Println(string(out))
 	}
 
 	api.Exec(rw, req)

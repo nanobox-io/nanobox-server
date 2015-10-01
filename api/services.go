@@ -9,7 +9,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
+	// "strings"
 	"time"
 
 	"github.com/nanobox-io/nanobox-server/config"
@@ -20,10 +20,11 @@ import (
 type Service struct {
 	CreatedAt time.Time
 	IP        string
-	Name      string
+	UID       string 
+	Name      string `json:",omitempty"`
 	Ports     []int
-	Username  string `json:"omitempty"`
-	Password  string `json:"omitempty"`
+	Username  string `json:",omitempty"`
+	Password  string `json:",omitempty"`
 }
 
 // ListServices
@@ -39,11 +40,12 @@ func (api *API) ListServices(rw http.ResponseWriter, req *http.Request) {
 	for _, container := range containers {
 
 		// a 'service' representing the container
-		name := strings.Replace(container.Name, "/", "", 1)
+		// uid := strings.Replace(container.Name, "/", "", 1)
 		service := Service{
 			CreatedAt: container.Created,
 			IP:        container.NetworkSettings.IPAddress,
-			Name:      name,
+			UID:      container.Config.Labels["uid"],
+			Name:     container.Config.Labels["name"],
 		}
 
 		ports := []int{}
@@ -62,10 +64,12 @@ func (api *API) ListServices(rw http.ResponseWriter, req *http.Request) {
 			config.Log.Info("getting port data: %s", out)
 			evars := map[string]string{}
 			if err := json.Unmarshal(out, &evars); err == nil {
-				service.Password = evars["PASSWORD"]
-				service.Username = evars["USERNAME"]
+				config.Log.Info("unmarshelled: %+v", evars)
+				service.Password = evars["PASS"]
+				service.Username = evars["USER"]
 			}
 		}
+		config.Log.Info("service: %+v", service)
 
 		// add the service to the list to be returned
 		services = append(services, service)
