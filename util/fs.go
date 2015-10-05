@@ -83,7 +83,6 @@ func UserPayload() map[string]interface{} {
 			}
 		}	
 	}
-	fmt.Printf("%+v\n", map[string]interface{}{"ssh_files":files})
 	return map[string]interface{}{"ssh_files":files}
 }
 

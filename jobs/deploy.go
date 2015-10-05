@@ -120,9 +120,11 @@ func (j *Deploy) Process() {
 	j.payload["env"] = evar
 
 	// run the default-user hook to get ssh keys setup
-	out, err := util.ExecHook("default-user", "build1", util.UserPayload())
-	if err != nil {
+	if out, err := util.ExecHook("default-user", "build1", util.UserPayload()); err != nil {
 		util.LogDebug("Failed script output: \n %s", out)
+		util.HandleError(stylish.Error("Failed to run user script", err.Error()))
+		util.UpdateStatus(j, "errored")
+		return
 	}
 
 	// run configure hook (blocking)

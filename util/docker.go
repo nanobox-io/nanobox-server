@@ -258,6 +258,7 @@ func ExecInContainer(container string, args ...string) ([]byte, error) {
 		AttachStderr: true,
 		Cmd:          args,
 		Container:    container,
+		User:         "root",
 	}
 	exec, err := dockerClient().CreateExec(opts)
 
