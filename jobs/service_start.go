@@ -82,7 +82,7 @@ func (j *ServiceStart) Process() {
 		matched, _ := regexp.MatchString(`NFS\d+_HOST`, key)
 		if matched {
 			needsStorage = true
-			nfsUid := regexp.MustCompile(`_HOST`).ReplaceAllString(key, "")
+			nfsUid := strings.ToLower(regexp.MustCompile(`_HOST`).ReplaceAllString(key, ""))
 			host := map[string]string{"host": val}
 			storage[nfsUid] = host
 		}

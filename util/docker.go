@@ -89,7 +89,7 @@ func addCategoryConfig(category string, cConfig *docker.CreateContainerOptions) 
 	case "code":
 		cConfig.HostConfig.Binds = []string{
 			"/mnt/sda/var/nanobox/deploy/:/data/",
-			"/mnt/sda/var/nanobox/build/:/code/:ro",
+			"/mnt/sda/var/nanobox/build/:/code/",
 		}
 	case "service":
 		// nothing to be done here
