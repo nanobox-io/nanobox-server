@@ -20,11 +20,7 @@ import (
 	"github.com/nanobox-io/golang-hatchet"
 	"github.com/nanobox-io/golang-mist"
 	"github.com/nanobox-io/nanobox-logtap"
-	logapi "github.com/nanobox-io/nanobox-logtap/api"
-	"github.com/nanobox-io/nanobox-logtap/archive"
-	"github.com/nanobox-io/nanobox-logtap/collector"
-	"github.com/nanobox-io/nanobox-logtap/drain"
-	"github.com/nanobox-io/nanobox-router"
+
 )
 
 //
@@ -71,49 +67,8 @@ func init() {
 	// 	App, err = appName()
 	// }
 
-	// create new router
-	err = router.StartHTTP(":" + Ports["router"])
-	if err != nil {
-		Log.Error("error: %s\n", err.Error())
-	}
-
-	// create a new mist and start listening for messages at *:1445
 	Mist = mist.New()
-	Mist.Listen(Ports["mist"])
-
-	// create new logtap; // we don't need to defer a close here, because this want
-	// to live as long as the server
 	Logtap = logtap.New(Log)
-	// defer Logtap.Close()
-
-	//
-	console := drain.AdaptLogger(Log)
-	Logtap.AddDrain("console", console)
-
-	// define logtap collectors/drains; we don't need to defer Close() anything here,
-	// because these want to live as long as the server
-	if _, err := collector.SyslogUDPStart("app", Ports["logtap"], Logtap); err != nil {
-		panic(err)
-	}
-
-	//
-	if _, err := collector.SyslogTCPStart("app", Ports["logtap"], Logtap); err != nil {
-		panic(err)
-	}
-
-	// we will be adding a 0 to the end of the logtap port because we cant have 2 tcp listeneres
-	// on the same port
-	if _, err := collector.StartHttpCollector("deploy", Ports["logtap"]+"0", Logtap); err != nil {
-		panic(err)
-	}
-
-	//
-	db, err := archive.NewBoltArchive("/tmp/bolt.db")
-	LogHandler = logapi.GenerateArchiveEndpoint(db)
-
-	//
-	Logtap.AddDrain("historical", db.Write)
-	Logtap.AddDrain("mist", drain.AdaptPublisher(Mist))
 }
 
 //
