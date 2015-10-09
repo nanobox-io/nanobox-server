@@ -1,4 +1,4 @@
-https://travis-ci.org/nanobox-io/nanobox-server.svg?branch=master
+[![Build Status](https://travis-ci.org/nanobox-io/nanobox-server.svg?branch=master)](https://travis-ci.org/nanobox-io/nanobox-server)
 nanobox-server
 ==============
 
