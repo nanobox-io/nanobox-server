@@ -1,7 +1,6 @@
 package jobs
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/nanobox-io/nanobox-boxfile"
@@ -52,7 +51,6 @@ func configureRoutes(box boxfile.Boxfile) error {
 			newRoutes = append(newRoutes, router.Route{Name: config.App + ".dev", Path: "/", URLs: []string{"http://" + web1.NetworkSettings.IPAddress + ":8080"}})
 		}
 	}
-	fmt.Println("newRoutes:", newRoutes)
 	router.UpdateRoutes(newRoutes)
 	router.ErrorHandler = nil
 	return nil
@@ -63,7 +61,7 @@ func clearPorts() {
 	if err != nil {
 		return
 	}
-	
+
 	// remove all old forwards
 	for _, vip := range vips {
 		if vip.Port != 80 && vip.Port != 443 {
@@ -71,7 +69,7 @@ func clearPorts() {
 				util.RemoveForward(server.Host)
 			}
 		}
-	}	
+	}
 }
 
 func configurePorts(box boxfile.Boxfile) error {

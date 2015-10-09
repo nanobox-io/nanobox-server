@@ -15,6 +15,5 @@ func Lock() {
 }
 
 func Unlock() {
-	atomic.AddInt64(&lockCount, -1)	
+	atomic.AddInt64(&lockCount, -1)
 }
-

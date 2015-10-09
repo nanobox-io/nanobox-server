@@ -10,8 +10,8 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"time"
 	"sync"
+	"time"
 
 	"github.com/nanobox-io/nanobox-boxfile"
 	"github.com/nanobox-io/nanobox-server/config"

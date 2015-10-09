@@ -13,7 +13,7 @@ import (
 	"net"
 	"net/http"
 	"strings"
-	"time"
+	// "time"
 
 	"github.com/jcelliott/lumber"
 
@@ -65,11 +65,11 @@ func init() {
 
 	Log.Info("LogtapHost: " + LogtapHost)
 	App, err = appName()
-	for err != nil {
-		Log.Error("error: %s\n", err.Error())
-		time.Sleep(time.Second)
-		App, err = appName()
-	}
+	// for err != nil {
+	// 	Log.Error("error: %s\n", err.Error())
+	// 	time.Sleep(time.Second)
+	// 	App, err = appName()
+	// }
 
 	// create new router
 	err = router.StartHTTP(":" + Ports["router"])
@@ -163,10 +163,6 @@ func appName() (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	// for _, file := range files {
-	// 	Log.Info("%s: %s\n\n", file.Name(), file.IsDir())
-	// }
 
 	if len(files) < 1 || !files[0].IsDir() {
 		return "", errors.New("There is no code in your /vagrant/code/ folder")

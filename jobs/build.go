@@ -39,7 +39,7 @@ func (j *Build) Process() {
 
 	// define the build payload
 	j.payload = map[string]interface{}{
-		"platform":   "local",
+		"platform":    "local",
 		"app":         config.App,
 		"dns":         []string{config.App + ".dev"},
 		"port":        "8080",

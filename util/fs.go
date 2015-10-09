@@ -72,7 +72,7 @@ func libDirs() (rtn []string) {
 func UserPayload() map[string]interface{} {
 	sshFiles, err := ioutil.ReadDir("/mnt/ssh/")
 	if err != nil {
-		return map[string]interface{}{"ssh_files":map[string]string{}}
+		return map[string]interface{}{"ssh_files": map[string]string{}}
 	}
 	files := map[string]string{}
 	for _, file := range sshFiles {
@@ -81,8 +81,7 @@ func UserPayload() map[string]interface{} {
 			if err == nil {
 				files[file.Name()] = string(content)
 			}
-		}	
+		}
 	}
-	return map[string]interface{}{"ssh_files":files}
+	return map[string]interface{}{"ssh_files": files}
 }
-

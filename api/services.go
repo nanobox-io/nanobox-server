@@ -9,7 +9,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	// "strings"
+	"strings"
 	"time"
 
 	"github.com/nanobox-io/nanobox-server/config"
@@ -20,11 +20,12 @@ import (
 type Service struct {
 	CreatedAt time.Time
 	IP        string
-	UID       string 
+	UID       string
 	Name      string `json:",omitempty"`
 	Ports     []int
-	Username  string `json:",omitempty"`
-	Password  string `json:",omitempty"`
+	Username  string            `json:",omitempty"`
+	Password  string            `json:",omitempty"`
+	EnvVars   map[string]string `json:",omitempty"`
 }
 
 // ListServices
@@ -44,8 +45,8 @@ func (api *API) ListServices(rw http.ResponseWriter, req *http.Request) {
 		service := Service{
 			CreatedAt: container.Created,
 			IP:        container.NetworkSettings.IPAddress,
-			UID:      container.Config.Labels["uid"],
-			Name:     container.Config.Labels["name"],
+			UID:       container.Config.Labels["uid"],
+			Name:      container.Config.Labels["name"],
 		}
 
 		ports := []int{}
@@ -62,11 +63,18 @@ func (api *API) ListServices(rw http.ResponseWriter, req *http.Request) {
 		// run environment hook (blocking)
 		if out, err := util.ExecHook("environment", container.ID, nil); err == nil {
 			config.Log.Info("getting port data: %s", out)
-			evars := map[string]string{}
-			if err := json.Unmarshal(out, &evars); err == nil {
-				config.Log.Info("unmarshelled: %+v", evars)
+			uidlessEvar := map[string]string{}
+			if err := json.Unmarshal(out, &uidlessEvar); err == nil {
+				service.Password = uidlessEvar["PASS"]
+				service.Username = uidlessEvar["USER"]
+				upUid := strings.ToUpper(service.UID)
+				evars := map[string]string{}
+				for key, value := range uidlessEvar {
+					evars[upUid+"_"+key] = value
+				}
 				service.Password = evars["PASS"]
 				service.Username = evars["USER"]
+				service.EnvVars = evars
 			}
 		}
 		config.Log.Info("service: %+v", service)

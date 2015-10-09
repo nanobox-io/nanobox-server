@@ -46,7 +46,7 @@ func (j *ServiceStart) Process() {
 	if !util.ImageExists("nanobox/" + image) {
 		util.LogInfo(stylish.SubBullet("- Pulling the latest %s image (this may take awhile)... ", image))
 		util.InstallImage("nanobox/" + image)
-	}	
+	}
 
 	extra := strings.Trim(strings.Join([]string{j.Boxfile.VersionValue("version"), j.Boxfile.StringValue("stability")}, "-"), "-")
 	if extra != "" {
@@ -101,7 +101,7 @@ func (j *ServiceStart) Process() {
 	}
 
 	util.LogInfo(stylish.SubBullet("- Starting %v service", j.UID))
-	
+
 	// run start hook (blocking)
 	if data, err := util.ExecHook("default-start", j.UID, payload); err != nil {
 		util.LogDebug("Failed Hook Output:\n%s\n", data)

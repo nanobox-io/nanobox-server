@@ -62,8 +62,8 @@ func addCategoryConfig(category string, cConfig *docker.CreateContainerOptions) 
 		cConfig.HostConfig.Binds = append([]string{
 			"/vagrant/code/" + config.App + "/:/code/",
 		}, libDirs()...)
-		if container, err :=  GetContainer("build1"); err == nil {
-			cConfig.HostConfig.Binds = append(cConfig.HostConfig.Binds, fmt.Sprintf("/mnt/sda/var/lib/docker/aufs/mnt/%s/data/:/data/", container.ID))			
+		if container, err := GetContainer("build1"); err == nil {
+			cConfig.HostConfig.Binds = append(cConfig.HostConfig.Binds, fmt.Sprintf("/mnt/sda/var/lib/docker/aufs/mnt/%s/data/:/data/", container.ID))
 		}
 
 		cConfig.HostConfig.NetworkMode = "host"

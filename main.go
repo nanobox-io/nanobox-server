@@ -15,9 +15,6 @@ import (
 )
 
 //
-const Version = "0.0.1"
-
-//
 func main() {
 
 	// initialize the api and set up routing

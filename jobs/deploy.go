@@ -21,9 +21,9 @@ import (
 
 //
 type Deploy struct {
-	ID      string
-	Reset   bool
-	Run     bool
+	ID    string
+	Reset bool
+	Run   bool
 
 	payload map[string]interface{}
 }
@@ -99,7 +99,7 @@ func (j *Deploy) Process() {
 
 	// define the deploy payload
 	j.payload = map[string]interface{}{
-		"platform":   "local",
+		"platform":    "local",
 		"app":         config.App,
 		"dns":         []string{config.App + ".dev"},
 		"port":        "8080",
@@ -287,7 +287,6 @@ func (j *Deploy) Process() {
 		}
 	}
 
-
 	// run cleanup script (blocking)
 	if out, err := util.ExecHook("default-cleanup", "build1", j.payload); err != nil {
 		util.LogDebug("Failed script output: \n %s", out)
@@ -299,7 +298,7 @@ func (j *Deploy) Process() {
 	// we will only create new code nodes if we are
 	// supposed to be running
 	if j.Run {
-		
+
 		// build new code containers
 		codeServices := []*ServiceStart{}
 		for _, node := range box.Nodes("code") {
