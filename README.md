@@ -1,3 +1,4 @@
+https://travis-ci.org/nanobox-io/nanobox-server.svg?branch=master
 nanobox-server
 ==============
 
