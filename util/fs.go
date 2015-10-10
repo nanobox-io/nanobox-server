@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/nanobox-io/nanobox-boxfile"
 	"github.com/nanobox-io/nanobox-server/config"
 )
 
@@ -57,16 +58,16 @@ func LibDirs() (rtn []string) {
 }
 
 func libDirs() (rtn []string) {
-	files, err := ioutil.ReadDir("/mnt/sda/var/nanobox/cache/lib_dirs/")
-	if err != nil {
-		return
-	}
-	for _, file := range files {
-		if file.IsDir() {
-			rtn = append(rtn, fmt.Sprintf("/mnt/sda/var/nanobox/cache/lib_dirs/%s/:/code/%s/", file.Name(), file.Name()))
+	box := combinedBox()
+	lib_dirs, ok := box.Node("build").Value("lib_dirs").([]string)
+	if ok {
+		for _, lib_dir := range lib_dirs {
+			if !isDir("/vagrant/code/" + config.App + "/" + lib_dir) && isDir("/mnt/sda/var/nanobox/cache/lib_dirs/" + lib_dir) {
+				rtn = append(rtn, fmt.Sprintf("/mnt/sda/var/nanobox/cache/lib_dirs/%s/:/code/%s/", lib_dir, lib_dir))
+			}
 		}
 	}
-	return rtn
+	return
 }
 
 func UserPayload() map[string]interface{} {
@@ -84,4 +85,24 @@ func UserPayload() map[string]interface{} {
 		}
 	}
 	return map[string]interface{}{"ssh_files": files}
+}
+
+func isDir(path string) bool {
+	fi, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return fi.IsDir()
+}
+
+func combinedBox() boxfile.Boxfile {
+	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
+
+	// run boxfile script (blocking)
+	if !box.Node("build").BoolValue("disable_engine_boxfile") {
+		if out, err := ExecHook("default-boxfile", "build1", nil); err == nil {
+			box.Merge(boxfile.New([]byte(out)))
+		}
+	}	
+	return box
 }
