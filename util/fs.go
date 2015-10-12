@@ -60,9 +60,9 @@ func LibDirs() (rtn []string) {
 func libDirs() (rtn []string) {
 	box := combinedBox()
 	lib_dirs, ok := box.Node("build").Value("lib_dirs").([]string)
-	if ok {
+	if ok && !box.Node("console").BoolValue("ignore_lib_dirs") {
 		for _, lib_dir := range lib_dirs {
-			if !isDir("/vagrant/code/" + config.App + "/" + lib_dir) && isDir("/mnt/sda/var/nanobox/cache/lib_dirs/" + lib_dir) {
+			if isDir("/mnt/sda/var/nanobox/cache/lib_dirs/" + lib_dir) {
 				rtn = append(rtn, fmt.Sprintf("/mnt/sda/var/nanobox/cache/lib_dirs/%s/:/code/%s/", lib_dir, lib_dir))
 			}
 		}
