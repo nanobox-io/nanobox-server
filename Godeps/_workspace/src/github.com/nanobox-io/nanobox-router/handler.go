@@ -17,7 +17,7 @@ type handler struct {
 	https bool
 }
 
-// Implement the http.Handler interface. Also let clients know when I have
+// Implement the http.Handler interface. Also let clients know when I have 
 // no matching route listeners
 func (self handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	if ErrorHandler != nil {
@@ -39,8 +39,8 @@ func (self handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 }
 
 // route and subdomain matching system.
-// This first makes sure the domain matches in a recursive manor
-// example: sub.domain.com is requested and we recursively strip subdomains
+// This first makes sure the domain matches in a recursive manor 
+// example: sub.domain.com is requested and we recursively strip subdomains 
 // until we find a match. Then score the path match and confirm it is a match.
 func bestMatch(host, path string) *Proxy {
 	dom := Domain{}

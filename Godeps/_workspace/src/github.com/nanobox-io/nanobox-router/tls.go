@@ -19,11 +19,10 @@ type KeyPair struct {
 }
 
 var address = ":443"
-
 // Start listening for secure connection.
-// The web server is split out from the much simpler from of
+// The web server is split out from the much simpler from of 
 //   http.ListenAndServeTLS(addr string, certFile string, keyFile string, handler Handler)
-// because we needed to handle multiple certs all at the same time and we needed
+// because we needed to handle multiple certs all at the same time and we needed 
 // to be able to change the set of certs without restarting the server
 // this can be done by establishing a tls listener seperate form the http Server.
 func StartTLS(addr string) error {
