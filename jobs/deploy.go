@@ -79,14 +79,14 @@ func (j *Deploy) Process() {
 
 	image := "nanobox/build"
 
+	if stab := box.Node("build").StringValue("stability"); stab != "" {
+		image = image + ":" + stab
+	}
+
 	// if the build image doesn't exist it needs to be downloaded
 	if !docker.ImageExists(image) {
 		util.LogInfo(stylish.Bullet("Pulling the latest build image (this may take awhile)... "))
 		docker.InstallImage(image)
-	}
-
-	if stab := box.Node("build").StringValue("stability"); stab != "" {
-		image = image + ":" + stab
 	}
 
 	util.LogDebug(stylish.Bullet("image name: %v", image))

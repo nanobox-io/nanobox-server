@@ -116,12 +116,13 @@ func RunExec(exec *dc.Exec, in io.Reader, out io.Writer, err io.Writer) (*dc.Exe
 
 func libDirs() (rtn []string) {
 	box := combinedBox()
-	lib_dirs, ok := box.Node("build").Value("lib_dirs").([]interface{})
+	fmt.Printf("libdirsBox: %+v\n", box)
+	libDirs, ok := box.Node("build").Value("lib_dirs").([]interface{})
 	if ok && !box.Node("console").BoolValue("ignore_lib_dirs") {
-		for _, lib_dir := range lib_dirs {
-			strDir, ok := lib_dir.(string)
+		for _, libDir := range libDirs {
+			strDir, ok := libDir.(string)
 			if ok && isDir("/mnt/sda/var/nanobox/cache/lib_dirs/" + strDir) {
-				rtn = append(rtn, fmt.Sprintf("/mnt/sda/var/nanobox/cache/lib_dirs/%s/:/code/%s/", lib_dir, lib_dir))
+				rtn = append(rtn, fmt.Sprintf("/mnt/sda/var/nanobox/cache/lib_dirs/%s/:/code/%s/", strDir, strDir))
 			}
 		}
 	}
@@ -138,11 +139,19 @@ func isDir(path string) bool {
 
 func combinedBox() boxfile.Boxfile {
 	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
-
+	fmt.Printf("combinedFirstBox: %+v\n", box)
 	// run boxfile script (blocking)
 	if !box.Node("build").BoolValue("disable_engine_boxfile") {
-		if out, err := ExecInContainer("build1", "default-boxfile", "'{}'"); err == nil {
-			box.Merge(boxfile.New([]byte(out)))
+		out, err := ExecInContainer("build1", "default-boxfile", "'{}'")
+		if err != nil {
+			fmt.Printf("out: %+v, err: %+v\n", out, err)
+		}
+
+		if err == nil {
+			fmt.Printf("combinedEout: %s\n", out)
+			eBox := boxfile.New([]byte(out))
+			fmt.Printf("combinedEBox: %+v\n", box)
+			box.Merge(eBox)
 		}
 	}
 	return box

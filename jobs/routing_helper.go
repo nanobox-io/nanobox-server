@@ -17,7 +17,6 @@ import (
 // find all routes and regsiter the routes with the router
 //
 func configureRoutes(box boxfile.Boxfile) error {
-	fmt.Printf("config:box: %+v\n", box)
 	newRoutes := []router.Route{}
 	webs := box.Nodes("web")
 	for _, web := range webs {

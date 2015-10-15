@@ -1,7 +1,7 @@
 package worker_test
 
 import "testing"
-import "github.com/nanobox-io/nanobox-server/util"
+import "github.com/nanobox-io/nanobox-server/util/worker"
 
 type Job struct {
 	ProcessCount int

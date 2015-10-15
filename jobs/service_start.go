@@ -46,17 +46,17 @@ func (j *ServiceStart) Process() {
 	}
 
 	extra := strings.Trim(strings.Join([]string{j.Boxfile.VersionValue("version"), j.Boxfile.StringValue("stability")}, "-"), "-")
-	if extra != "" {
-		image = image + ":" + extra
-	} else {
+	if extra == "" {
 		image = image + ":latest"
+	} else {
+		image = image + ":" + extra
 	}
 
 	createConfig.Image = "nanobox/" + image
 
-	if !docker.ImageExists("nanobox/" + image) {
-		util.LogInfo(stylish.SubBullet("- Pulling the %s image (this may take awhile)... ", image))
-		docker.InstallImage("nanobox/" + image)
+	if !docker.ImageExists(createConfig.Image) {
+		util.LogInfo(stylish.SubBullet("- Pulling the %s image (this may take awhile)... ", createConfig.Image))
+		docker.InstallImage(createConfig.Image)
 	}
 
 	util.LogDebug(stylish.SubBullet("- Image name: %v", createConfig.Image))
