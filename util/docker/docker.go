@@ -116,7 +116,6 @@ func RunExec(exec *dc.Exec, in io.Reader, out io.Writer, err io.Writer) (*dc.Exe
 
 func libDirs() (rtn []string) {
 	box := combinedBox()
-	fmt.Printf("libdirsBox: %+v\n", box)
 	libDirs, ok := box.Node("build").Value("lib_dirs").([]interface{})
 	if ok && !box.Node("console").BoolValue("ignore_lib_dirs") {
 		for _, libDir := range libDirs {
@@ -139,18 +138,11 @@ func isDir(path string) bool {
 
 func combinedBox() boxfile.Boxfile {
 	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
-	fmt.Printf("combinedFirstBox: %+v\n", box)
 	// run boxfile script (blocking)
 	if !box.Node("build").BoolValue("disable_engine_boxfile") {
-		out, err := ExecInContainer("build1", "default-boxfile", "'{}'")
-		if err != nil {
-			fmt.Printf("out: %+v, err: %+v\n", out, err)
-		}
-
+		out, err := ExecInContainer("build1", "/opt/bin/default-boxfile", "{}")
 		if err == nil {
-			fmt.Printf("combinedEout: %s\n", out)
 			eBox := boxfile.New([]byte(out))
-			fmt.Printf("combinedEBox: %+v\n", box)
 			box.Merge(eBox)
 		}
 	}
