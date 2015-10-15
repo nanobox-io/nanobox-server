@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/nanobox-io/nanobox-boxfile"
@@ -8,17 +9,20 @@ import (
 
 	"github.com/nanobox-io/nanobox-server/config"
 	"github.com/nanobox-io/nanobox-server/util"
+	"github.com/nanobox-io/nanobox-server/util/docker"
+	"github.com/nanobox-io/nanobox-server/util/script"
 )
 
 // grab the original boxfile and loop through the webs
 // find all routes and regsiter the routes with the router
 //
 func configureRoutes(box boxfile.Boxfile) error {
+	fmt.Printf("config:box: %+v\n", box)
 	newRoutes := []router.Route{}
 	webs := box.Nodes("web")
 	for _, web := range webs {
 		b := box.Node(web)
-		container, err := util.GetContainer(web)
+		container, err := docker.GetContainer(web)
 		if err != nil {
 			// if the container doesnt exist just continue and dont
 			// add routes for that node
@@ -29,12 +33,12 @@ func configureRoutes(box boxfile.Boxfile) error {
 		for _, route := range routes(b) {
 			if len(ports(b)) == 0 {
 				route.URLs = []string{"http://" + ip + ":8080"}
-				newRoutes = append(newRoutes, route)
 			}
+			fmt.Printf("web:ports: %+v\n", ports(b))
 			for _, to := range ports(b) {
-				route.URLs = []string{"http://" + ip + ":" + to}
-				newRoutes = append(newRoutes, route)
+				route.URLs = append(route.URLs, "http://" + ip + ":" + to)
 			}
+			newRoutes = append(newRoutes, route)
 		}
 	}
 
@@ -47,8 +51,19 @@ func configureRoutes(box boxfile.Boxfile) error {
 		}
 	}
 	if !defaulted {
-		if web1, err := util.GetContainer("web1"); err == nil {
-			newRoutes = append(newRoutes, router.Route{Name: config.App + ".dev", Path: "/", URLs: []string{"http://" + web1.NetworkSettings.IPAddress + ":8080"}})
+		if web1, err := docker.GetContainer("web1"); err == nil {
+			ip := web1.NetworkSettings.IPAddress
+			route := router.Route{Name: config.App + ".dev", Path: "/"}
+			b := box.Node("web1")
+			if len(ports(b)) == 0 {
+				route.URLs = []string{"http://" + ip + ":8080"}
+			}
+			fmt.Printf("defbox: %+v\n", b)
+			fmt.Printf("defPorts: %+v\n", ports(b))
+			for _, to := range ports(b) {
+				route.URLs = append(route.URLs, "http://" + ip + ":" + to)
+			}
+			newRoutes = append(newRoutes, route)
 		}
 	}
 	router.UpdateRoutes(newRoutes)
@@ -79,7 +94,7 @@ func configurePorts(box boxfile.Boxfile) error {
 	nodes := box.Nodes("container")
 	for _, node := range nodes {
 		b := box.Node(node)
-		container, err := util.GetContainer(node)
+		container, err := docker.GetContainer(node)
 		if err != nil {
 			// if the container doesnt exist just continue and dont
 			// add routes for that node
@@ -125,27 +140,34 @@ func routes(box boxfile.Boxfile) (rtn []router.Route) {
 
 func ports(box boxfile.Boxfile) map[string]string {
 	rtn := map[string]string{}
-	ports, ok := box.Value("ports").([]string)
+	ports, ok := box.Value("ports").([]interface{})
 	if !ok {
-		tmps, ok := box.Value("ports").([]interface{})
-		if !ok {
-			return rtn
-		}
-		for _, tmp := range tmps {
-			if str, ok := tmp.(string); ok {
-				ports = append(ports, str)
+		return rtn
+	}
+	for _, port := range ports {
+		p, ok := port.(string)
+		if ok {
+			portParts := strings.Split(p, ":")
+			switch len(portParts) {
+			case 1:
+				rtn[portParts[0]] = portParts[0]
+			case 2:
+				rtn[portParts[0]] = portParts[1]
 			}
 		}
 	}
+	return rtn
+}
 
-	for _, port := range ports {
-		portParts := strings.Split(port, ":")
-		switch len(portParts) {
-		case 1:
-			rtn[portParts[0]] = portParts[0]
-		case 2:
-			rtn[portParts[0]] = portParts[1]
+
+func combinedBox() boxfile.Boxfile {
+	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
+
+	// run boxfile script (blocking)
+	if !box.Node("build").BoolValue("disable_engine_boxfile") {
+		if out, err := script.Exec("default-boxfile", "build1", nil); err == nil {
+			box.Merge(boxfile.New([]byte(out)))
 		}
 	}
-	return rtn
+	return box
 }

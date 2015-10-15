@@ -20,7 +20,6 @@ import (
 	"github.com/nanobox-io/golang-hatchet"
 	"github.com/nanobox-io/golang-mist"
 	"github.com/nanobox-io/nanobox-logtap"
-
 )
 
 //
@@ -42,7 +41,7 @@ func init() {
 	// create an error object
 	var err error
 
-	Log = lumber.NewConsoleLogger(lumber.INFO)
+	Log = lumber.NewConsoleLogger(lumber.DEBUG)
 
 	//
 	Ports = map[string]string{
@@ -59,7 +58,6 @@ func init() {
 
 	LogtapHost = IP
 
-	Log.Info("LogtapHost: " + LogtapHost)
 	App, err = appName()
 	// for err != nil {
 	// 	Log.Error("error: %s\n", err.Error())

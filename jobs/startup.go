@@ -11,7 +11,9 @@ import (
 	"github.com/nanobox-io/nanobox-boxfile"
 
 	"github.com/nanobox-io/nanobox-server/config"
-	"github.com/nanobox-io/nanobox-server/util"
+	"github.com/nanobox-io/nanobox-server/util/docker"
+	"github.com/nanobox-io/nanobox-server/util/script"
+	"github.com/nanobox-io/nanobox-server/util/worker"
 )
 
 //
@@ -21,16 +23,16 @@ type Startup struct{}
 func (j *Startup) Process() {
 	config.Log.Info("starting startup job")
 
-	util.RemoveContainer("exec1")
+	docker.RemoveContainer("exec1")
 	// TODO get the boxfile. merge with build boxfile(if any) and call:
 	// configureRoutes(box)
 	// configurePorts(box)
 	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
 
 	// if i have a build make sure to merge the boxfile
-	_, err := util.InspectContainer("build1")
+	_, err := docker.InspectContainer("build1")
 	if err == nil {
-		if out, err := util.ExecHook("default-boxfile", "build1", nil); err == nil {
+		if out, err := script.Exec("default-boxfile", "build1", nil); err == nil {
 			box.Merge(boxfile.New([]byte(out)))
 		}
 	}
@@ -40,11 +42,11 @@ func (j *Startup) Process() {
 
 	// we also need to set up a ssh tunnel for each running docker container
 	// this is easiest to do by creating a ServiceEnv job and working it
-	worker := util.NewWorker()
+	worker := worker.New()
 	worker.Blocking = true
 	worker.Concurrent = true
 
-	serviceContainers, _ := util.ListContainers("service")
+	serviceContainers, _ := docker.ListContainers("service")
 	for _, container := range serviceContainers {
 		s := ServiceEnv{UID: container.Config.Labels["uid"]}
 		worker.Queue(&s)

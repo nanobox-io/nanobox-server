@@ -4,21 +4,52 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at http://mozilla.org/MPL/2.0/.
 
-package util
+package fs
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 
-	"github.com/nanobox-io/nanobox-boxfile"
 	"github.com/nanobox-io/nanobox-server/config"
 )
 
-var dirs []string = []string{"cache", "deploy", "build"}
+var dirs = []string{"cache", "deploy", "build"}
+
+type FsUtil interface {
+	CreateDirs() error
+	Clean() error
+	Touch(file string)
+	LibDirs() (rtn []string)
+	UserPayload() map[string]interface{}
+}
+
+var FsDefault FsUtil
+
+type Fs struct {
+}
+
+func init() {
+	FsDefault = Fs{}
+}
 
 func CreateDirs() error {
+	return FsDefault.CreateDirs()
+}
+func Clean() error {
+	return FsDefault.Clean()
+}
+func Touch(file string) {
+	FsDefault.Touch(file)
+}
+func LibDirs() (rtn []string) {
+	return FsDefault.LibDirs()
+}
+func UserPayload() map[string]interface{} {
+	return FsDefault.UserPayload()
+}
+
+func (f Fs) CreateDirs() error {
 	for _, dir := range dirs {
 		err := os.MkdirAll("/mnt/sda/var/nanobox/"+dir+"/", 0755)
 		if err != nil {
@@ -28,7 +59,7 @@ func CreateDirs() error {
 	return nil
 }
 
-func Clean() error {
+func (f Fs) Clean() error {
 	for _, dir := range dirs {
 		err := os.RemoveAll("/mnt/sda/var/nanobox/" + dir + "/")
 		if err != nil {
@@ -38,12 +69,12 @@ func Clean() error {
 	return CreateDirs()
 }
 
-func Touch(file string) {
+func (f Fs) Touch(file string) {
 	file = "/vagrant/code/" + config.App + file
 	exec.Command("touch", "-c", file).Output()
 }
 
-func LibDirs() (rtn []string) {
+func (f Fs) LibDirs() (rtn []string) {
 	files, err := ioutil.ReadDir("/mnt/sda/var/nanobox/cache/lib_dirs/")
 	if err != nil {
 		return
@@ -57,20 +88,7 @@ func LibDirs() (rtn []string) {
 
 }
 
-func libDirs() (rtn []string) {
-	box := combinedBox()
-	lib_dirs, ok := box.Node("build").Value("lib_dirs").([]string)
-	if ok && !box.Node("console").BoolValue("ignore_lib_dirs") {
-		for _, lib_dir := range lib_dirs {
-			if isDir("/mnt/sda/var/nanobox/cache/lib_dirs/" + lib_dir) {
-				rtn = append(rtn, fmt.Sprintf("/mnt/sda/var/nanobox/cache/lib_dirs/%s/:/code/%s/", lib_dir, lib_dir))
-			}
-		}
-	}
-	return
-}
-
-func UserPayload() map[string]interface{} {
+func (f Fs) UserPayload() map[string]interface{} {
 	sshFiles, err := ioutil.ReadDir("/mnt/ssh/")
 	if err != nil {
 		return map[string]interface{}{"ssh_files": map[string]string{}}
@@ -93,16 +111,4 @@ func isDir(path string) bool {
 		return false
 	}
 	return fi.IsDir()
-}
-
-func combinedBox() boxfile.Boxfile {
-	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
-
-	// run boxfile script (blocking)
-	if !box.Node("build").BoolValue("disable_engine_boxfile") {
-		if out, err := ExecHook("default-boxfile", "build1", nil); err == nil {
-			box.Merge(boxfile.New([]byte(out)))
-		}
-	}	
-	return box
 }

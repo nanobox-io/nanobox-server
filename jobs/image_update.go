@@ -11,6 +11,7 @@ import (
 
 	"github.com/nanobox-io/nanobox-golang-stylish"
 	"github.com/nanobox-io/nanobox-server/util"
+	"github.com/nanobox-io/nanobox-server/util/docker"
 )
 
 type ImageUpdate struct{}
@@ -19,7 +20,7 @@ type ImageUpdate struct{}
 func (j *ImageUpdate) Process() {
 
 	//
-	images, err := util.ListImages()
+	images, err := docker.ListImages()
 	if err != nil {
 		util.HandleError("Unable to pull images:" + err.Error())
 		util.UpdateStatus(j, "errored")
@@ -38,7 +39,7 @@ func (j *ImageUpdate) Process() {
 			//
 			if strings.HasPrefix(tag, "nanobox") {
 				util.LogInfo(stylish.SubBullet("- Updating image: %s", tag))
-				if err := util.UpdateImage(tag); err != nil {
+				if err := docker.UpdateImage(tag); err != nil {
 					util.HandleError("Unable to update image:" + err.Error())
 					util.UpdateStatus(j, "errored")
 					return

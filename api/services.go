@@ -12,8 +12,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/nanobox-io/nanobox-router"
 	"github.com/nanobox-io/nanobox-server/config"
 	"github.com/nanobox-io/nanobox-server/util"
+	"github.com/nanobox-io/nanobox-server/util/docker"
+	"github.com/nanobox-io/nanobox-server/util/script"
 )
 
 //
@@ -28,6 +31,10 @@ type Service struct {
 	EnvVars   map[string]string `json:",omitempty"`
 }
 
+func (api *API) ListRoutes(rw http.ResponseWriter, req *http.Request) {
+	writeBody(router.Routes(), rw, http.StatusOK)
+}
+
 // ListServices
 func (api *API) ListServices(rw http.ResponseWriter, req *http.Request) {
 
@@ -37,7 +44,7 @@ func (api *API) ListServices(rw http.ResponseWriter, req *http.Request) {
 	// interate over each container building a corresponding service for that container
 	// and then add it to the list of services that will be passed back as the
 	// response
-	containers, _ := util.ListContainers("service")
+	containers, _ := docker.ListContainers("service")
 	for _, container := range containers {
 
 		// a 'service' representing the container
@@ -61,7 +68,7 @@ func (api *API) ListServices(rw http.ResponseWriter, req *http.Request) {
 		service.Ports = ports
 
 		// run environment hook (blocking)
-		if out, err := util.ExecHook("environment", container.ID, nil); err == nil {
+		if out, err := script.Exec("environment", container.ID, nil); err == nil {
 			config.Log.Info("getting port data: %s", out)
 			uidlessEvar := map[string]string{}
 			if err := json.Unmarshal(out, &uidlessEvar); err == nil {

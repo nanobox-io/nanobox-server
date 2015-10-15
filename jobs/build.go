@@ -8,10 +8,12 @@
 package jobs
 
 import (
-	"github.com/nanobox-io/nanobox-boxfile"
 	"github.com/nanobox-io/nanobox-golang-stylish"
 	"github.com/nanobox-io/nanobox-server/config"
 	"github.com/nanobox-io/nanobox-server/util"
+	"github.com/nanobox-io/nanobox-server/util/docker"
+	"github.com/nanobox-io/nanobox-server/util/script"
+	"github.com/nanobox-io/nanobox-server/util/worker"
 )
 
 //
@@ -28,14 +30,14 @@ func (j *Build) Process() {
 	util.Lock()
 	defer util.Unlock()
 
-	_, err := util.InspectContainer("build1")
+	_, err := docker.InspectContainer("build1")
 	if err != nil {
 		util.UpdateStatus(j, "unavailable")
 		return
 	}
 
 	// parse the boxfile
-	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
+	box := combinedBox()
 
 	// define the build payload
 	j.payload = map[string]interface{}{
@@ -54,34 +56,34 @@ func (j *Build) Process() {
 	j.payload["env"] = evar
 
 	// run sync hook (blocking)
-	if _, err := util.ExecHook("default-sync", "build1", j.payload); err != nil {
+	if _, err := script.Exec("default-sync", "build1", j.payload); err != nil {
 		util.HandleError(stylish.Error("Failed to run sync hook", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run build hook (blocking)
-	if _, err := util.ExecHook("default-build", "build1", j.payload); err != nil {
+	if _, err := script.Exec("default-build", "build1", j.payload); err != nil {
 		util.HandleError(stylish.Error("Failed to run build hook", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// run publish hook (blocking)
-	if _, err := util.ExecHook("default-publish", "build1", j.payload); err != nil {
+	if _, err := script.Exec("default-publish", "build1", j.payload); err != nil {
 		util.HandleError(stylish.Error("Failed to run publish hook", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
 	}
 
-	worker := util.NewWorker()
+	worker := worker.New()
 	worker.Blocking = true
 	worker.Concurrent = true
 
 	restarts := []*Restart{}
 
 	// find code containers and run the restart hook
-	containers, _ := util.ListContainers("code")
+	containers, _ := docker.ListContainers("code")
 	for _, container := range containers {
 
 		uid := container.Config.Labels["uid"]

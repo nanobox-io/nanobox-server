@@ -18,24 +18,20 @@ import (
 
 	"github.com/nanobox-io/nanobox-server/config"
 	"github.com/nanobox-io/nanobox-server/jobs"
-	"github.com/nanobox-io/nanobox-server/util"
+	"github.com/nanobox-io/nanobox-server/util/worker"
 )
 
 // structs
 type (
-	//
 	API struct {
-		Worker *util.Worker
+		Worker *worker.Worker
 	}
 )
 
 func Init() *API {
-	//
-	api := &API{
-		Worker: util.NewWorker(),
+	return &API{
+		Worker: worker.New(),
 	}
-
-	return api
 }
 
 // Start
@@ -91,6 +87,7 @@ func (api *API) registerRoutes() (*pat.Router, error) {
 	router.Post("/deploys", api.handleRequest(api.CreateDeploy))
 	router.Post("/image-update", api.handleRequest(api.UpdateImages))
 	router.Get("/services", api.handleRequest(api.ListServices))
+	router.Get("/routes", api.handleRequest(api.ListRoutes))
 	return router, nil
 }
 

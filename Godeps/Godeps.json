@@ -76,7 +76,7 @@
 		},
 		{
 			"ImportPath": "github.com/nanobox-io/nanobox-lvs",
-			"Rev": "22b4253474b395c1f9ab3074f45e2ca030b20fda"
+			"Rev": "620cc8911569686135cfd0d1e94e519992d12696"
 		},
 		{
 			"ImportPath": "github.com/nanobox-io/nanobox-router",

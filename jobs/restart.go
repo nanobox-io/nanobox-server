@@ -12,6 +12,7 @@ import (
 	"github.com/nanobox-io/nanobox-golang-stylish"
 	"github.com/nanobox-io/nanobox-server/config"
 	"github.com/nanobox-io/nanobox-server/util"
+	"github.com/nanobox-io/nanobox-server/util/script"
 )
 
 //
@@ -39,7 +40,7 @@ func (j *Restart) Process() {
 	}
 
 	// run restart hook (blocking)
-	if _, err := util.ExecHook("default-restart", j.UID, payload); err != nil {
+	if _, err := script.Exec("default-restart", j.UID, payload); err != nil {
 		util.LogInfo("ERROR %v\n", err)
 		return
 	}

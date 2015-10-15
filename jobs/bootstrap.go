@@ -11,6 +11,9 @@ import (
 	"github.com/nanobox-io/nanobox-golang-stylish"
 	"github.com/nanobox-io/nanobox-server/config"
 	"github.com/nanobox-io/nanobox-server/util"
+	"github.com/nanobox-io/nanobox-server/util/docker"
+	"github.com/nanobox-io/nanobox-server/util/fs"
+	"github.com/nanobox-io/nanobox-server/util/script"
 )
 
 //
@@ -24,21 +27,21 @@ func (j *Bootstrap) Process() {
 
 	// Make sure we have the directories
 	util.LogDebug(stylish.Bullet("Ensure directories exist on host..."))
-	if err := util.CreateDirs(); err != nil {
+	if err := fs.CreateDirs(); err != nil {
 		util.HandleError(stylish.Error("Failed to create dirs", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// if the build image doesn't exist it needs to be downloaded
-	if !util.ImageExists("nanobox/build") {
+	if !docker.ImageExists("nanobox/build") {
 		util.LogInfo(stylish.Bullet("Pulling the latest build image (this will take awhile)... "))
-		util.InstallImage("nanobox/build")
+		docker.InstallImage("nanobox/build")
 	}
 
 	// create a build container
 	util.LogInfo(stylish.Bullet("Creating build container..."))
-	_, err := util.CreateContainer(util.CreateConfig{Image: "nanobox/build", Category: "bootstrap", UID: "bootstrap1"})
+	_, err := docker.CreateContainer(docker.CreateConfig{Image: "nanobox/build", Category: "bootstrap", UID: "bootstrap1"})
 	if err != nil {
 		util.HandleError(stylish.Error("Failed to create build container", err.Error()))
 		util.UpdateStatus(j, "errored")
@@ -53,12 +56,12 @@ func (j *Bootstrap) Process() {
 	}
 
 	// run configure hook (blocking)
-	if _, err := util.ExecHook("default-bootstrap", "bootstrap1", payload); err != nil {
+	if _, err := script.Exec("default-bootstrap", "bootstrap1", payload); err != nil {
 		util.HandleError(stylish.Error("Failed to run bootstrap hook", err.Error()))
 		util.UpdateStatus(j, "errored")
 	}
 
-	util.RemoveContainer("bootstrap1")
+	docker.RemoveContainer("bootstrap1")
 
 	util.UpdateStatus(j, "complete")
 }

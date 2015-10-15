@@ -10,13 +10,13 @@ package main
 import (
 	"os"
 
-	"github.com/nanobox-io/nanobox-router"
-	"github.com/nanobox-io/nanobox-server/api"
-	"github.com/nanobox-io/nanobox-server/config"
 	logapi "github.com/nanobox-io/nanobox-logtap/api"
 	"github.com/nanobox-io/nanobox-logtap/archive"
 	"github.com/nanobox-io/nanobox-logtap/collector"
 	"github.com/nanobox-io/nanobox-logtap/drain"
+	"github.com/nanobox-io/nanobox-router"
+	"github.com/nanobox-io/nanobox-server/api"
+	"github.com/nanobox-io/nanobox-server/config"
 )
 
 //
@@ -31,7 +31,6 @@ func main() {
 	if err != nil {
 		config.Log.Error("error: %s\n", err.Error())
 	}
-
 
 	// initialize the api and set up routing
 	api := api.Init()
@@ -75,5 +74,5 @@ func setupLogtap() {
 	//
 	config.Logtap.AddDrain("historical", db.Write)
 	config.Logtap.AddDrain("mist", drain.AdaptPublisher(config.Mist))
-	
+
 }

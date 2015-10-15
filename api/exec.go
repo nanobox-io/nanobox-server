@@ -16,7 +16,12 @@ import (
 	"github.com/nanobox-io/nanobox-boxfile"
 	"github.com/nanobox-io/nanobox-server/config"
 	"github.com/nanobox-io/nanobox-server/util"
+	"github.com/nanobox-io/nanobox-server/util/fs"
+	"github.com/nanobox-io/nanobox-server/util/docker"
+	"github.com/nanobox-io/nanobox-server/util/script"
 )
+
+var createTex = sync.Mutex{}
 
 var execWait = sync.WaitGroup{}
 
@@ -32,9 +37,11 @@ func (api *API) Run(rw http.ResponseWriter, req *http.Request) {
 	box := mergedBox()
 
 	containerControl := false
+
+	createTex.Lock()
 	// if there is no exec 1 it needs to be created and this thread needs to remember
 	// to shut it down when its done conatinerControl is used for that purpose
-	container, err := util.GetContainer("exec1")
+	container, err := docker.GetContainer("exec1")
 	if err != nil {
 		containerControl = true
 		cmd := []string{"/bin/sleep", "365d"}
@@ -44,40 +51,42 @@ func (api *API) Run(rw http.ResponseWriter, req *http.Request) {
 			image = image + ":" + stab
 		}
 
-		container, err = util.CreateContainer(util.CreateConfig{Image: image, Category: "exec", UID: "exec1", Cmd: cmd})
+		container, err = docker.CreateContainer(docker.CreateConfig{Image: image, Category: "exec", UID: "exec1", Cmd: cmd})
 		if err != nil {
 			rw.Write([]byte(err.Error()))
 			return
 		}
 
 		// run the default-user hook to get ssh keys setup
-		out, err := util.ExecHook("default-user", "exec1", util.UserPayload())
+		out, err := script.Exec("default-user", "exec1", fs.UserPayload())
 		if err != nil {
 			util.LogDebug("Failed script output: \n %s", out)
 		}
 		fmt.Println(string(out))
 	}
 
+	createTex.Unlock()
+
 	api.Exec(rw, req)
 
 	if containerControl {
 		execWait.Wait()
-		util.RemoveContainer(container.ID)
+		docker.RemoveContainer(container.ID)
 	}
 }
 
 func (api *API) LibDirs(rw http.ResponseWriter, req *http.Request) {
-	writeBody(util.LibDirs(), rw, http.StatusOK)
+	writeBody(fs.LibDirs(), rw, http.StatusOK)
 }
 
 func (api *API) FileChange(rw http.ResponseWriter, req *http.Request) {
-	util.Touch(req.FormValue("filename"))
+	fs.Touch(req.FormValue("filename"))
 	writeBody(nil, rw, http.StatusOK)
 }
 
 func (api *API) KillRun(rw http.ResponseWriter, req *http.Request) {
 	fmt.Printf("signal recieved: %s\n", req.FormValue("signal"))
-	err := util.KillContainer("exec1", req.FormValue("signal"))
+	err := docker.KillContainer("exec1", req.FormValue("signal"))
 	fmt.Println(err)
 }
 
@@ -91,7 +100,7 @@ func (api *API) ResizeRun(rw http.ResponseWriter, req *http.Request) {
 	if h == 0 || w == 0 {
 		return
 	}
-	err := util.ResizeContainerTTY("exec1", h, w)
+	err := docker.ResizeContainerTTY("exec1", h, w)
 	fmt.Println(err)
 }
 
@@ -120,7 +129,7 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 		cmd = append(cmd, "-c", additionalCmd)
 	}
 
-	container, err := util.GetContainer(name)
+	container, err := docker.GetContainer(name)
 	if err != nil {
 		conn.Write([]byte(err.Error()))
 		return
@@ -129,11 +138,11 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 	// Flush the options to make sure the client sets the raw mode
 	conn.Write([]byte{})
 
-	exec, err := util.CreateExec(container.ID, cmd, true, true, true)
+	exec, err := docker.CreateExec(container.ID, cmd, true, true, true)
 	if err == nil {
 		execKeys[name] = exec.ID
 		defer delete(execKeys, name)
-		util.RunExec(exec, conn, conn, conn)
+		docker.RunExec(exec, conn, conn, conn)
 	}
 }
 
@@ -154,13 +163,13 @@ func (api *API) ResizeExec(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err := util.ResizeExecTTY(execKeys[name], h, w)
+	err := docker.ResizeExecTTY(execKeys[name], h, w)
 	fmt.Println(err)
 }
 
 func mergedBox() (box boxfile.Boxfile) {
 	box = boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
-	if out, err := util.ExecHook("boxfile", "build1", map[string]interface{}{}); err == nil {
+	if out, err := script.Exec("boxfile", "build1", map[string]interface{}{}); err == nil {
 		box.Merge(boxfile.New([]byte(out)))
 	}
 	return

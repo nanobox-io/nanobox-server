@@ -17,6 +17,10 @@ import (
 	"github.com/nanobox-io/nanobox-router"
 	"github.com/nanobox-io/nanobox-server/config"
 	"github.com/nanobox-io/nanobox-server/util"
+	"github.com/nanobox-io/nanobox-server/util/docker"
+	"github.com/nanobox-io/nanobox-server/util/fs"
+	"github.com/nanobox-io/nanobox-server/util/script"
+	"github.com/nanobox-io/nanobox-server/util/worker"
 )
 
 //
@@ -44,10 +48,10 @@ func (j *Deploy) Process() {
 	util.LogInfo(stylish.Bullet("Cleaning containers"))
 
 	// might as well remove bootstraps and execs too
-	containers, _ := util.ListContainers("code", "build", "bootstrap", "exec", "tcp", "udp")
+	containers, _ := docker.ListContainers("code", "build", "bootstrap", "exec", "tcp", "udp")
 	for _, container := range containers {
 		util.RemoveForward(container.NetworkSettings.IPAddress)
-		if err := util.RemoveContainer(container.ID); err != nil {
+		if err := docker.RemoveContainer(container.ID); err != nil {
 			util.HandleError(stylish.Error("Failed to remove old containers", err.Error()))
 			util.UpdateStatus(j, "errored")
 			return
@@ -55,7 +59,7 @@ func (j *Deploy) Process() {
 	}
 
 	// Make sure we have the directories
-	if err := util.CreateDirs(); err != nil {
+	if err := fs.CreateDirs(); err != nil {
 		util.HandleError(stylish.Error("Failed to create dirs", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
@@ -64,7 +68,7 @@ func (j *Deploy) Process() {
 	// wipe the previous deploy data if reset == true
 	if j.Reset {
 		util.LogInfo(stylish.Bullet("Emptying cache"))
-		if err := util.Clean(); err != nil {
+		if err := fs.Clean(); err != nil {
 			util.HandleError(stylish.Warning("Failed to reset cache and code directories:\n%v", err.Error()))
 		}
 	}
@@ -76,9 +80,9 @@ func (j *Deploy) Process() {
 	image := "nanobox/build"
 
 	// if the build image doesn't exist it needs to be downloaded
-	if !util.ImageExists(image) {
+	if !docker.ImageExists(image) {
 		util.LogInfo(stylish.Bullet("Pulling the latest build image (this may take awhile)... "))
-		util.InstallImage(image)
+		docker.InstallImage(image)
 	}
 
 	if stab := box.Node("build").StringValue("stability"); stab != "" {
@@ -90,7 +94,7 @@ func (j *Deploy) Process() {
 	// create a build container
 	util.LogInfo(stylish.Bullet("Creating build container"))
 
-	_, err := util.CreateContainer(util.CreateConfig{Image: image, Category: "build", UID: "build1"})
+	_, err := docker.CreateContainer(docker.CreateConfig{Image: image, Category: "build", UID: "build1"})
 	if err != nil {
 		util.HandleError(stylish.Error("Failed to create build container", err.Error()))
 		util.UpdateStatus(j, "errored")
@@ -120,7 +124,7 @@ func (j *Deploy) Process() {
 	j.payload["env"] = evar
 
 	// run the default-user hook to get ssh keys setup
-	if out, err := util.ExecHook("default-user", "build1", util.UserPayload()); err != nil {
+	if out, err := script.Exec("default-user", "build1", fs.UserPayload()); err != nil {
 		util.LogDebug("Failed script output: \n %s", out)
 		util.HandleError(stylish.Error("Failed to run user script", err.Error()))
 		util.UpdateStatus(j, "errored")
@@ -128,7 +132,7 @@ func (j *Deploy) Process() {
 	}
 
 	// run configure hook (blocking)
-	if out, err := util.ExecHook("default-configure", "build1", j.payload); err != nil {
+	if out, err := script.Exec("default-configure", "build1", j.payload); err != nil {
 		util.LogDebug("Failed script output: \n %s", out)
 		util.HandleError(stylish.Error("Failed to run configure script", err.Error()))
 		util.UpdateStatus(j, "errored")
@@ -136,7 +140,7 @@ func (j *Deploy) Process() {
 	}
 
 	// run detect script (blocking)
-	if out, err := util.ExecHook("default-detect", "build1", j.payload); err != nil {
+	if out, err := script.Exec("default-detect", "build1", j.payload); err != nil {
 		util.LogDebug("Failed script output: \n %s", out)
 		util.HandleError(stylish.Error("Failed to run detect script", err.Error()))
 		util.UpdateStatus(j, "errored")
@@ -144,7 +148,7 @@ func (j *Deploy) Process() {
 	}
 
 	// run sync script (blocking)
-	if out, err := util.ExecHook("default-sync", "build1", j.payload); err != nil {
+	if out, err := script.Exec("default-sync", "build1", j.payload); err != nil {
 		util.LogDebug("Failed script output: \n %s", out)
 		util.HandleError(stylish.Error("Failed to run sync script", err.Error()))
 		util.UpdateStatus(j, "errored")
@@ -152,7 +156,7 @@ func (j *Deploy) Process() {
 	}
 
 	// run setup script (blocking)
-	if out, err := util.ExecHook("default-setup", "build1", j.payload); err != nil {
+	if out, err := script.Exec("default-setup", "build1", j.payload); err != nil {
 		util.LogDebug("Failed script output: \n %s", out)
 		util.HandleError(stylish.Error("Failed to run setup script", err.Error()))
 		util.UpdateStatus(j, "errored")
@@ -161,7 +165,7 @@ func (j *Deploy) Process() {
 
 	// run boxfile script (blocking)
 	if !box.Node("build").BoolValue("disable_engine_boxfile") {
-		if out, err := util.ExecHook("default-boxfile", "build1", j.payload); err != nil {
+		if out, err := script.Exec("default-boxfile", "build1", j.payload); err != nil {
 			util.LogDebug("Failed script output: \n %s", out)
 			util.HandleError(stylish.Error("Failed to run boxfile script", err.Error()))
 			util.UpdateStatus(j, "errored")
@@ -179,15 +183,15 @@ func (j *Deploy) Process() {
 
 	// remove any containers no longer in the boxfile
 	util.LogDebug(stylish.Bullet("Removing old containers..."))
-	serviceContainers, _ := util.ListContainers("service")
+	serviceContainers, _ := docker.ListContainers("service")
 	for _, container := range serviceContainers {
 		if !box.Node(container.Config.Labels["uid"]).Valid {
 			util.RemoveForward(container.NetworkSettings.IPAddress)
-			util.RemoveContainer(container.ID)
+			docker.RemoveContainer(container.ID)
 		}
 	}
 
-	worker := util.NewWorker()
+	worker := worker.New()
 	worker.Blocking = true
 	worker.Concurrent = true
 
@@ -196,7 +200,7 @@ func (j *Deploy) Process() {
 
 	// build service containers according to boxfile
 	for _, node := range box.Nodes("service") {
-		if _, err := util.GetContainer(node); err != nil {
+		if _, err := docker.GetContainer(node); err != nil {
 			// container doesn't exist so we need to create it
 			s := ServiceStart{
 				Boxfile: box.Node(node),
@@ -235,7 +239,7 @@ func (j *Deploy) Process() {
 	//
 	serviceEnvs := []*ServiceEnv{}
 
-	serviceContainers, _ = util.ListContainers("service")
+	serviceContainers, _ = docker.ListContainers("service")
 	for _, container := range serviceContainers {
 
 		s := ServiceEnv{UID: container.Config.Labels["uid"]}
@@ -262,7 +266,7 @@ func (j *Deploy) Process() {
 	j.payload["env"] = evars
 
 	// run prepare script (blocking)
-	if out, err := util.ExecHook("default-prepare", "build1", j.payload); err != nil {
+	if out, err := script.Exec("default-prepare", "build1", j.payload); err != nil {
 		util.LogDebug("Failed script output: \n %s", out)
 		util.HandleError(stylish.Error("Failed to run prepare script", err.Error()))
 		util.UpdateStatus(j, "errored")
@@ -271,7 +275,7 @@ func (j *Deploy) Process() {
 
 	if j.Run {
 		// run build script (blocking)
-		if out, err := util.ExecHook("default-build", "build1", j.payload); err != nil {
+		if out, err := script.Exec("default-build", "build1", j.payload); err != nil {
 			util.LogDebug("Failed script output: \n %s", out)
 			util.HandleError(stylish.Error("Failed to run build script", err.Error()))
 			util.UpdateStatus(j, "errored")
@@ -279,7 +283,7 @@ func (j *Deploy) Process() {
 		}
 
 		// run publish script (blocking)
-		if out, err := util.ExecHook("default-publish", "build1", j.payload); err != nil {
+		if out, err := script.Exec("default-publish", "build1", j.payload); err != nil {
 			util.LogDebug("Failed script output: \n %s", out)
 			util.HandleError(stylish.Error("Failed to run publish script", err.Error()))
 			util.UpdateStatus(j, "errored")
@@ -288,7 +292,7 @@ func (j *Deploy) Process() {
 	}
 
 	// run cleanup script (blocking)
-	if out, err := util.ExecHook("default-cleanup", "build1", j.payload); err != nil {
+	if out, err := script.Exec("default-cleanup", "build1", j.payload); err != nil {
 		util.LogDebug("Failed script output: \n %s", out)
 		util.HandleError(stylish.Error("Failed to run cleanup script", err.Error()))
 		util.UpdateStatus(j, "errored")
@@ -302,7 +306,7 @@ func (j *Deploy) Process() {
 		// build new code containers
 		codeServices := []*ServiceStart{}
 		for _, node := range box.Nodes("code") {
-			if _, err := util.GetContainer(node); err != nil {
+			if _, err := docker.GetContainer(node); err != nil {
 				// container doesn't exist so we need to create it
 				s := ServiceStart{
 					Boxfile: box.Node(node),
@@ -339,7 +343,7 @@ func (j *Deploy) Process() {
 		if bd != nil || bda != nil {
 
 			// run before deploy script (blocking)
-			if out, err := util.ExecHook("default-before_deploy", node, map[string]interface{}{"before_deploy": bd, "before_deploy_all": bda}); err != nil {
+			if out, err := script.Exec("default-before_deploy", node, map[string]interface{}{"before_deploy": bd, "before_deploy_all": bda}); err != nil {
 				util.LogDebug("Failed script output: \n %s", out)
 				util.HandleError(stylish.Error("Failed to run before_deploy script", err.Error()))
 				util.UpdateStatus(j, "errored")
@@ -374,7 +378,7 @@ func (j *Deploy) Process() {
 		if ad != nil || ada != nil {
 
 			// run after deploy hook (blocking)
-			if out, err := util.ExecHook("default-after_deploy", node, map[string]interface{}{"after_deploy": ad, "after_deploy_all": ada}); err != nil {
+			if out, err := script.Exec("default-after_deploy", node, map[string]interface{}{"after_deploy": ad, "after_deploy_all": ada}); err != nil {
 				util.LogDebug("Failed script output: \n %s", out)
 				util.HandleError(stylish.Error("Failed to run after_deploy script", err.Error()))
 				util.UpdateStatus(j, "errored")

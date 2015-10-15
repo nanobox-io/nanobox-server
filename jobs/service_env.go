@@ -13,6 +13,8 @@ import (
 	"github.com/nanobox-io/nanobox-golang-stylish"
 	"github.com/nanobox-io/nanobox-server/config"
 	"github.com/nanobox-io/nanobox-server/util"
+	"github.com/nanobox-io/nanobox-server/util/docker"
+	"github.com/nanobox-io/nanobox-server/util/script"
 )
 
 type ServiceEnv struct {
@@ -26,7 +28,7 @@ func (j *ServiceEnv) Process() {
 	j.Success = false
 
 	// run environment hook (blocking)
-	if out, err := util.ExecHook("environment", j.UID, nil); err != nil {
+	if out, err := script.Exec("environment", j.UID, nil); err != nil {
 		util.HandleError(stylish.ErrorHead("Failed to configure %v's environment variables", j.UID))
 		util.HandleError(stylish.ErrorBody(err.Error()))
 		util.UpdateStatus(&j.deploy, "errored")
@@ -49,7 +51,7 @@ func (j *ServiceEnv) Process() {
 	}
 
 	// now we need to set the host in the evars as well as create a tunnel port in the router
-	container, err := util.InspectContainer(j.UID)
+	container, err := docker.InspectContainer(j.UID)
 	if err != nil {
 		util.HandleError(stylish.ErrorHead("Failed to configure %v's tunnel", j.UID))
 		util.HandleError(stylish.ErrorBody(err.Error()))

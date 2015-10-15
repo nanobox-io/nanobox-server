@@ -5,7 +5,7 @@
 // obtain one at http://mozilla.org/MPL/2.0/.
 
 //
-package util
+package worker
 
 import (
 	"runtime/debug"
@@ -39,7 +39,7 @@ type (
 )
 
 //
-func NewWorker() *Worker {
+func New() *Worker {
 	return &Worker{
 		Blocking:   false,
 		Concurrent: false,

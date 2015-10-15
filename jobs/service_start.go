@@ -14,6 +14,8 @@ import (
 	"github.com/nanobox-io/nanobox-golang-stylish"
 	"github.com/nanobox-io/nanobox-server/config"
 	"github.com/nanobox-io/nanobox-server/util"
+	"github.com/nanobox-io/nanobox-server/util/docker"
+	"github.com/nanobox-io/nanobox-server/util/script"
 )
 
 //
@@ -33,7 +35,7 @@ func (j *ServiceStart) Process() {
 
 	j.Success = false
 
-	createConfig := util.CreateConfig{UID: j.UID, Name: j.Boxfile.StringValue("name")}
+	createConfig := docker.CreateConfig{UID: j.UID, Name: j.Boxfile.StringValue("name")}
 
 	image := regexp.MustCompile(`\d+`).ReplaceAllString(j.UID, "")
 	if image == "web" || image == "worker" || image == "tcp" || image == "udp" {
@@ -43,24 +45,26 @@ func (j *ServiceStart) Process() {
 		createConfig.Category = "service"
 	}
 
-	if !util.ImageExists("nanobox/" + image) {
-		util.LogInfo(stylish.SubBullet("- Pulling the latest %s image (this may take awhile)... ", image))
-		util.InstallImage("nanobox/" + image)
-	}
-
 	extra := strings.Trim(strings.Join([]string{j.Boxfile.VersionValue("version"), j.Boxfile.StringValue("stability")}, "-"), "-")
 	if extra != "" {
 		image = image + ":" + extra
+	} else {
+		image = image + ":latest"
 	}
 
 	createConfig.Image = "nanobox/" + image
+
+	if !docker.ImageExists("nanobox/" + image) {
+		util.LogInfo(stylish.SubBullet("- Pulling the %s image (this may take awhile)... ", image))
+		docker.InstallImage("nanobox/" + image)
+	}
 
 	util.LogDebug(stylish.SubBullet("- Image name: %v", createConfig.Image))
 
 	util.LogInfo(stylish.SubBullet("- Creating %v container", j.UID))
 
 	// start the container
-	if _, err = util.CreateContainer(createConfig); err != nil {
+	if _, err = docker.CreateContainer(createConfig); err != nil {
 		util.HandleError(stylish.ErrorHead("Failed to create %v container", j.UID))
 		util.HandleError(stylish.ErrorBody(err.Error()))
 		util.UpdateStatus(&j.deploy, "errored")
@@ -93,7 +97,7 @@ func (j *ServiceStart) Process() {
 	}
 
 	// run configure hook (blocking)
-	if data, err := util.ExecHook("default-configure", j.UID, payload); err != nil {
+	if data, err := script.Exec("default-configure", j.UID, payload); err != nil {
 		util.LogDebug("Failed Hook Output:\n%s\n", data)
 		util.HandleError(stylish.Error("Configure hook failed", err.Error()))
 		util.UpdateStatus(&j.deploy, "errored")
@@ -103,7 +107,7 @@ func (j *ServiceStart) Process() {
 	util.LogInfo(stylish.SubBullet("- Starting %v service", j.UID))
 
 	// run start hook (blocking)
-	if data, err := util.ExecHook("default-start", j.UID, payload); err != nil {
+	if data, err := script.Exec("default-start", j.UID, payload); err != nil {
 		util.LogDebug("Failed Hook Output:\n%s\n", data)
 		util.HandleError(stylish.Error("Start hook failed", err.Error()))
 		util.UpdateStatus(&j.deploy, "errored")
