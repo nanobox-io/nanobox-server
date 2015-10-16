@@ -47,7 +47,7 @@ func (d DockerUtil) CreateContainer(conf CreateConfig) (*dc.Container, error) {
 
 func addCategoryConfig(category string, cConfig *dc.CreateContainerOptions) {
 	switch category {
-	case "exec":
+	case "dev":
 		cConfig.Config.Hostname = fmt.Sprintf("%s.dev", config.App)
 		cConfig.Config.OpenStdin = true
 		cConfig.Config.AttachStdin = true

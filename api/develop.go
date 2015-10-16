@@ -9,13 +9,10 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 	"sync"
-	"time"
 
 	"github.com/nanobox-io/nanobox-boxfile"
 	"github.com/nanobox-io/nanobox-server/config"
-	"github.com/nanobox-io/nanobox-server/util"
 	"github.com/nanobox-io/nanobox-server/util/fs"
 	"github.com/nanobox-io/nanobox-server/util/docker"
 	"github.com/nanobox-io/nanobox-server/util/script"
@@ -24,18 +21,19 @@ import (
 var developTex = sync.Mutex{}
 
 func (api *API) Develop(rw http.ResponseWriter, req *http.Request) {
-	name := req.FormValue("container")
-	if name != "" {
-		// force the develop route to go into a dev1 container
-		req.Form["container"] = []string{"dev1"}
+	err := req.ParseMultipartForm(32 << 20)
+	if err != nil {
+		config.Log.Debug("form parsing error: \n %s", err.Error())
 	}
+	// force the develop route to go into a dev1 container
+	req.Form["container"] = []string{"dev1"}
 
 	box := mergedBox()
 
 	containerControl := false
 
 	developTex.Lock()
-	// if there is no exec 1 it needs to be created and this thread needs to remember
+	// if there is no dev1 it needs to be created and this thread needs to remember
 	// to shut it down when its done conatinerControl is used for that purpose
 	container, err := docker.GetContainer("dev1")
 	if err != nil {
@@ -47,7 +45,7 @@ func (api *API) Develop(rw http.ResponseWriter, req *http.Request) {
 			image = image + ":" + stab
 		}
 
-		container, err = docker.CreateContainer(docker.CreateConfig{Image: image, Category: "exec", UID: "dev1", Cmd: cmd})
+		container, err = docker.CreateContainer(docker.CreateConfig{Image: image, Category: "dev", UID: "dev1", Cmd: cmd})
 		if err != nil {
 			rw.Write([]byte(err.Error()))
 			return
@@ -56,7 +54,7 @@ func (api *API) Develop(rw http.ResponseWriter, req *http.Request) {
 		// run the default-user hook to get ssh keys setup
 		out, err := script.Exec("default-user", "dev1", fs.UserPayload())
 		if err != nil {
-			util.LogDebug("Failed script output: \n %s", out)
+			config.Log.Debug("Failed script output: \n %s", out)
 		}
 		fmt.Println(string(out))
 	}

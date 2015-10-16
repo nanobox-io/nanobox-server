@@ -13,12 +13,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/nanobox-io/nanobox-boxfile"
-	"github.com/nanobox-io/nanobox-server/config"
 	"github.com/nanobox-io/nanobox-server/util"
 	"github.com/nanobox-io/nanobox-server/util/fs"
 	"github.com/nanobox-io/nanobox-server/util/docker"
-	"github.com/nanobox-io/nanobox-server/util/script"
 )
 
 var execWait = sync.WaitGroup{}
