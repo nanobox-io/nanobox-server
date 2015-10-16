@@ -21,59 +21,9 @@ import (
 	"github.com/nanobox-io/nanobox-server/util/script"
 )
 
-var createTex = sync.Mutex{}
-
 var execWait = sync.WaitGroup{}
 
 var execKeys = map[string]string{}
-
-func (api *API) Run(rw http.ResponseWriter, req *http.Request) {
-	name := req.FormValue("container")
-	if name != "" {
-		api.Exec(rw, req)
-		return
-	}
-
-	box := mergedBox()
-
-	containerControl := false
-
-	createTex.Lock()
-	// if there is no exec 1 it needs to be created and this thread needs to remember
-	// to shut it down when its done conatinerControl is used for that purpose
-	container, err := docker.GetContainer("exec1")
-	if err != nil {
-		containerControl = true
-		cmd := []string{"/bin/sleep", "365d"}
-
-		image := "nanobox/build"
-		if stab := box.Node("build").StringValue("stability"); stab != "" {
-			image = image + ":" + stab
-		}
-
-		container, err = docker.CreateContainer(docker.CreateConfig{Image: image, Category: "exec", UID: "exec1", Cmd: cmd})
-		if err != nil {
-			rw.Write([]byte(err.Error()))
-			return
-		}
-
-		// run the default-user hook to get ssh keys setup
-		out, err := script.Exec("default-user", "exec1", fs.UserPayload())
-		if err != nil {
-			util.LogDebug("Failed script output: \n %s", out)
-		}
-		fmt.Println(string(out))
-	}
-
-	createTex.Unlock()
-
-	api.Exec(rw, req)
-
-	if containerControl {
-		execWait.Wait()
-		docker.RemoveContainer(container.ID)
-	}
-}
 
 func (api *API) LibDirs(rw http.ResponseWriter, req *http.Request) {
 	writeBody(fs.LibDirs(), rw, http.StatusOK)
@@ -84,25 +34,25 @@ func (api *API) FileChange(rw http.ResponseWriter, req *http.Request) {
 	writeBody(nil, rw, http.StatusOK)
 }
 
-func (api *API) KillRun(rw http.ResponseWriter, req *http.Request) {
-	fmt.Printf("signal recieved: %s\n", req.FormValue("signal"))
-	err := docker.KillContainer("exec1", req.FormValue("signal"))
-	fmt.Println(err)
-}
+// func (api *API) KillRun(rw http.ResponseWriter, req *http.Request) {
+// 	fmt.Printf("signal recieved: %s\n", req.FormValue("signal"))
+// 	err := docker.KillContainer("exec1", req.FormValue("signal"))
+// 	fmt.Println(err)
+// }
 
-func (api *API) ResizeRun(rw http.ResponseWriter, req *http.Request) {
-	if req.FormValue("container") != "" {
-		api.ResizeExec(rw, req)
-		return
-	}
-	h, _ := strconv.Atoi(req.FormValue("h"))
-	w, _ := strconv.Atoi(req.FormValue("w"))
-	if h == 0 || w == 0 {
-		return
-	}
-	err := docker.ResizeContainerTTY("exec1", h, w)
-	fmt.Println(err)
-}
+// func (api *API) ResizeRun(rw http.ResponseWriter, req *http.Request) {
+// 	if req.FormValue("container") != "" {
+// 		api.ResizeExec(rw, req)
+// 		return
+// 	}
+// 	h, _ := strconv.Atoi(req.FormValue("h"))
+// 	w, _ := strconv.Atoi(req.FormValue("w"))
+// 	if h == 0 || w == 0 {
+// 		return
+// 	}
+// 	err := docker.ResizeContainerTTY("exec1", h, w)
+// 	fmt.Println(err)
+// }
 
 // proxy an exec request to docker. This allows us to have the same
 // exec power but with added security.
@@ -140,19 +90,20 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 
 	exec, err := docker.CreateExec(container.ID, cmd, true, true, true)
 	if err == nil {
-		execKeys[name] = exec.ID
-		defer delete(execKeys, name)
+		pid := req.FormValue("pid")
+		execKeys[pid] = exec.ID
+		defer delete(execKeys, pid)
 		docker.RunExec(exec, conn, conn, conn)
 	}
 }
 
 // necessary for anything using a windowing system through the exec.
 func (api *API) ResizeExec(rw http.ResponseWriter, req *http.Request) {
-	name := req.FormValue("container")
-	if execKeys[name] == "" {
+	pid := req.FormValue("pid")
+	if execKeys[pid] == "" {
 		time.Sleep(1 * time.Second)
 	}
-	if name == "" || execKeys[name] == "" {
+	if pid == "" || execKeys[pid] == "" {
 		rw.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -163,14 +114,6 @@ func (api *API) ResizeExec(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err := docker.ResizeExecTTY(execKeys[name], h, w)
+	err := docker.ResizeExecTTY(execKeys[pid], h, w)
 	fmt.Println(err)
-}
-
-func mergedBox() (box boxfile.Boxfile) {
-	box = boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
-	if out, err := script.Exec("boxfile", "build1", map[string]interface{}{}); err == nil {
-		box.Merge(boxfile.New([]byte(out)))
-	}
-	return
 }
