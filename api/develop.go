@@ -13,8 +13,8 @@ import (
 
 	"github.com/nanobox-io/nanobox-boxfile"
 	"github.com/nanobox-io/nanobox-server/config"
-	"github.com/nanobox-io/nanobox-server/util/fs"
 	"github.com/nanobox-io/nanobox-server/util/docker"
+	"github.com/nanobox-io/nanobox-server/util/fs"
 	"github.com/nanobox-io/nanobox-server/util/script"
 )
 
@@ -68,7 +68,6 @@ func (api *API) Develop(rw http.ResponseWriter, req *http.Request) {
 		docker.RemoveContainer(container.ID)
 	}
 }
-
 
 func combinedBox() boxfile.Boxfile {
 	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")

@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"github.com/nanobox-io/nanobox-server/util"
-	"github.com/nanobox-io/nanobox-server/util/fs"
 	"github.com/nanobox-io/nanobox-server/util/docker"
+	"github.com/nanobox-io/nanobox-server/util/fs"
 )
 
 var execWait = sync.WaitGroup{}

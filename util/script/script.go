@@ -16,7 +16,7 @@ import (
 // It is not in the docker package becuase it isnt a function of docker
 // but more a function of our system
 // it makes more sense to do script.Exec then docker.ExecScript
-// it is alos a var instead of a package function so we can swap it out for a 
+// it is alos a var instead of a package function so we can swap it out for a
 // mock function in tests.
 var Exec = func(name, container string, payload map[string]interface{}) ([]byte, error) {
 

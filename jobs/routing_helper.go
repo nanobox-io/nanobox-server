@@ -35,7 +35,7 @@ func configureRoutes(box boxfile.Boxfile) error {
 			}
 			fmt.Printf("web:ports: %+v\n", ports(b))
 			for _, to := range ports(b) {
-				route.URLs = append(route.URLs, "http://" + ip + ":" + to)
+				route.URLs = append(route.URLs, "http://"+ip+":"+to)
 			}
 			newRoutes = append(newRoutes, route)
 		}
@@ -60,7 +60,7 @@ func configureRoutes(box boxfile.Boxfile) error {
 			fmt.Printf("defbox: %+v\n", b)
 			fmt.Printf("defPorts: %+v\n", ports(b))
 			for _, to := range ports(b) {
-				route.URLs = append(route.URLs, "http://" + ip + ":" + to)
+				route.URLs = append(route.URLs, "http://"+ip+":"+to)
 			}
 			newRoutes = append(newRoutes, route)
 		}
@@ -157,7 +157,6 @@ func ports(box boxfile.Boxfile) map[string]string {
 	}
 	return rtn
 }
-
 
 func combinedBox() boxfile.Boxfile {
 	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")

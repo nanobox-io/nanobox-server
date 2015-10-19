@@ -1,12 +1,12 @@
 package docker
 
 import (
+	"fmt"
 	"io"
 	"os"
-	"fmt"
 
-	"github.com/nanobox-io/nanobox-boxfile"
 	dc "github.com/fsouza/go-dockerclient"
+	"github.com/nanobox-io/nanobox-boxfile"
 
 	"github.com/nanobox-io/nanobox-server/config"
 )
@@ -41,7 +41,7 @@ type DockerDefault interface {
 	ListContainers(labels ...string) ([]*dc.Container, error)
 	InstallImage(image string) error
 	ListImages() ([]dc.APIImages, error)
-	ImageExists(name string) bool	
+	ImageExists(name string) bool
 	ExecInContainer(container string, args ...string) ([]byte, error)
 	CreateExec(id string, cmd []string, in, out, err bool) (*dc.Exec, error)
 	ResizeExecTTY(id string, height, width int) error
@@ -56,7 +56,7 @@ var Client ClientInterface
 var Default DockerDefault
 
 func init() {
-	Client, _ = dc.NewClient("unix:///var/run/docker.sock") 
+	Client, _ = dc.NewClient("unix:///var/run/docker.sock")
 	Default = DockerUtil{}
 }
 
@@ -109,7 +109,6 @@ func RunExec(exec *dc.Exec, in io.Reader, out io.Writer, err io.Writer) (*dc.Exe
 	return Default.RunExec(exec, in, out, err)
 }
 
-
 // These functions are bandaids. I will be removing them once I have a clear place to put them
 func libDirs() (rtn []string) {
 	box := combinedBox()
@@ -117,7 +116,7 @@ func libDirs() (rtn []string) {
 	if ok && !box.Node("console").BoolValue("ignore_lib_dirs") {
 		for _, libDir := range libDirs {
 			strDir, ok := libDir.(string)
-			if ok && isDir("/mnt/sda/var/nanobox/cache/lib_dirs/" + strDir) {
+			if ok && isDir("/mnt/sda/var/nanobox/cache/lib_dirs/"+strDir) {
 				rtn = append(rtn, fmt.Sprintf("/mnt/sda/var/nanobox/cache/lib_dirs/%s/:/code/%s/", strDir, strDir))
 			}
 		}
@@ -134,14 +133,14 @@ func isDir(path string) bool {
 }
 
 func combinedBox() boxfile.Boxfile {
-    box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
-    // run boxfile script (blocking)
-    if !box.Node("build").BoolValue("disable_engine_boxfile") {
-        out, err := ExecInContainer("build1", "/opt/bin/default-boxfile", "{}")
-        if err == nil {
-            eBox := boxfile.New([]byte(out))
-            box.Merge(eBox)
-        }
-    }
-    return box
+	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
+	// run boxfile script (blocking)
+	if !box.Node("build").BoolValue("disable_engine_boxfile") {
+		out, err := ExecInContainer("build1", "/opt/bin/default-boxfile", "{}")
+		if err == nil {
+			eBox := boxfile.New([]byte(out))
+			box.Merge(eBox)
+		}
+	}
+	return box
 }

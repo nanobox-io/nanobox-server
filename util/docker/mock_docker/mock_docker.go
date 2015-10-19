@@ -4,9 +4,9 @@
 package mock_docker
 
 import (
-	docker "github.com/nanobox-io/nanobox-server/util/docker"
 	go_dockerclient "github.com/fsouza/go-dockerclient"
 	gomock "github.com/golang/mock/gomock"
+	docker "github.com/nanobox-io/nanobox-server/util/docker"
 	io "io"
 )
 

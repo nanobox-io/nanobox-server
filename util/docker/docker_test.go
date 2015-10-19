@@ -1,8 +1,8 @@
 package docker_test
 
 import (
-	"testing"
 	"github.com/golang/mock/gomock"
+	"testing"
 
 	dc "github.com/fsouza/go-dockerclient"
 	"github.com/nanobox-io/nanobox-server/util/docker"
@@ -17,7 +17,7 @@ func (c createMatcher) Matches(x interface{}) bool {
 	if !ok {
 		return false
 	}
-	binds :=[]string{
+	binds := []string{
 		"/mnt/sda/var/nanobox/cache/:/mnt/cache/",
 		"/mnt/sda/var/nanobox/deploy/:/mnt/deploy/",
 		"/mnt/sda/var/nanobox/build/:/mnt/build/",
@@ -44,12 +44,12 @@ func TestCreatContainer(t *testing.T) {
 	docker.Client = mClient
 
 	gomock.InOrder(
-    mClient.EXPECT().ListImages(dc.ListImagesOptions{}).Return([]dc.APIImages{dc.APIImages{RepoTags: []string{"nanobox/build:latest"}}}, nil),
-    mClient.EXPECT().CreateContainer(createMatcher{}).Return(&dc.Container{ID: "1234"}, nil),
-    mClient.EXPECT().StartContainer("1234", nil),
-    mClient.EXPECT().InspectContainer("1234"),
+		mClient.EXPECT().ListImages(dc.ListImagesOptions{}).Return([]dc.APIImages{dc.APIImages{RepoTags: []string{"nanobox/build:latest"}}}, nil),
+		mClient.EXPECT().CreateContainer(createMatcher{}).Return(&dc.Container{ID: "1234"}, nil),
+		mClient.EXPECT().StartContainer("1234", nil),
+		mClient.EXPECT().InspectContainer("1234"),
 	)
-	
+
 	cc := docker.CreateConfig{
 		Category: "build",
 		UID:      "build1",
@@ -61,7 +61,6 @@ func TestCreatContainer(t *testing.T) {
 
 }
 
-
 func TestExecInContainer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -69,20 +68,20 @@ func TestExecInContainer(t *testing.T) {
 	mClient := mock_docker.NewMockClientInterface(ctrl)
 	docker.Client = mClient
 
-	 opts := dc.CreateExecOptions{
-	      AttachStdout: true,
-	      AttachStderr: true,
-	      Cmd:          []string{"ls", "-la"},
-	      Container:    "exec1",
-	      User:         "root",
-	  }
+	opts := dc.CreateExecOptions{
+		AttachStdout: true,
+		AttachStderr: true,
+		Cmd:          []string{"ls", "-la"},
+		Container:    "exec1",
+		User:         "root",
+	}
 	gomock.InOrder(
-    mClient.EXPECT().CreateExec(opts).Return(&dc.Exec{ID:"1234"}, nil),
-    mClient.EXPECT().StartExec("1234", gomock.Any()),
-    mClient.EXPECT().InspectExec("1234").Return(&dc.ExecInspect{ExitCode:0}, nil),
-  )
+		mClient.EXPECT().CreateExec(opts).Return(&dc.Exec{ID: "1234"}, nil),
+		mClient.EXPECT().StartExec("1234", gomock.Any()),
+		mClient.EXPECT().InspectExec("1234").Return(&dc.ExecInspect{ExitCode: 0}, nil),
+	)
 	docker.ExecInContainer("exec1", "ls", "-la")
-	
+
 }
 
 func TestListContainers(t *testing.T) {
@@ -93,11 +92,11 @@ func TestListContainers(t *testing.T) {
 	docker.Client = mClient
 
 	web := dc.APIContainers{ID: "1234", Labels: map[string]string{"web1": "true"}}
-	db  := dc.APIContainers{ID: "4321", Labels: map[string]string{"mysql1": "true"}}
+	db := dc.APIContainers{ID: "4321", Labels: map[string]string{"mysql1": "true"}}
 
 	mClient.EXPECT().ListContainers(dc.ListContainersOptions{All: true, Size: false}).Times(2).Return([]dc.APIContainers{web, db}, nil)
-	mClient.EXPECT().InspectContainer("1234").Times(2).Return(&dc.Container{ID:"1234"}, nil)
-	mClient.EXPECT().InspectContainer("4321").Return(&dc.Container{ID:"4321"}, nil)
+	mClient.EXPECT().InspectContainer("1234").Times(2).Return(&dc.Container{ID: "1234"}, nil)
+	mClient.EXPECT().InspectContainer("4321").Return(&dc.Container{ID: "4321"}, nil)
 
 	results, err := docker.ListContainers()
 	if err != nil || len(results) != 2 || results[0].ID != "1234" || results[1].ID != "4321" {
@@ -105,7 +104,7 @@ func TestListContainers(t *testing.T) {
 	}
 	results, err = docker.ListContainers("web1")
 
-	if err != nil || len(results) != 1 || results[0].ID != "1234"{
+	if err != nil || len(results) != 1 || results[0].ID != "1234" {
 		t.Errorf("bad result from list containers")
 	}
 }
@@ -118,13 +117,13 @@ func TestGetContainer(t *testing.T) {
 	docker.Client = mClient
 
 	web := dc.APIContainers{ID: "1234", Labels: map[string]string{"web1": "true"}}
-	db  := dc.APIContainers{ID: "4321", Labels: map[string]string{"mysql1": "true"}}
+	db := dc.APIContainers{ID: "4321", Labels: map[string]string{"mysql1": "true"}}
 
 	mClient.EXPECT().ListContainers(dc.ListContainersOptions{All: true, Size: false}).Return([]dc.APIContainers{web, db}, nil)
-	mClient.EXPECT().InspectContainer("1234").Return(&dc.Container{ID:"1234"}, nil)
-	mClient.EXPECT().InspectContainer("4321").Return(&dc.Container{ID:"4321"}, nil)
-	
-	result, err :=docker.GetContainer("1234")
+	mClient.EXPECT().InspectContainer("1234").Return(&dc.Container{ID: "1234"}, nil)
+	mClient.EXPECT().InspectContainer("4321").Return(&dc.Container{ID: "4321"}, nil)
+
+	result, err := docker.GetContainer("1234")
 	if err != nil || result.ID != "1234" {
 		t.Errorf("failed to retrieve container")
 	}
@@ -138,18 +137,18 @@ func TestImageExists(t *testing.T) {
 	docker.Client = mClient
 
 	type APIImages struct {
-	    ID          string            `json:"Id" yaml:"Id"`
-	    RepoTags    []string          `json:"RepoTags,omitempty" yaml:"RepoTags,omitempty"`
-	    Created     int64             `json:"Created,omitempty" yaml:"Created,omitempty"`
-	    Size        int64             `json:"Size,omitempty" yaml:"Size,omitempty"`
-	    VirtualSize int64             `json:"VirtualSize,omitempty" yaml:"VirtualSize,omitempty"`
-	    ParentID    string            `json:"ParentId,omitempty" yaml:"ParentId,omitempty"`
-	    RepoDigests []string          `json:"RepoDigests,omitempty" yaml:"RepoDigests,omitempty"`
-	    Labels      map[string]string `json:"Labels,omitempty" yaml:"Labels,omitempty"`
+		ID          string            `json:"Id" yaml:"Id"`
+		RepoTags    []string          `json:"RepoTags,omitempty" yaml:"RepoTags,omitempty"`
+		Created     int64             `json:"Created,omitempty" yaml:"Created,omitempty"`
+		Size        int64             `json:"Size,omitempty" yaml:"Size,omitempty"`
+		VirtualSize int64             `json:"VirtualSize,omitempty" yaml:"VirtualSize,omitempty"`
+		ParentID    string            `json:"ParentId,omitempty" yaml:"ParentId,omitempty"`
+		RepoDigests []string          `json:"RepoDigests,omitempty" yaml:"RepoDigests,omitempty"`
+		Labels      map[string]string `json:"Labels,omitempty" yaml:"Labels,omitempty"`
 	}
-	base := dc.APIImages{RepoTags:[]string{"nanobox/base:alpha", "nanobox/base:latest", "nanobox/base:beta"}}
-	redis := dc.APIImages{RepoTags:[]string{"nanobox/redis:3.4", "nanobox/redis:latest", "nanobox/base:3.4-stable"}}
-	code := dc.APIImages{RepoTags:[]string{"nanobox/code:alpha", "nanobox/code:latest", "nanobox/code:beta"}}
+	base := dc.APIImages{RepoTags: []string{"nanobox/base:alpha", "nanobox/base:latest", "nanobox/base:beta"}}
+	redis := dc.APIImages{RepoTags: []string{"nanobox/redis:3.4", "nanobox/redis:latest", "nanobox/base:3.4-stable"}}
+	code := dc.APIImages{RepoTags: []string{"nanobox/code:alpha", "nanobox/code:latest", "nanobox/code:beta"}}
 	mClient.EXPECT().ListImages(dc.ListImagesOptions{}).AnyTimes().Return([]dc.APIImages{base, redis, code}, nil)
 
 	working := []string{
