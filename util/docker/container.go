@@ -156,7 +156,7 @@ func (d DockerUtil) GetContainer(id string) (*dc.Container, error) {
 
 	for _, container := range containers {
 		if container.Name == id || container.Name == ("/"+id) || container.ID == id {
-			return InspectContainer(container.ID)
+			return container, nil
 		}
 	}
 	return nil, fmt.Errorf("not found")
@@ -178,10 +178,10 @@ func (d DockerUtil) ListContainers(labels ...string) ([]*dc.Container, error) {
 	}
 
 	for _, apiContainer := range apiContainers {
-		container, _ := InspectContainer(apiContainer.ID)
-		if container != nil {
-			for _, label := range labels {
-				if container.Config.Labels[label] == "true" {
+		for _, label := range labels {
+			if apiContainer.Labels[label] == "true" {
+				container, _ := InspectContainer(apiContainer.ID)
+				if container != nil {
 					rtn = append(rtn, container)
 				}
 			}

@@ -39,7 +39,7 @@ func (j *ImageUpdate) Process() {
 			//
 			if strings.HasPrefix(tag, "nanobox") {
 				util.LogInfo(stylish.SubBullet("- Updating image: %s", tag))
-				if err := docker.UpdateImage(tag); err != nil {
+				if err := docker.InstallImage(tag); err != nil {
 					util.HandleError("Unable to update image:" + err.Error())
 					util.UpdateStatus(j, "errored")
 					return

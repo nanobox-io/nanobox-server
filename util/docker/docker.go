@@ -41,7 +41,6 @@ type DockerDefault interface {
 	ListContainers(labels ...string) ([]*dc.Container, error)
 	InstallImage(image string) error
 	ListImages() ([]dc.APIImages, error)
-	UpdateImage(image string) error
 	ImageExists(name string) bool	
 	ExecInContainer(container string, args ...string) ([]byte, error)
 	CreateExec(id string, cmd []string, in, out, err bool) (*dc.Exec, error)
@@ -66,9 +65,6 @@ func InstallImage(image string) error {
 }
 func ListImages() ([]dc.APIImages, error) {
 	return Default.ListImages()
-}
-func UpdateImage(image string) error {
-	return Default.UpdateImage(image)
 }
 func ImageExists(image string) bool {
 	return Default.ImageExists(image)
@@ -114,6 +110,7 @@ func RunExec(exec *dc.Exec, in io.Reader, out io.Writer, err io.Writer) (*dc.Exe
 }
 
 
+// These functions are bandaids. I will be removing them once I have a clear place to put them
 func libDirs() (rtn []string) {
 	box := combinedBox()
 	libDirs, ok := box.Node("build").Value("lib_dirs").([]interface{})
