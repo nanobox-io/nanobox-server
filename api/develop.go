@@ -28,7 +28,7 @@ func (api *API) Develop(rw http.ResponseWriter, req *http.Request) {
 	// force the develop route to go into a dev1 container
 	req.Form["container"] = []string{"dev1"}
 
-	box := mergedBox()
+	box := combinedBox()
 
 	containerControl := false
 
@@ -70,10 +70,13 @@ func (api *API) Develop(rw http.ResponseWriter, req *http.Request) {
 }
 
 
-func mergedBox() (box boxfile.Boxfile) {
-	box = boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
-	if out, err := script.Exec("boxfile", "build1", map[string]interface{}{}); err == nil {
-		box.Merge(boxfile.New([]byte(out)))
+func combinedBox() boxfile.Boxfile {
+	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
+
+	if !box.Node("build").BoolValue("disable_engine_boxfile") {
+		if out, err := script.Exec("default-boxfile", "build1", nil); err == nil {
+			box.Merge(boxfile.New([]byte(out)))
+		}
 	}
-	return
+	return box
 }

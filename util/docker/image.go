@@ -5,10 +5,7 @@ import (
 )
 
 func (d DockerUtil) InstallImage(image string) error {
-	if err := Client.PullImage(dc.PullImageOptions{Repository: image}, dc.AuthConfiguration{}); err != nil {
-		return err
-	}
-	return nil
+	return Client.PullImage(dc.PullImageOptions{Repository: image}, dc.AuthConfiguration{})
 }
 
 func (d DockerUtil) ListImages() ([]dc.APIImages, error) {

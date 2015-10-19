@@ -162,7 +162,6 @@ func ports(box boxfile.Boxfile) map[string]string {
 func combinedBox() boxfile.Boxfile {
 	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
 
-	// run boxfile script (blocking)
 	if !box.Node("build").BoolValue("disable_engine_boxfile") {
 		if out, err := script.Exec("default-boxfile", "build1", nil); err == nil {
 			box.Merge(boxfile.New([]byte(out)))

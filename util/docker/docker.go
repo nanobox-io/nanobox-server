@@ -134,14 +134,14 @@ func isDir(path string) bool {
 }
 
 func combinedBox() boxfile.Boxfile {
-	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
-	// run boxfile script (blocking)
-	if !box.Node("build").BoolValue("disable_engine_boxfile") {
-		out, err := ExecInContainer("build1", "/opt/bin/default-boxfile", "{}")
-		if err == nil {
-			eBox := boxfile.New([]byte(out))
-			box.Merge(eBox)
-		}
-	}
-	return box
+    box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
+    // run boxfile script (blocking)
+    if !box.Node("build").BoolValue("disable_engine_boxfile") {
+        out, err := ExecInContainer("build1", "/opt/bin/default-boxfile", "{}")
+        if err == nil {
+            eBox := boxfile.New([]byte(out))
+            box.Merge(eBox)
+        }
+    }
+    return box
 }
