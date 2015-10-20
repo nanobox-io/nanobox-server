@@ -45,6 +45,12 @@ func (j *ServiceStart) Process() {
 		createConfig.Category = "service"
 	}
 
+	if j.Boxfile.StringValue("image") != "" {
+		image = j.Boxfile.StringValue("image")
+	} else {
+		image = "nanobox/" + image
+	}
+
 	extra := strings.Trim(strings.Join([]string{j.Boxfile.VersionValue("version"), j.Boxfile.StringValue("stability")}, "-"), "-")
 	if extra == "" {
 		image = image + ":latest"
@@ -52,7 +58,8 @@ func (j *ServiceStart) Process() {
 		image = image + ":" + extra
 	}
 
-	createConfig.Image = "nanobox/" + image
+
+	createConfig.Image = image
 
 	if !docker.ImageExists(createConfig.Image) {
 		util.LogInfo(stylish.SubBullet("- Pulling the %s image (this may take awhile)... ", createConfig.Image))
@@ -98,7 +105,7 @@ func (j *ServiceStart) Process() {
 
 	// run configure hook (blocking)
 	if data, err := script.Exec("default-configure", j.UID, payload); err != nil {
-		util.LogDebug("Failed Hook Output:\n%s\n", data)
+		util.LogDebug("Failed Script Output:\n%s\n", data)
 		util.HandleError(stylish.Error("Configure hook failed", err.Error()))
 		util.UpdateStatus(&j.deploy, "errored")
 		return
@@ -108,7 +115,7 @@ func (j *ServiceStart) Process() {
 
 	// run start hook (blocking)
 	if data, err := script.Exec("default-start", j.UID, payload); err != nil {
-		util.LogDebug("Failed Hook Output:\n%s\n", data)
+		util.LogDebug("Failed Script Output:\n%s\n", data)
 		util.HandleError(stylish.Error("Start hook failed", err.Error()))
 		util.UpdateStatus(&j.deploy, "errored")
 		return

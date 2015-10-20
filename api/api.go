@@ -70,15 +70,19 @@ func (api *API) registerRoutes() (*pat.Router, error) {
 		rw.Write([]byte("pong"))
 	})
 
+	router.Get("/logs", config.LogHandler)
+
 	router.Put("/suspend", api.handleRequest(api.Suspend))
 	router.Put("/lock", api.handleRequest(api.Lock))
 	router.Get("/lock-count", api.handleRequest(api.LockCount))
 
-	router.Get("/logs", config.LogHandler)
+	router.Post("/develop", api.handleRequest(api.Develop))
+	router.Post("/exec", api.handleRequest(api.Exec))
 
-	router.Post("/exec", api.handleRequest(api.Run))
-	router.Post("/killexec", api.handleRequest(api.KillRun))
-	router.Post("/resizeexec", api.handleRequest(api.ResizeRun))
+	router.Post("/console", api.handleRequest(api.Exec))
+	router.Post("/resizeexec", api.handleRequest(api.ResizeExec))
+	// router.Post("/killexec", api.handleRequest(api.KillRun))
+
 	router.Get("/libdirs", api.handleRequest(api.LibDirs))
 	router.Post("/file-change", api.handleRequest(api.FileChange))
 
@@ -86,8 +90,10 @@ func (api *API) registerRoutes() (*pat.Router, error) {
 	router.Post("/builds", api.handleRequest(api.CreateBuild))
 	router.Post("/deploys", api.handleRequest(api.CreateDeploy))
 	router.Post("/image-update", api.handleRequest(api.UpdateImages))
+
 	router.Get("/services", api.handleRequest(api.ListServices))
 	router.Get("/routes", api.handleRequest(api.ListRoutes))
+
 	return router, nil
 }
 

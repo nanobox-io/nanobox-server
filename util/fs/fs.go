@@ -85,7 +85,6 @@ func (f Fs) LibDirs() (rtn []string) {
 		}
 	}
 	return rtn
-
 }
 
 func (f Fs) UserPayload() map[string]interface{} {

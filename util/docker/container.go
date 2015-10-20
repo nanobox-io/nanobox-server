@@ -9,6 +9,7 @@ package docker
 //
 import (
 	"fmt"
+	"strings"
 
 	docksig "github.com/docker/docker/pkg/signal"
 	dc "github.com/fsouza/go-dockerclient"
@@ -47,7 +48,7 @@ func (d DockerUtil) CreateContainer(conf CreateConfig) (*dc.Container, error) {
 
 func addCategoryConfig(category string, cConfig *dc.CreateContainerOptions) {
 	switch category {
-	case "exec":
+	case "dev":
 		cConfig.Config.Hostname = fmt.Sprintf("%s.dev", config.App)
 		cConfig.Config.OpenStdin = true
 		cConfig.Config.AttachStdin = true
@@ -88,6 +89,9 @@ func addCategoryConfig(category string, cConfig *dc.CreateContainerOptions) {
 			"/mnt/sda/var/nanobox/build/:/code/",
 		}
 	case "service":
+		if strings.Contains(cConfig.Name, "/") {
+			cConfig.Name = strings.Replace(cConfig.Name, "/", "-", -1)
+		}
 		// nothing to be done here
 	}
 	return
@@ -156,7 +160,7 @@ func (d DockerUtil) GetContainer(id string) (*dc.Container, error) {
 
 	for _, container := range containers {
 		if container.Name == id || container.Name == ("/"+id) || container.ID == id {
-			return InspectContainer(container.ID)
+			return container, nil
 		}
 	}
 	return nil, fmt.Errorf("not found")
@@ -178,10 +182,10 @@ func (d DockerUtil) ListContainers(labels ...string) ([]*dc.Container, error) {
 	}
 
 	for _, apiContainer := range apiContainers {
-		container, _ := InspectContainer(apiContainer.ID)
-		if container != nil {
-			for _, label := range labels {
-				if container.Config.Labels[label] == "true" {
+		for _, label := range labels {
+			if apiContainer.Labels[label] == "true" {
+				container, _ := InspectContainer(apiContainer.ID)
+				if container != nil {
 					rtn = append(rtn, container)
 				}
 			}

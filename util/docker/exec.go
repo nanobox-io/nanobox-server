@@ -1,9 +1,9 @@
 package docker
 
 import (
-	"io"
-	"fmt"
 	"bytes"
+	"fmt"
+	"io"
 	"strings"
 
 	dc "github.com/fsouza/go-dockerclient"
@@ -11,14 +11,14 @@ import (
 
 // Exec
 func (d DockerUtil) ExecInContainer(container string, args ...string) ([]byte, error) {
-  opts := dc.CreateExecOptions{
-      AttachStdout: true,
-      AttachStderr: true,
-      Cmd:          args,
-      Container:    container,
-      User:         "root",
-  }
-  exec, err := Client.CreateExec(opts)
+	opts := dc.CreateExecOptions{
+		AttachStdout: true,
+		AttachStderr: true,
+		Cmd:          args,
+		Container:    container,
+		User:         "root",
+	}
+	exec, err := Client.CreateExec(opts)
 
 	if err != nil {
 		return []byte{}, err

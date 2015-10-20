@@ -5,21 +5,11 @@ import (
 )
 
 func (d DockerUtil) InstallImage(image string) error {
-	if err := Client.PullImage(dc.PullImageOptions{Repository: image}, dc.AuthConfiguration{}); err != nil {
-		return err
-	}
-	return nil
+	return Client.PullImage(dc.PullImageOptions{Repository: image}, dc.AuthConfiguration{})
 }
 
 func (d DockerUtil) ListImages() ([]dc.APIImages, error) {
 	return Client.ListImages(dc.ListImagesOptions{})
-}
-
-func (d DockerUtil) UpdateImage(image string) error {
-	if err := Client.PullImage(dc.PullImageOptions{Repository: image}, dc.AuthConfiguration{}); err != nil {
-		return err
-	}
-	return nil
 }
 
 func (d DockerUtil) ImageExists(name string) bool {
