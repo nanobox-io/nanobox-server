@@ -38,9 +38,6 @@ func (j *Deploy) Process() {
 	util.Lock()
 	defer util.Unlock()
 
-	// clear the deploy log
-	// config.Logtap.Drains["history"].(*logtap.HistoricalDrain).ClearDeploy()
-
 	// set routing to watch logs
 	router.ErrorHandler = router.DeployInProgress{}
 

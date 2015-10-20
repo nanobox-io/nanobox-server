@@ -19,7 +19,6 @@ import (
 // it is alos a var instead of a package function so we can swap it out for a
 // mock function in tests.
 var Exec = func(name, container string, payload map[string]interface{}) ([]byte, error) {
-
 	if payload == nil {
 		payload = map[string]interface{}{}
 	}

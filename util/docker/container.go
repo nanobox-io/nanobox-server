@@ -9,6 +9,7 @@ package docker
 //
 import (
 	"fmt"
+	"strings"
 
 	docksig "github.com/docker/docker/pkg/signal"
 	dc "github.com/fsouza/go-dockerclient"
@@ -88,6 +89,9 @@ func addCategoryConfig(category string, cConfig *dc.CreateContainerOptions) {
 			"/mnt/sda/var/nanobox/build/:/code/",
 		}
 	case "service":
+		if strings.Contains(cConfig.Name, "/") {
+			cConfig.Name = strings.Replace(cConfig.Name, "/", "-", -1)
+		}
 		// nothing to be done here
 	}
 	return
