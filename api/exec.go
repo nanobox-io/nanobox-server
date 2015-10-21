@@ -8,6 +8,7 @@ package api
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"sync"
@@ -90,7 +91,7 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 		pid := req.FormValue("pid")
 		execKeys[pid] = exec.ID
 		defer delete(execKeys, pid)
-		docker.RunExec(exec, br, conn, conn)
+		docker.RunExec(exec, ioutil.NopCloser(br), conn, conn)
 	}
 }
 
