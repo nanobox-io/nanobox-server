@@ -27,15 +27,7 @@ func (j *Startup) Process() {
 	// TODO get the boxfile. merge with build boxfile(if any) and call:
 	// configureRoutes(box)
 	// configurePorts(box)
-	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
-
-	// if i have a build make sure to merge the boxfile
-	_, err := docker.InspectContainer("build1")
-	if err == nil {
-		if out, err := script.Exec("default-boxfile", "build1", nil); err == nil {
-			box.Merge(boxfile.New([]byte(out)))
-		}
-	}
+	box := combinedBox()
 
 	configureRoutes(box)
 	configurePorts(box)

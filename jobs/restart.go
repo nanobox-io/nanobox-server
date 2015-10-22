@@ -19,6 +19,7 @@ import (
 type Restart struct {
 	UID     string
 	Success bool
+	Boxfile boxfile.Boxfile
 }
 
 // Proccess syncronies your docker containers with the boxfile specification
@@ -30,7 +31,7 @@ func (j *Restart) Process() {
 	j.Success = false
 
 	util.LogInfo(stylish.Bullet("Restarting app in %s container...", j.UID))
-	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
+	box := combinedBox()
 	// restart payload
 	payload := map[string]interface{}{
 		"platform":    "local",
