@@ -8,11 +8,9 @@ package jobs
 
 //
 import (
-	"github.com/nanobox-io/nanobox-boxfile"
 
 	"github.com/nanobox-io/nanobox-server/config"
 	"github.com/nanobox-io/nanobox-server/util/docker"
-	"github.com/nanobox-io/nanobox-server/util/script"
 	"github.com/nanobox-io/nanobox-server/util/worker"
 )
 
