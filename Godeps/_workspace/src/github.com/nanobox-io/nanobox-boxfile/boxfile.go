@@ -48,6 +48,7 @@ func (self Boxfile) Node(name string) (box Boxfile) {
 		}
 		box.Valid = true
 	default:
+		box.Parsed = make(map[string]interface{})
 		box.Valid = false
 	}
 	return

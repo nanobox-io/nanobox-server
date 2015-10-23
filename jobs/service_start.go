@@ -58,7 +58,6 @@ func (j *ServiceStart) Process() {
 		image = image + ":" + extra
 	}
 
-
 	createConfig.Image = image
 
 	if !docker.ImageExists(createConfig.Image) {
