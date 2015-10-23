@@ -177,7 +177,7 @@ func (j *Deploy) Process() {
 
 	// add the missing storage nodes to the boxfile
 	box.AddStorageNode()
-	j.Payload["boxfile"] = box.Node("build").Parsed
+	j.payload["boxfile"] = box.Node("build").Parsed
 
 	// remove any containers no longer in the boxfile
 	util.LogDebug(stylish.Bullet("Removing old containers..."))
