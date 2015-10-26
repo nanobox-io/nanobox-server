@@ -91,7 +91,8 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 		pid := req.FormValue("pid")
 		execKeys[pid] = exec.ID
 		defer delete(execKeys, pid)
-		docker.RunExec(exec, io.MultiReader(br, conn), conn, conn)
+		container, err := docker.RunExec(exec, io.MultiReader(br, conn), conn, conn)
+		fmt.Printf("container: %+v\nerr: %+v\n\n", container, err)
 	}
 }
 

@@ -9,7 +9,11 @@ package script
 //
 import (
 	"encoding/json"
+	"fmt"
+
+	"github.com/nanobox-io/nanobox-golang-stylish"
 	"github.com/nanobox-io/nanobox-server/util/docker"
+	"github.com/nanobox-io/nanobox-server/util"
 )
 
 // Exec executes a script using docker
@@ -28,5 +32,10 @@ var Exec = func(name, container string, payload map[string]interface{}) ([]byte,
 		return nil, err
 	}
 
-	return docker.ExecInContainer(container, "/opt/bin/"+name, string(b))
+	out, err := docker.ExecInContainer(container, "/opt/bin/"+name, string(b))
+	if err != nil {
+		util.LogDebug("Failed script output(%s): \n %s",name,  out)
+		util.HandleError(stylish.Error(fmt.Sprintf("Failed to run %s script", name), err.Error()))
+	}
+	return out, err
 }
