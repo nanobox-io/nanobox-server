@@ -55,23 +55,7 @@ func (j *Build) Process() {
 	evar["APP_NAME"] = config.App
 	j.payload["env"] = evar
 
-	// run sync hook (blocking)
-	if _, err := script.Exec("default-sync", "build1", j.payload); err != nil {
-		util.HandleError(stylish.Error("Failed to run sync hook", err.Error()))
-		util.UpdateStatus(j, "errored")
-		return
-	}
-
-	// run build hook (blocking)
-	if _, err := script.Exec("default-build", "build1", j.payload); err != nil {
-		util.HandleError(stylish.Error("Failed to run build hook", err.Error()))
-		util.UpdateStatus(j, "errored")
-		return
-	}
-
-	// run publish hook (blocking)
-	if _, err := script.Exec("default-publish", "build1", j.payload); err != nil {
-		util.HandleError(stylish.Error("Failed to run publish hook", err.Error()))
+	if err := j.RunBuild(); err != nil {
 		util.UpdateStatus(j, "errored")
 		return
 	}
@@ -106,4 +90,29 @@ func (j *Build) Process() {
 	}
 
 	util.UpdateStatus(j, "complete")
+}
+
+
+func (j *Build) RunBuild() error {
+	// run sync hook (blocking)
+	if _, err := script.Exec("default-sync", "build1", j.payload); err != nil {
+		return err
+	}
+
+	// run build hook (blocking)
+	if _, err := script.Exec("default-build", "build1", j.payload); err != nil {
+		return err
+	}
+
+	// run publish hook (blocking)
+	if _, err := script.Exec("default-publish", "build1", j.payload); err != nil {
+		return err
+	}
+
+	// run cleanup script (blocking)
+	if _, err := script.Exec("default-cleanup", "build1", j.payload); err != nil {
+		return err
+	}	
+
+	return nil
 }
