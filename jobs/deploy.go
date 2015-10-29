@@ -9,8 +9,8 @@ package jobs
 
 //
 import (
-	"strings"
 	"fmt"
+	"strings"
 
 	"github.com/nanobox-io/nanobox-boxfile"
 	"github.com/nanobox-io/nanobox-golang-stylish"
@@ -56,7 +56,7 @@ func (j *Deploy) Process() {
 
 	// parse the boxfile
 	util.LogDebug(stylish.Bullet("Parsing Boxfile"))
-	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
+	box := boxfile.NewFromPath(config.MountFolder + "code/" + config.App + "/Boxfile")
 
 	if err := j.CreateBuildContainer(box.Node("build")); err != nil {
 		util.UpdateStatus(j, "errored")
@@ -182,7 +182,7 @@ func (j *Deploy) Process() {
 		}
 	}
 	if failedEnv {
-			util.UpdateStatus(j, "errored")
+		util.UpdateStatus(j, "errored")
 
 		return
 	}
@@ -261,10 +261,9 @@ func (j *Deploy) Process() {
 	util.UpdateStatus(j, "complete")
 }
 
-
 func (j *Deploy) RemoveOldContainers() error {
 	// might as well remove bootstraps and execs too
-	containers, _ := docker.ListContainers("code", "build", "bootstrap", "exec", "tcp", "udp")
+	containers, _ := docker.ListContainers("code", "build", "bootstrap", "dev", "tcp", "udp")
 	for _, container := range containers {
 		util.RemoveForward(container.NetworkSettings.IPAddress)
 		if err := docker.RemoveContainer(container.ID); err != nil {
@@ -274,7 +273,6 @@ func (j *Deploy) RemoveOldContainers() error {
 	}
 	return nil
 }
-
 
 func (j *Deploy) SetupFS() error {
 	// Make sure we have the directories
@@ -290,7 +288,7 @@ func (j *Deploy) SetupFS() error {
 			util.HandleError(stylish.Warning("Failed to reset cache and code directories:\n%v", err.Error()))
 			return err
 		}
-	}	
+	}
 	return nil
 }
 
@@ -317,13 +315,13 @@ func (j *Deploy) CreateBuildContainer(box boxfile.Boxfile) error {
 		util.HandleError(stylish.Error("Failed to create build container", err.Error()))
 		return err
 	}
-	return nil	
+	return nil
 }
 
 func (j *Deploy) SetupBuild() error {
 	// run the default-user hook to get ssh keys setup
 	if _, err := script.Exec("default-user", "build1", fs.UserPayload()); err != nil {
-		return err 
+		return err
 	}
 
 	if _, err := script.Exec("default-configure", "build1", j.payload); err != nil {
@@ -365,22 +363,22 @@ func (j *Deploy) RunBuild() error {
 	// run cleanup script (blocking)
 	if _, err := script.Exec("default-cleanup", "build1", j.payload); err != nil {
 		return err
-	}	
+	}
 	return nil
 }
 
 func (j *Deploy) RunDeployScripts(stage string, box boxfile.Boxfile) error {
 	// run before deploy scripts
 	for _, node := range box.Nodes() {
-		bd := box.Node(node).Value(stage+"_deploy")
-		bda := box.Node(node).Value(stage+"_deploy_all")
+		bd := box.Node(node).Value(stage + "_deploy")
+		bda := box.Node(node).Value(stage + "_deploy_all")
 		if bd != nil || bda != nil {
 
 			// run before deploy script (blocking)
-			if _, err := script.Exec(fmt.Sprintf("default-%s_deploy", stage), node, map[string]interface{}{stage+"_deploy": bd, stage+"_deploy_all": bda}); err != nil {
+			if _, err := script.Exec(fmt.Sprintf("default-%s_deploy", stage), node, map[string]interface{}{stage + "_deploy": bd, stage + "_deploy_all": bda}); err != nil {
 				return err
 			}
 		}
 	}
-	return nil	
+	return nil
 }

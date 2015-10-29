@@ -6,8 +6,8 @@ package mock_docker
 import (
 	go_dockerclient "github.com/fsouza/go-dockerclient"
 	gomock "github.com/golang/mock/gomock"
-	docker "github.com/nanobox-io/nanobox-server/util/docker"
 	io "io"
+	docker "github.com/nanobox-io/nanobox-server/util/docker"
 )
 
 // Mock of ClientInterface interface
@@ -327,16 +327,6 @@ func (_m *MockDockerDefault) ListImages() ([]go_dockerclient.APIImages, error) {
 
 func (_mr *_MockDockerDefaultRecorder) ListImages() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "ListImages")
-}
-
-func (_m *MockDockerDefault) UpdateImage(image string) error {
-	ret := _m.ctrl.Call(_m, "UpdateImage", image)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-func (_mr *_MockDockerDefaultRecorder) UpdateImage(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "UpdateImage", arg0)
 }
 
 func (_m *MockDockerDefault) ImageExists(name string) bool {

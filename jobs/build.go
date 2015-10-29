@@ -92,7 +92,6 @@ func (j *Build) Process() {
 	util.UpdateStatus(j, "complete")
 }
 
-
 func (j *Build) RunBuild() error {
 	// run sync hook (blocking)
 	if _, err := script.Exec("default-sync", "build1", j.payload); err != nil {
@@ -112,7 +111,7 @@ func (j *Build) RunBuild() error {
 	// run cleanup script (blocking)
 	if _, err := script.Exec("default-cleanup", "build1", j.payload); err != nil {
 		return err
-	}	
+	}
 
 	return nil
 }

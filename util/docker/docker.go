@@ -56,7 +56,7 @@ var Client ClientInterface
 var Default DockerDefault
 
 func init() {
-	Client, _ = dc.NewClient("unix:///var/run/docker.sock")
+	Client, _ = dc.NewClient(config.DockerEndPoint)
 	Default = DockerUtil{}
 }
 
@@ -133,7 +133,7 @@ func isDir(path string) bool {
 }
 
 func combinedBox() boxfile.Boxfile {
-	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
+	box := boxfile.NewFromPath(config.MountFolder + "code/" + config.App + "/Boxfile")
 	// run boxfile script (blocking)
 	if !box.Node("build").BoolValue("disable_engine_boxfile") {
 		out, err := ExecInContainer("build1", "/opt/bin/default-boxfile", "{}")

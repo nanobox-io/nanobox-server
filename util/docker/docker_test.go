@@ -4,6 +4,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"testing"
 
+	"github.com/nanobox-io/nanobox-server/config"
 	dc "github.com/fsouza/go-dockerclient"
 	"github.com/nanobox-io/nanobox-server/util/docker"
 	"github.com/nanobox-io/nanobox-server/util/docker/mock_docker"
@@ -21,8 +22,8 @@ func (c createMatcher) Matches(x interface{}) bool {
 		"/mnt/sda/var/nanobox/cache/:/mnt/cache/",
 		"/mnt/sda/var/nanobox/deploy/:/mnt/deploy/",
 		"/mnt/sda/var/nanobox/build/:/mnt/build/",
-		"/vagrant/code//:/share/code/:ro", // the app name cannot be grabbed outside the environment
-		"/vagrant/engines/:/share/engines/:ro",
+		config.MountFolder + "code/app/:/share/code/:ro", // the app name cannot be grabbed outside the environment
+		config.MountFolder + "engines/:/share/engines/:ro",
 	}
 	for i, bind := range createConfig.HostConfig.Binds {
 		if binds[i] != bind {
@@ -37,6 +38,7 @@ func (c createMatcher) String() string {
 }
 
 func TestCreatContainer(t *testing.T) {
+	config.App = "app"
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 

@@ -24,10 +24,12 @@ import (
 
 //
 var (
-	App        string
-	LogtapHost string
-	Ports      map[string]string
-	IP         string
+	App            string
+	LogtapHost     string
+	Ports          map[string]string
+	IP             string
+	MountFolder    string
+	DockerEndPoint string
 
 	Log        hatchet.Logger
 	Logtap     *logtap.Logtap
@@ -37,7 +39,8 @@ var (
 
 //
 func init() {
-
+	MountFolder = "/vagrant/"
+	DockerEndPoint = "unix:///var/run/docker.sock"
 	// create an error object
 	var err error
 
@@ -58,11 +61,11 @@ func init() {
 
 	LogtapHost = IP
 
-	App, err = appName()
+	App, err = AppName()
 	// for err != nil {
 	// 	Log.Error("error: %s\n", err.Error())
 	// 	time.Sleep(time.Second)
-	// 	App, err = appName()
+	// 	App, err = AppName()
 	// }
 
 	Mist = mist.New()
@@ -111,14 +114,14 @@ func externalIP() (string, error) {
 }
 
 //
-func appName() (string, error) {
-	files, err := ioutil.ReadDir("/vagrant/code/")
+func AppName() (string, error) {
+	files, err := ioutil.ReadDir(MountFolder + "code/")
 	if err != nil {
 		return "", err
 	}
 
 	if len(files) < 1 || !files[0].IsDir() {
-		return "", errors.New("There is no code in your /vagrant/code/ folder")
+		return "", errors.New("There is no code in your "+MountFolder+"code/ folder")
 	}
 
 	return files[0].Name(), nil
