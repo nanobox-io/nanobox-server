@@ -172,22 +172,25 @@ func (d DockerUtil) ListContainers(labels ...string) ([]*dc.Container, error) {
 	rtn := []*dc.Container{}
 
 	apiContainers, err := Client.ListContainers(dc.ListContainersOptions{All: true, Size: false})
-	if len(labels) == 0 || err != nil {
+	if err != nil {
+		return rtn, err
+	}
+
+	if len(labels) == 0 {
 		for _, apiContainer := range apiContainers {
 			container, _ := InspectContainer(apiContainer.ID)
 			if container != nil {
 				rtn = append(rtn, container)
 			}
 		}
-		return rtn, err
-	}
-
-	for _, apiContainer := range apiContainers {
-		for _, label := range labels {
-			if apiContainer.Labels[label] == "true" {
-				container, _ := InspectContainer(apiContainer.ID)
-				if container != nil {
-					rtn = append(rtn, container)
+	} else {
+		for _, apiContainer := range apiContainers {
+			for _, label := range labels {
+				if apiContainer.Labels[label] == "true" {
+					container, _ := InspectContainer(apiContainer.ID)
+					if container != nil {
+						rtn = append(rtn, container)
+					}
 				}
 			}
 		}
