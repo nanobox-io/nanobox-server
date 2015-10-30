@@ -143,6 +143,7 @@ func (d DockerUtil) WaitContainer(id string) (int, error) {
 func (d DockerUtil) RemoveContainer(id string) error {
 	Client.StopContainer(id, 0)
 	// if it errors on stopping ignore it
+
 	return Client.RemoveContainer(dc.RemoveContainerOptions{ID: id, RemoveVolumes: false, Force: true})
 }
 

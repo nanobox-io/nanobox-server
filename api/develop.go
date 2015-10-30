@@ -7,7 +7,6 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 	"sync"
 
@@ -36,7 +35,10 @@ func (api *API) Develop(rw http.ResponseWriter, req *http.Request) {
 	// if there is no dev1 it needs to be created and this thread needs to remember
 	// to shut it down when its done conatinerControl is used for that purpose
 	container, err := docker.GetContainer("dev1")
-	if err != nil {
+	if err != nil || !container.State.Running {
+		if container != nil && !container.State.Running {
+			docker.RemoveContainer(container.ID)
+		}
 		containerControl = true
 		cmd := []string{"/bin/sleep", "365d"}
 
@@ -47,6 +49,7 @@ func (api *API) Develop(rw http.ResponseWriter, req *http.Request) {
 
 		container, err = docker.CreateContainer(docker.CreateConfig{Image: image, Category: "dev", UID: "dev1", Cmd: cmd})
 		if err != nil {
+			config.Log.Debug("develop create containter: %s", err.Error())
 			rw.Write([]byte(err.Error()))
 			return
 		}
@@ -55,8 +58,8 @@ func (api *API) Develop(rw http.ResponseWriter, req *http.Request) {
 		out, err := script.Exec("default-user", "dev1", fs.UserPayload())
 		if err != nil {
 			config.Log.Debug("Failed script output: \n %s", out)
+			config.Log.Debug("out: %s", string(out))
 		}
-		fmt.Println(string(out))
 	}
 
 	developTex.Unlock()
