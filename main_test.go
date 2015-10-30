@@ -60,13 +60,12 @@ func TestPing(t *testing.T) {
 	}
 }
 
-func TestDeploy(t *testing.T) {
-	fmt.Println(docker.ListContainers())
-	<-time.After(1000 * time.Second)
-	r, err := http.Post("http://localhost:1757/deploy?run=true", "json", nil)
-	if err != nil || r.StatusCode != 200 {
-		t.Errorf("unable to deploy")
-	}
+// func TestDeploy(t *testing.T) {
+// 	fmt.Println(docker.ListContainers())
+// 	r, err := http.Post("http://localhost:1757/deploy?run=true", "json", nil)
+// 	if err != nil || r.StatusCode != 200 {
+// 		t.Errorf("unable to deploy")
+// 	}
 
-}
+// }
 
