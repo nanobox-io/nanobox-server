@@ -9,6 +9,7 @@ package jobs
 
 //
 import (
+	"fmt"
 	"strings"
 
 	"github.com/nanobox-io/nanobox-boxfile"
@@ -43,57 +44,21 @@ func (j *Deploy) Process() {
 
 	// remove all code containers
 	util.LogInfo(stylish.Bullet("Cleaning containers"))
-
-	// might as well remove bootstraps and execs too
-	containers, _ := docker.ListContainers("code", "build", "bootstrap", "exec", "tcp", "udp")
-	for _, container := range containers {
-		util.RemoveForward(container.NetworkSettings.IPAddress)
-		if err := docker.RemoveContainer(container.ID); err != nil {
-			util.HandleError(stylish.Error("Failed to remove old containers", err.Error()))
-			util.UpdateStatus(j, "errored")
-			return
-		}
-	}
-
-	// Make sure we have the directories
-	if err := fs.CreateDirs(); err != nil {
-		util.HandleError(stylish.Error("Failed to create dirs", err.Error()))
+	if err := j.RemoveOldContainers(); err != nil {
 		util.UpdateStatus(j, "errored")
 		return
 	}
 
-	// wipe the previous deploy data if reset == true
-	if j.Reset {
-		util.LogInfo(stylish.Bullet("Emptying cache"))
-		if err := fs.Clean(); err != nil {
-			util.HandleError(stylish.Warning("Failed to reset cache and code directories:\n%v", err.Error()))
-		}
+	if err := j.SetupFS(); err != nil {
+		util.UpdateStatus(j, "errored")
+		return
 	}
 
 	// parse the boxfile
 	util.LogDebug(stylish.Bullet("Parsing Boxfile"))
-	box := boxfile.NewFromPath("/vagrant/code/" + config.App + "/Boxfile")
+	box := boxfile.NewFromPath(config.MountFolder + "code/" + config.App + "/Boxfile")
 
-	image := "nanobox/build"
-
-	if stab := box.Node("build").StringValue("stability"); stab != "" {
-		image = image + ":" + stab
-	}
-
-	// if the build image doesn't exist it needs to be downloaded
-	if !docker.ImageExists(image) {
-		util.LogInfo(stylish.Bullet("Pulling the latest build image (this may take awhile)... "))
-		docker.InstallImage(image)
-	}
-
-	util.LogDebug(stylish.Bullet("image name: %v", image))
-
-	// create a build container
-	util.LogInfo(stylish.Bullet("Creating build container"))
-
-	_, err := docker.CreateContainer(docker.CreateConfig{Image: image, Category: "build", UID: "build1"})
-	if err != nil {
-		util.HandleError(stylish.Error("Failed to create build container", err.Error()))
+	if err := j.CreateBuildContainer(box.Node("build")); err != nil {
 		util.UpdateStatus(j, "errored")
 		return
 	}
@@ -120,61 +85,12 @@ func (j *Deploy) Process() {
 	evar["APP_NAME"] = config.App
 	j.payload["env"] = evar
 
-	// run the default-user hook to get ssh keys setup
-	if out, err := script.Exec("default-user", "build1", fs.UserPayload()); err != nil {
-		util.LogDebug("Failed script output: \n %s", out)
-		util.HandleError(stylish.Error("Failed to run user script", err.Error()))
+	if err := j.SetupBuild(); err != nil {
 		util.UpdateStatus(j, "errored")
 		return
 	}
 
-	// run configure hook (blocking)
-	if out, err := script.Exec("default-configure", "build1", j.payload); err != nil {
-		util.LogDebug("Failed script output: \n %s", out)
-		util.HandleError(stylish.Error("Failed to run configure script", err.Error()))
-		util.UpdateStatus(j, "errored")
-		return
-	}
-
-	// run detect script (blocking)
-	if out, err := script.Exec("default-detect", "build1", j.payload); err != nil {
-		util.LogDebug("Failed script output: \n %s", out)
-		util.HandleError(stylish.Error("Failed to run detect script", err.Error()))
-		util.UpdateStatus(j, "errored")
-		return
-	}
-
-	// run sync script (blocking)
-	if out, err := script.Exec("default-sync", "build1", j.payload); err != nil {
-		util.LogDebug("Failed script output: \n %s", out)
-		util.HandleError(stylish.Error("Failed to run sync script", err.Error()))
-		util.UpdateStatus(j, "errored")
-		return
-	}
-
-	// run setup script (blocking)
-	if out, err := script.Exec("default-setup", "build1", j.payload); err != nil {
-		util.LogDebug("Failed script output: \n %s", out)
-		util.HandleError(stylish.Error("Failed to run setup script", err.Error()))
-		util.UpdateStatus(j, "errored")
-		return
-	}
-
-	// run boxfile script (blocking)
-	if !box.Node("build").BoolValue("disable_engine_boxfile") {
-		if out, err := script.Exec("default-boxfile", "build1", j.payload); err != nil {
-			util.LogDebug("Failed script output: \n %s", out)
-			util.HandleError(stylish.Error("Failed to run boxfile script", err.Error()))
-			util.UpdateStatus(j, "errored")
-			return
-
-			// if the script runs succesfully merge the boxfiles
-		} else {
-			util.LogDebug(stylish.Bullet("Merging Boxfiles..."))
-			box.Merge(boxfile.New([]byte(out)))
-		}
-	}
-
+	box = combinedBox()
 	// add the missing storage nodes to the boxfile
 	box.AddStorageNode()
 	j.payload["boxfile"] = box.Node("build").Parsed
@@ -218,14 +134,18 @@ func (j *Deploy) Process() {
 
 	worker.Process()
 
+	failedStart := false
 	// ensure all services started correctly before continuing
 	for _, starts := range serviceStarts {
 		if !starts.Success {
 			util.HandleError(stylish.ErrorHead("Failed to start %v", starts.UID))
 			util.HandleError(stylish.ErrorBody(""))
-			util.UpdateStatus(j, "errored")
-			return
+			failedStart = true
 		}
+	}
+	if failedStart {
+		util.UpdateStatus(j, "errored")
+		return
 	}
 
 	// grab the environment data from all service containers
@@ -248,51 +168,28 @@ func (j *Deploy) Process() {
 
 	worker.Process()
 
+	failedEnv := false
 	for _, env := range serviceEnvs {
 		if !env.Success {
 			util.HandleError(stylish.ErrorHead("Failed to configure %v's environment variables", env.UID))
 			util.HandleError(stylish.ErrorBody(""))
-			util.UpdateStatus(j, "errored")
-			return
+			failedEnv = true
+			continue
 		}
 
 		for key, val := range env.EVars {
 			evars[strings.ToUpper(env.UID+"_"+key)] = val
 		}
 	}
-
-	j.payload["env"] = evars
-
-	// run prepare script (blocking)
-	if out, err := script.Exec("default-prepare", "build1", j.payload); err != nil {
-		util.LogDebug("Failed script output: \n %s", out)
-		util.HandleError(stylish.Error("Failed to run prepare script", err.Error()))
+	if failedEnv {
 		util.UpdateStatus(j, "errored")
+
 		return
 	}
 
-	if j.Run {
-		// run build script (blocking)
-		if out, err := script.Exec("default-build", "build1", j.payload); err != nil {
-			util.LogDebug("Failed script output: \n %s", out)
-			util.HandleError(stylish.Error("Failed to run build script", err.Error()))
-			util.UpdateStatus(j, "errored")
-			return
-		}
+	j.payload["env"] = evars
 
-		// run publish script (blocking)
-		if out, err := script.Exec("default-publish", "build1", j.payload); err != nil {
-			util.LogDebug("Failed script output: \n %s", out)
-			util.HandleError(stylish.Error("Failed to run publish script", err.Error()))
-			util.UpdateStatus(j, "errored")
-			return
-		}
-	}
-
-	// run cleanup script (blocking)
-	if out, err := script.Exec("default-cleanup", "build1", j.payload); err != nil {
-		util.LogDebug("Failed script output: \n %s", out)
-		util.HandleError(stylish.Error("Failed to run cleanup script", err.Error()))
+	if err := j.RunBuild(); err != nil {
 		util.UpdateStatus(j, "errored")
 		return
 	}
@@ -334,33 +231,20 @@ func (j *Deploy) Process() {
 
 	util.LogDebug(stylish.Bullet("Running before deploy scripts..."))
 
-	// run before deploy scripts
-	for _, node := range box.Nodes() {
-		bd := box.Node(node).Value("before_deploy")
-		bda := box.Node(node).Value("before_deploy_all")
-		if bd != nil || bda != nil {
-
-			// run before deploy script (blocking)
-			if out, err := script.Exec("default-before_deploy", node, map[string]interface{}{"before_deploy": bd, "before_deploy_all": bda}); err != nil {
-				util.LogDebug("Failed script output: \n %s", out)
-				util.HandleError(stylish.Error("Failed to run before_deploy script", err.Error()))
-				util.UpdateStatus(j, "errored")
-				return
-			}
-		}
+	if err := j.RunDeployScripts("before", box); err != nil {
+		util.UpdateStatus(j, "errored")
+		return
 	}
 
 	// configure the port forwards per service
-	err = configurePorts(box)
-	if err != nil {
+	if err := configurePorts(box); err != nil {
 		util.HandleError(stylish.Error("Failed to configure Ports", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// configure the routing mesh for any web services
-	err = configureRoutes(box)
-	if err != nil {
+	if err := configureRoutes(box); err != nil {
 		util.HandleError(stylish.Error("Failed to configure Routes", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
@@ -369,21 +253,132 @@ func (j *Deploy) Process() {
 	//
 	util.LogDebug(stylish.Bullet("Running after deploy hooks..."))
 
-	// after deploy hooks
-	for _, node := range box.Nodes() {
-		ad := box.Node(node).Value("after_deploy")
-		ada := box.Node(node).Value("after_deploy_all")
-		if ad != nil || ada != nil {
-
-			// run after deploy hook (blocking)
-			if out, err := script.Exec("default-after_deploy", node, map[string]interface{}{"after_deploy": ad, "after_deploy_all": ada}); err != nil {
-				util.LogDebug("Failed script output: \n %s", out)
-				util.HandleError(stylish.Error("Failed to run after_deploy script", err.Error()))
-				util.UpdateStatus(j, "errored")
-				return
-			}
-		}
+	if err := j.RunDeployScripts("after", box); err != nil {
+		util.UpdateStatus(j, "errored")
+		return
 	}
 
 	util.UpdateStatus(j, "complete")
+}
+
+func (j *Deploy) RemoveOldContainers() error {
+	// might as well remove bootstraps and execs too
+	containers, _ := docker.ListContainers("code", "build", "bootstrap", "dev", "tcp", "udp")
+	for _, container := range containers {
+		util.RemoveForward(container.NetworkSettings.IPAddress)
+		if err := docker.RemoveContainer(container.ID); err != nil {
+			util.HandleError(stylish.Error("Failed to remove old containers", err.Error()))
+			return err
+		}
+	}
+	return nil
+}
+
+func (j *Deploy) SetupFS() error {
+	// Make sure we have the directories
+	if err := fs.CreateDirs(); err != nil {
+		util.HandleError(stylish.Error("Failed to create dirs", err.Error()))
+		return err
+	}
+
+	// wipe the previous deploy data if reset == true
+	if j.Reset {
+		util.LogInfo(stylish.Bullet("Emptying cache"))
+		if err := fs.Clean(); err != nil {
+			util.HandleError(stylish.Warning("Failed to reset cache and code directories:\n%v", err.Error()))
+			return err
+		}
+	}
+	return nil
+}
+
+func (j *Deploy) CreateBuildContainer(box boxfile.Boxfile) error {
+	image := "nanobox/build"
+
+	if stab := box.StringValue("stability"); stab != "" {
+		image = image + ":" + stab
+	}
+
+	// if the build image doesn't exist it needs to be downloaded
+	if !docker.ImageExists(image) {
+		util.LogInfo(stylish.Bullet("Pulling the latest build image (this may take awhile)... "))
+		docker.InstallImage(image)
+	}
+
+	util.LogDebug(stylish.Bullet("image name: %v", image))
+
+	// create a build container
+	util.LogInfo(stylish.Bullet("Creating build container"))
+
+	_, err := docker.CreateContainer(docker.CreateConfig{Image: image, Category: "build", UID: "build1"})
+	if err != nil {
+		util.HandleError(stylish.Error("Failed to create build container", err.Error()))
+		return err
+	}
+	return nil
+}
+
+func (j *Deploy) SetupBuild() error {
+	// run the default-user hook to get ssh keys setup
+	if _, err := script.Exec("default-user", "build1", fs.UserPayload()); err != nil {
+		return err
+	}
+
+	if _, err := script.Exec("default-configure", "build1", j.payload); err != nil {
+		return err
+	}
+
+	if _, err := script.Exec("default-detect", "build1", j.payload); err != nil {
+		return err
+	}
+
+	if _, err := script.Exec("default-sync", "build1", j.payload); err != nil {
+		return err
+	}
+
+	if _, err := script.Exec("default-setup", "build1", j.payload); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (j *Deploy) RunBuild() error {
+	// run prepare script (blocking)
+	if _, err := script.Exec("default-prepare", "build1", j.payload); err != nil {
+		return err
+	}
+
+	if j.Run {
+		// run build script (blocking)
+		if _, err := script.Exec("default-build", "build1", j.payload); err != nil {
+			return err
+		}
+
+		// run publish script (blocking)
+		if _, err := script.Exec("default-publish", "build1", j.payload); err != nil {
+			return err
+		}
+	}
+
+	// run cleanup script (blocking)
+	if _, err := script.Exec("default-cleanup", "build1", j.payload); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (j *Deploy) RunDeployScripts(stage string, box boxfile.Boxfile) error {
+	// run before deploy scripts
+	for _, node := range box.Nodes() {
+		bd := box.Node(node).Value(stage + "_deploy")
+		bda := box.Node(node).Value(stage + "_deploy_all")
+		if bd != nil || bda != nil {
+
+			// run before deploy script (blocking)
+			if _, err := script.Exec(fmt.Sprintf("default-%s_deploy", stage), node, map[string]interface{}{stage + "_deploy": bd, stage + "_deploy_all": bda}); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

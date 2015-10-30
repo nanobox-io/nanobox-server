@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/nanobox-io/nanobox-server/config"
 	"github.com/nanobox-io/nanobox-server/util"
 	"github.com/nanobox-io/nanobox-server/util/docker"
 	"github.com/nanobox-io/nanobox-server/util/fs"
@@ -60,12 +61,13 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 	defer execWait.Done()
 	defer util.Unlock()
 	name := req.FormValue("container")
-	if name == "" {
-		name = "exec1"
-	}
+	// if name == "" {
+	// 	name = "dev1"
+	// }
 
 	conn, br, err := rw.(http.Hijacker).Hijack()
 	if err != nil {
+		config.Log.Debug("exec hijack error: %s", err.Error())
 		rw.WriteHeader(http.StatusInternalServerError)
 		rw.Write([]byte(err.Error()))
 		return
@@ -79,6 +81,7 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 
 	container, err := docker.GetContainer(name)
 	if err != nil {
+		config.Log.Debug("exec get container: %s", err.Error())
 		conn.Write([]byte(err.Error()))
 		return
 	}

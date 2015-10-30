@@ -57,7 +57,7 @@ func addCategoryConfig(category string, cConfig *dc.CreateContainerOptions) {
 		cConfig.Config.WorkingDir = "/code"
 		cConfig.Config.User = "gonano"
 		cConfig.HostConfig.Binds = append([]string{
-			"/vagrant/code/" + config.App + "/:/code/",
+			config.MountFolder + "code/" + config.App + "/:/code/",
 		}, libDirs()...)
 		if container, err := GetContainer("build1"); err == nil {
 			cConfig.HostConfig.Binds = append(cConfig.HostConfig.Binds, fmt.Sprintf("/mnt/sda/var/lib/docker/aufs/mnt/%s/data/:/data/", container.ID))
@@ -71,8 +71,8 @@ func addCategoryConfig(category string, cConfig *dc.CreateContainerOptions) {
 			"/mnt/sda/var/nanobox/deploy/:/mnt/deploy/",
 			"/mnt/sda/var/nanobox/build/:/mnt/build/",
 
-			"/vagrant/code/" + config.App + "/:/share/code/:ro",
-			"/vagrant/engines/:/share/engines/:ro",
+			config.MountFolder + "code/" + config.App + "/:/share/code/:ro",
+			config.MountFolder + "engines/:/share/engines/:ro",
 		}
 	case "bootstrap":
 		cConfig.Config.Cmd = []string{"/bin/sleep", "365d"}
@@ -80,8 +80,8 @@ func addCategoryConfig(category string, cConfig *dc.CreateContainerOptions) {
 			"/mnt/sda/var/nanobox/cache/:/mnt/cache/",
 			"/mnt/sda/var/nanobox/deploy/:/mnt/deploy/",
 
-			"/vagrant/code/" + config.App + "/:/code/",
-			"/vagrant/engines/:/share/engines/:ro",
+			config.MountFolder + "code/" + config.App + "/:/code/",
+			config.MountFolder + "engines/:/share/engines/:ro",
 		}
 	case "code":
 		cConfig.HostConfig.Binds = []string{
@@ -143,6 +143,7 @@ func (d DockerUtil) WaitContainer(id string) (int, error) {
 func (d DockerUtil) RemoveContainer(id string) error {
 	Client.StopContainer(id, 0)
 	// if it errors on stopping ignore it
+
 	return Client.RemoveContainer(dc.RemoveContainerOptions{ID: id, RemoveVolumes: false, Force: true})
 }
 
