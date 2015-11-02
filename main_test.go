@@ -26,7 +26,7 @@ import (
 var apiClient = api.Init()
 
 func TestMain(m *testing.M) {
-	config.Log = lumber.NewConsoleLogger(lumber.DEBUG)
+	config.Log = lumber.NewConsoleLogger(lumber.ERROR)
 
 	curDir, err := os.Getwd()
 	if err != nil {
@@ -122,6 +122,44 @@ func TestDeploy(t *testing.T) {
 		t.Errorf("I should have atleast one docker container")
 	}
 
+	if c, err := docker.GetContainer("build1"); err != nil || c.Name == "" {
+		t.Errorf("There should be a build1 container")
+	}
+}
+
+func TestBuild(t *testing.T) {
+	r, err := http.Post("http://localhost:1757/builds", "json", nil)
+	if err != nil || r.StatusCode != 200 {
+		fmt.Println(r, err)
+		t.Errorf("unable to build")
+	}
+	bytes, _ := ioutil.ReadAll(r.Body)
+	build := map[string]string{}
+	err = json.Unmarshal(bytes, &build)
+	if err != nil {
+		t.Errorf("unable to unmarshal body %s", bytes)
+	}
+
+	id := build["id"]
+
+	mistClient := mist.NewLocalClient(config.Mist, 1)
+	mistClient.Subscribe([]string{"job", "build"})
+
+	message := <- mistClient.Messages()
+
+	data := map[string]interface{}{}
+
+	err = json.Unmarshal([]byte(message.Data), &data)
+	if err != nil {
+		t.Errorf("unable to unmarshal data %s\nerr: %s", message.Data, err.Error())
+	}
+
+	if data["document"].(map[string]interface{})["id"] != id {
+		t.Errorf("the message is not for my build: %+v", data["document"])
+	}
+	if data["document"].(map[string]interface{})["status"] != "complete" {
+		t.Errorf("I recieved a bad status: %+v", data["document"])
+	}
 	if c, err := docker.GetContainer("build1"); err != nil || c.Name == "" {
 		t.Errorf("There should be a build1 container")
 	}
