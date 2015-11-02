@@ -36,12 +36,13 @@ func TestMain(m *testing.M) {
 	config.DockerMount = curDir + "test/"
 	config.App, _ = config.AppName()
 
-	// this is required testing docker things when not on linux
-	// im expecting some env var's to tell me how to connect
-	// see docker-machine
-	if runtime.GOOS != "linux" {
-		docker.Client, _ = dc.NewClientFromEnv()
-	}
+	// // this is required testing docker things when not on linux
+	// // im expecting some env var's to tell me how to connect
+	// // see docker-machine
+	// if runtime.GOOS != "linux" {
+		
+	// }
+	docker.Client, _ = dc.NewClientFromEnv()
 	
 	config.Logtap.AddDrain("console", drain.AdaptLogger(config.Log))
 	config.Logtap.AddDrain("mist", drain.AdaptPublisher(config.Mist))	
