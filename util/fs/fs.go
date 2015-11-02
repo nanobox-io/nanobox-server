@@ -51,7 +51,7 @@ func UserPayload() map[string]interface{} {
 
 func (f Fs) CreateDirs() error {
 	for _, dir := range dirs {
-		err := os.MkdirAll("/mnt/sda/var/nanobox/"+dir+"/", 0755)
+		err := os.MkdirAll(config.DockerMount + "sda/var/nanobox/"+dir+"/", 0755)
 		if err != nil {
 			return err
 		}
@@ -61,7 +61,7 @@ func (f Fs) CreateDirs() error {
 
 func (f Fs) Clean() error {
 	for _, dir := range dirs {
-		err := os.RemoveAll("/mnt/sda/var/nanobox/" + dir + "/")
+		err := os.RemoveAll(config.DockerMount + "sda/var/nanobox/" + dir + "/")
 		if err != nil {
 			return err
 		}
@@ -75,7 +75,7 @@ func (f Fs) Touch(file string) {
 }
 
 func (f Fs) LibDirs() (rtn []string) {
-	files, err := ioutil.ReadDir("/mnt/sda/var/nanobox/cache/lib_dirs/")
+	files, err := ioutil.ReadDir(config.DockerMount + "sda/var/nanobox/cache/lib_dirs/")
 	if err != nil {
 		return
 	}
@@ -88,14 +88,14 @@ func (f Fs) LibDirs() (rtn []string) {
 }
 
 func (f Fs) UserPayload() map[string]interface{} {
-	sshFiles, err := ioutil.ReadDir("/mnt/ssh/")
+	sshFiles, err := ioutil.ReadDir(config.DockerMount + "ssh/")
 	if err != nil {
 		return map[string]interface{}{"ssh_files": map[string]string{}}
 	}
 	files := map[string]string{}
 	for _, file := range sshFiles {
 		if !file.IsDir() && file.Name() != "authorized_keys" && file.Name() != "config" && file.Name() != "known_hosts" {
-			content, err := ioutil.ReadFile("/mnt/ssh/" + file.Name())
+			content, err := ioutil.ReadFile(config.DockerMount + "ssh/" + file.Name())
 			if err == nil {
 				files[file.Name()] = string(content)
 			}

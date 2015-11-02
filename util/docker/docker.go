@@ -60,11 +60,6 @@ func init() {
 	Default = DockerUtil{}
 }
 
-func ResetDefaults() {
-	Client, _ = dc.NewClient(config.DockerEndPoint)
-	Default = DockerUtil{}
-}
-
 func InstallImage(image string) error {
 	return Default.InstallImage(image)
 }

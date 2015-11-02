@@ -29,6 +29,7 @@ var (
 	Ports          map[string]string
 	IP             string
 	MountFolder    string
+	DockerMount    string
 	DockerEndPoint string
 
 	Log        hatchet.Logger
@@ -40,11 +41,12 @@ var (
 //
 func init() {
 	MountFolder = "/vagrant/"
+	DockerMount = "/mnt/"
 	DockerEndPoint = "unix:///var/run/docker.sock"
 	// create an error object
 	var err error
 
-	Log = lumber.NewConsoleLogger(lumber.DEBUG)
+	Log = lumber.NewConsoleLogger(lumber.INFO)
 
 	//
 	Ports = map[string]string{
