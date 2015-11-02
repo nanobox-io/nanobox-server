@@ -118,5 +118,11 @@ func TestDeploy(t *testing.T) {
 	if data["document"].(map[string]interface{})["status"] != "complete" {
 		t.Errorf("I recieved a bad status: %+v", data["document"])
 	}
-}
+	if list, err := docker.ListContainers(); err != nil || len(list) == 0 {
+		t.Errorf("I should have atleast one docker container")
+	}
 
+	if c, err := docker.GetContainer("build1"); err != nil || c.Name == "" {
+		t.Errorf("There should be a build1 container")
+	}
+}

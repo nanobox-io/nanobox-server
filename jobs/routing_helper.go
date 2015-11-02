@@ -7,6 +7,8 @@ import (
 	"github.com/nanobox-io/nanobox-boxfile"
 	"github.com/nanobox-io/nanobox-router"
 
+	// "github.com/nanobox-io/nanobox-golang-stylish"
+
 	"github.com/nanobox-io/nanobox-server/config"
 	"github.com/nanobox-io/nanobox-server/util"
 	"github.com/nanobox-io/nanobox-server/util/docker"
@@ -166,5 +168,6 @@ func combinedBox() boxfile.Boxfile {
 			box.Merge(boxfile.New([]byte(out)))
 		}
 	}
+	util.LogDebug("combined Boxfile: %+v", box.Parsed)
 	return box
 }
