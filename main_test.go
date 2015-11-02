@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"net"
 	"net/http"
 	"testing"
 	"time"
@@ -15,7 +16,6 @@ import (
 
 	"github.com/nanobox-io/nanobox-logtap/drain"
 	"github.com/nanobox-io/nanobox-logtap/collector"
-
 
 	"github.com/nanobox-io/golang-mist"
 	"github.com/nanobox-io/nanobox-server/api"
@@ -32,8 +32,8 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		os.Exit(1)
 	}
-	config.MountFolder = curDir + "test/"
-	config.DockerMount = curDir + "test/"
+	config.MountFolder = curDir + "/test/"
+	config.DockerMount = curDir + "/test/"
 	config.App, _ = config.AppName()
 
 	// // this is required testing docker things when not on linux
@@ -70,7 +70,15 @@ func TestMain(m *testing.M) {
 		}
 	}()
 	<-time.After(time.Second)
-	os.Exit(m.Run())
+	rtn := m.Run()
+
+	// Remove all containers
+	containers, _ := docker.ListContainers()
+	for _, container := range containers {
+		docker.RemoveContainer(container.ID)
+	}
+
+	os.Exit(rtn)
 }
 
 func TestPing(t *testing.T) {
@@ -163,4 +171,27 @@ func TestBuild(t *testing.T) {
 	if c, err := docker.GetContainer("build1"); err != nil || c.Name == "" {
 		t.Errorf("There should be a build1 container")
 	}
+}
+
+func TestDevelop(t *testing.T) {
+	conn, err := net.Dial("tcp4", "localhost:1757")	
+	if err != nil {
+		t.Errorf("unable to establish connection")
+	}
+
+	fmt.Fprintf(conn, "POST /develop? HTTP/1.1\r\n\r\n")
+
+	// give the server time to start the dev
+	<-time.After(1 * time.Second)
+
+	if c, err := docker.GetContainer("dev1"); err != nil || c.Name == "" {
+		t.Errorf("There should be a dev1 container")
+	}
+	conn.Close()
+
+	// give the server time to start the dev
+	<-time.After(1 * time.Second)
+	if _, err := docker.GetContainer("dev1"); err == nil {
+		t.Errorf("There should not be a dev1 container")
+	}	
 }
