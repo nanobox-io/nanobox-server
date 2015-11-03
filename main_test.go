@@ -195,3 +195,24 @@ func TestDevelop(t *testing.T) {
 		t.Errorf("There should not be a dev1 container")
 	}	
 }
+
+func TestRoutes(t *testing.T) {
+	r, err := http.Get("http://localhost:1757/routes")
+	if err != nil || r.StatusCode != 200 {
+		fmt.Println(r, err)
+		t.Errorf("unable to get routes")
+	}
+	bytes, _ := ioutil.ReadAll(r.Body)
+	routes := []map[string]interface{}{}
+	err = json.Unmarshal(bytes, &routes)
+	if err != nil {
+		t.Errorf("unable to unmarshal body %s", bytes)
+	}
+	if len(routes) < 1 {
+		t.Errorf("I should have one route")
+		return
+	}
+	if routes[0]["Name"] != "app.dev" {
+		t.Errorf("the Route I have is not app.dev")
+	}
+}

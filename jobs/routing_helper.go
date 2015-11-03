@@ -57,8 +57,6 @@ func configureRoutes(box boxfile.Boxfile) error {
 			if len(ports(b)) == 0 {
 				route.URLs = []string{"http://" + ip + ":8080"}
 			}
-			fmt.Printf("defbox: %+v\n", b)
-			fmt.Printf("defPorts: %+v\n", ports(b))
 			for _, to := range ports(b) {
 				route.URLs = append(route.URLs, "http://"+ip+":"+to)
 			}
