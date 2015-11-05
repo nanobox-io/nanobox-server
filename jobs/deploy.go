@@ -73,17 +73,7 @@ func (j *Deploy) Process() {
 		"logtap_host": config.LogtapHost,
 	}
 
-	evar := map[string]string{}
-	if box.Node("env").Valid {
-		for key, val := range box.Node("env").Parsed {
-			if str, ok := val.(string); ok {
-				evar[key] = str
-			}
-		}
-	}
-
-	evar["APP_NAME"] = config.App
-	j.payload["env"] = evar
+	j.payload["env"] = DefaultEVars(box)
 
 	if err := j.SetupBuild(); err != nil {
 		util.UpdateStatus(j, "errored")

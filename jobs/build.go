@@ -48,12 +48,8 @@ func (j *Build) Process() {
 		"boxfile":     box.Node("build").Parsed,
 		"logtap_host": config.LogtapHost,
 	}
-	evar := map[string]interface{}{}
-	if box.Node("env").Valid {
-		evar = box.Node("env").Parsed
-	}
-	evar["APP_NAME"] = config.App
-	j.payload["env"] = evar
+	
+	j.payload["env"] = DefaultEVars(box)
 
 	if err := j.RunBuild(); err != nil {
 		util.UpdateStatus(j, "errored")

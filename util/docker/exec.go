@@ -57,11 +57,6 @@ func (d DockerUtil) CreateExec(id string, cmd []string, in, out, err bool) (*dc.
 	return Client.CreateExec(config)
 }
 
-// resize the exec.
-func (d DockerUtil) ResizeExecTTY(id string, height, width int) error {
-	return Client.ResizeExecTTY(id, height, width)
-}
-
 // Start the exec. This will hang until the exec exits.
 func (d DockerUtil) RunExec(exec *dc.Exec, in io.Reader, out io.Writer, err io.Writer) (*dc.ExecInspect, error) {
 	e := Client.StartExec(exec.ID, dc.StartExecOptions{
@@ -75,4 +70,9 @@ func (d DockerUtil) RunExec(exec *dc.Exec, in io.Reader, out io.Writer, err io.W
 		return nil, e
 	}
 	return Client.InspectExec(exec.ID)
+}
+
+// resize the exec.
+func (d DockerUtil) ResizeExecTTY(id string, height, width int) error {
+	return Client.ResizeExecTTY(id, height, width)
 }

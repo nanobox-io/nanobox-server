@@ -152,3 +152,17 @@ web1:
 	}
 }
 
+func TestDefaultEVars(t *testing.T) {
+	box := boxfile.New([]byte(`---
+env:
+  PORT: 3000
+build:
+  stability: beta
+  engine: '../../../nanobox-engine-golang'
+`))
+	r := jobs.DefaultEVars(box)
+	if r["PORT"] != "3000" {
+		
+	}
+}
+
