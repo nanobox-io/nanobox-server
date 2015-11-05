@@ -167,3 +167,19 @@ func combinedBox() boxfile.Boxfile {
 	util.LogDebug("combined Boxfile: %+v", box.Parsed)
 	return box
 }
+
+func DefaultEVars(box boxfile.Boxfile) map[string]string {
+	evar := map[string]string{}
+	if box.Node("env").Valid {
+		b := box.Node("env")
+		for key, _ := range b.Parsed {
+			val := b.StringValue(key)
+			if val != "" {
+				evar[key] = val
+			}
+		}
+	}
+
+	evar["APP_NAME"] = config.App
+	return evar
+}
