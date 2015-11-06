@@ -162,7 +162,7 @@ build:
 `))
 	r := jobs.DefaultEVars(box)
 	if r["PORT"] != "3000" {
-		
+		t.Error("Numeric ports are not being processed correctly")
 	}
 }
 
