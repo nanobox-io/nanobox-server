@@ -26,7 +26,7 @@ import (
 var apiClient = api.Init()
 
 func TestMain(m *testing.M) {
-	config.Log = lumber.NewConsoleLogger(lumber.DEBUG)
+	config.Log = lumber.NewConsoleLogger(lumber.ERROR)
 
 	curDir, err := os.Getwd()
 	if err != nil {
