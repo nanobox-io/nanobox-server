@@ -24,34 +24,51 @@ func (api *API) Develop(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		config.Log.Debug("form parsing error: \n %s", err.Error())
 	}
-	// force the develop route to go into a dev1 container
+
+	// force the exec route to go into a dev1 container
 	req.Form["container"] = []string{"dev1"}
 
 	box := combinedBox()
 
-	containerControl := false
+	image := "nanobox/build"
+	if stab := box.Node("build").StringValue("stability"); stab != "" {
+		image = image + ":" + stab
+	}
 
+	control, err := ensureContainer(image) 
+	if err != nil {
+		rw.Write([]byte(err.Error()))
+		return
+	}
+
+	api.Exec(rw, req)
+
+	if control {
+		execWait.Wait()
+		docker.RemoveContainer("dev1")
+	}
+}
+
+func ensureContainer(image string) (control bool, err error) {
 	developTex.Lock()
+	defer developTex.Unlock()
 	// if there is no dev1 it needs to be created and this thread needs to remember
 	// to shut it down when its done conatinerControl is used for that purpose
 	container, err := docker.GetContainer("dev1")
 	if err != nil || !container.State.Running {
 		if container != nil && !container.State.Running {
-			docker.RemoveContainer(container.ID)
+			err = docker.RemoveContainer(container.ID)
+			if err != nil {
+				config.Log.Debug("develop remove containter: %s", err.Error())
+				return false, err
+			}
 		}
-		containerControl = true
-		cmd := []string{"/bin/sleep", "365d"}
+		control = true
 
-		image := "nanobox/build"
-		if stab := box.Node("build").StringValue("stability"); stab != "" {
-			image = image + ":" + stab
-		}
-
-		container, err = docker.CreateContainer(docker.CreateConfig{Image: image, Category: "dev", UID: "dev1", Cmd: cmd})
+		container, err = docker.CreateContainer(docker.CreateConfig{Image: image, Category: "dev", UID: "dev1"})
 		if err != nil {
 			config.Log.Debug("develop create containter: %s", err.Error())
-			rw.Write([]byte(err.Error()))
-			return
+			return false, err
 		}
 
 		// run the default-user hook to get ssh keys setup
@@ -61,15 +78,7 @@ func (api *API) Develop(rw http.ResponseWriter, req *http.Request) {
 			config.Log.Debug("out: %s", string(out))
 		}
 	}
-
-	developTex.Unlock()
-
-	api.Exec(rw, req)
-
-	if containerControl {
-		execWait.Wait()
-		docker.RemoveContainer(container.ID)
-	}
+	return
 }
 
 func combinedBox() boxfile.Boxfile {
