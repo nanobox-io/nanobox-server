@@ -62,6 +62,9 @@ func init() {
 	LogtapHost = IP
 
 	App, err = AppName()
+	if err != nil {
+		Log.Error("config error %s\n", err.Error())
+	}
 
 	Mist = mist.New()
 	Logtap = logtap.New(Log)
