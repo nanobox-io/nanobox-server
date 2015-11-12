@@ -151,6 +151,11 @@ func (j *Deploy) Process() {
 	for _, container := range serviceContainers {
 
 		s := ServiceEnv{UID: container.Config.Labels["uid"]}
+		for _, serviceStart := range serviceStarts {
+			if serviceStart.UID == s.UID {
+				s.FirstTime = true
+			}
+		}
 		serviceEnvs = append(serviceEnvs, &s)
 
 		worker.Queue(&s)
