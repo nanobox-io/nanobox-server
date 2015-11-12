@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"encoding/json"
 
-	dc "github.com/fsouza/go-dockerclient"
 	"github.com/jcelliott/lumber"
 
 	"github.com/nanobox-io/nanobox-logtap/drain"
@@ -26,7 +25,7 @@ import (
 var apiClient = api.Init()
 
 func TestMain(m *testing.M) {
-	config.Log = lumber.NewConsoleLogger(lumber.DEBUG)
+	config.Log = lumber.NewConsoleLogger(lumber.ERROR)
 
 	curDir, err := os.Getwd()
 	if err != nil {

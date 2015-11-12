@@ -13,7 +13,7 @@ import (
 	"net"
 	"net/http"
 	"strings"
-	// "time"
+	"time"
 
 	"github.com/jcelliott/lumber"
 
@@ -62,11 +62,6 @@ func init() {
 	LogtapHost = IP
 
 	App, err = AppName()
-	// for err != nil {
-	// 	Log.Error("error: %s\n", err.Error())
-	// 	time.Sleep(time.Second)
-	// 	App, err = AppName()
-	// }
 
 	Mist = mist.New()
 	Logtap = logtap.New(Log)
@@ -114,15 +109,23 @@ func externalIP() (string, error) {
 }
 
 //
-func AppName() (string, error) {
-	files, err := ioutil.ReadDir(MountFolder + "code/")
-	if err != nil {
-		return "", err
-	}
+func AppName() (name string, e error) {
+	for i := 0; i < 10; i++ {
+		files, err := ioutil.ReadDir(MountFolder + "code/")
+		if err != nil {
+			<-time.After(time.Second)
+			e = err
+			continue
+		}
 
-	if len(files) < 1 || !files[0].IsDir() {
-		return "", errors.New("There is no code in your "+MountFolder+"code/ folder")
+		if len(files) < 1 || !files[0].IsDir() {
+			<-time.After(time.Second)
+			e = errors.New("There is no code in your "+MountFolder+"code/ folder")
+			continue
+		}
+		name = files[0].Name()
+		e = nil
+		break
 	}
-
-	return files[0].Name(), nil
+	return
 }
