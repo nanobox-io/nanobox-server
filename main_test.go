@@ -42,8 +42,6 @@ func TestMain(m *testing.M) {
 	// if runtime.GOOS != "linux" {
 		
 	// }
-	docker.Client, _ = dc.NewClientFromEnv()
-	
 	config.Logtap.AddDrain("console", drain.AdaptLogger(config.Log))
 	config.Logtap.AddDrain("mist", drain.AdaptPublisher(config.Mist))	
 	// define logtap collectors/drains; we don't need to defer Close() anything here,

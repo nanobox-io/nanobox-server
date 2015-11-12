@@ -56,7 +56,7 @@ var Client ClientInterface
 var Default DockerDefault
 
 func init() {
-	Client, _ = dc.NewClient(config.DockerEndPoint)
+	Client, _ = dc.NewClientFromEnv()
 	Default = DockerUtil{}
 }
 

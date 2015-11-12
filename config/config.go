@@ -30,7 +30,6 @@ var (
 	IP             string
 	MountFolder    string
 	DockerMount    string
-	DockerEndPoint string
 
 	Log        hatchet.Logger
 	Logtap     *logtap.Logtap
@@ -42,7 +41,6 @@ var (
 func init() {
 	MountFolder = "/vagrant/"
 	DockerMount = "/mnt/"
-	DockerEndPoint = "unix:///var/run/docker.sock"
 	// create an error object
 	var err error
 
