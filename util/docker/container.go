@@ -50,7 +50,6 @@ func addCategoryConfig(category string, cConfig *dc.CreateContainerOptions) {
 	switch category {
 	case "dev":
 		cConfig.Config.Cmd = []string{"/bin/sleep", "365d"}
-		cConfig.Config.Hostname = fmt.Sprintf("%s.dev", config.App)
 		cConfig.Config.OpenStdin = true
 		cConfig.Config.AttachStdin = true
 		cConfig.Config.AttachStdout = true
@@ -63,7 +62,6 @@ func addCategoryConfig(category string, cConfig *dc.CreateContainerOptions) {
 		if container, err := GetContainer("build1"); err == nil {
 			cConfig.HostConfig.Binds = append(cConfig.HostConfig.Binds, fmt.Sprintf("/mnt/sda/var/lib/docker/aufs/mnt/%s/data/:/data/", container.ID))
 		}
-
 		cConfig.HostConfig.NetworkMode = "host"
 	case "build":
 		cConfig.Config.Cmd = []string{"/bin/sleep", "365d"}

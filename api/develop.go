@@ -56,7 +56,15 @@ func ensureContainer(image string) (control bool, err error) {
 	// to shut it down when its done conatinerControl is used for that purpose
 	container, err := docker.GetContainer("dev1")
 	if err != nil || !container.State.Running {
+		config.Log.Debug("develop controlling container")
+		config.Log.Debug("develop container: %+v", container)
+		if container != nil {
+			config.Log.Debug("develop container config: %+v", container.Config)
+			config.Log.Debug("develop container host: %+v", container.HostConfig)
+		}
+		
 		if container != nil && !container.State.Running {
+			config.Log.Debug("removing old dev1")
 			err = docker.RemoveContainer(container.ID)
 			if err != nil {
 				config.Log.Debug("develop remove containter: %s", err.Error())
