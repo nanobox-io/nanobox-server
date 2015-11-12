@@ -8,6 +8,8 @@
 package jobs
 
 import (
+	"strings"
+	
 	"github.com/nanobox-io/nanobox-golang-stylish"
 	"github.com/nanobox-io/nanobox-server/config"
 	"github.com/nanobox-io/nanobox-server/util"
@@ -49,16 +51,53 @@ func (j *Build) Process() {
 		"logtap_host": config.LogtapHost,
 	}
 	
-	j.payload["env"] = DefaultEVars(box)
+	// grab the environment data from all service containers
+
+	worker := worker.New()
+	worker.Blocking = true
+	worker.Concurrent = true
+
+	//
+	serviceEnvs := []*ServiceEnv{}
+
+	serviceContainers, _ := docker.ListContainers("service")
+	for _, container := range serviceContainers {
+
+		s := ServiceEnv{UID: container.Config.Labels["uid"]}
+		serviceEnvs = append(serviceEnvs, &s)
+
+		worker.Queue(&s)
+	}
+
+	worker.Process()
+
+	evars := DefaultEVars(box)
+
+	failedEnv := false
+	for _, env := range serviceEnvs {
+		if !env.Success {
+			util.HandleError(stylish.ErrorHead("Failed to configure %v's environment variables", env.UID))
+			util.HandleError(stylish.ErrorBody(""))
+			failedEnv = true
+			continue
+		}
+
+		for key, val := range env.EVars {
+			evars[strings.ToUpper(env.UID+"_"+key)] = val
+		}
+	}
+	if failedEnv {
+		util.UpdateStatus(j, "errored")
+
+		return
+	}
+
+	j.payload["env"] = evars
 
 	if err := j.RunBuild(); err != nil {
 		util.UpdateStatus(j, "errored")
 		return
 	}
-
-	worker := worker.New()
-	worker.Blocking = true
-	worker.Concurrent = true
 
 	restarts := []*Restart{}
 
