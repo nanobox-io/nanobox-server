@@ -35,12 +35,6 @@ func TestMain(m *testing.M) {
 	config.DockerMount = curDir + "/test/"
 	config.App, _ = config.AppName()
 
-	// // this is required testing docker things when not on linux
-	// // im expecting some env var's to tell me how to connect
-	// // see docker-machine
-	// if runtime.GOOS != "linux" {
-		
-	// }
 	config.Logtap.AddDrain("console", drain.AdaptLogger(config.Log))
 	config.Logtap.AddDrain("mist", drain.AdaptPublisher(config.Mist))	
 	// define logtap collectors/drains; we don't need to defer Close() anything here,
