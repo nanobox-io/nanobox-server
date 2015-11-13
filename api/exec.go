@@ -29,8 +29,11 @@ func (api *API) LibDirs(rw http.ResponseWriter, req *http.Request) {
 }
 
 func (api *API) FileChange(rw http.ResponseWriter, req *http.Request) {
-	<- time.After(time.Second)
-	fs.Touch(req.FormValue("filename"))
+	file := req.FormValue("filename")
+	go func(file string) {
+		<- time.After(time.Second)
+		fs.Touch(file)
+	}(file)
 	writeBody(nil, rw, http.StatusOK)
 }
 
