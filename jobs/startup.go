@@ -37,7 +37,7 @@ func (j *Startup) Process() {
 
 	serviceContainers, _ := docker.ListContainers("service")
 	for _, container := range serviceContainers {
-		s := ServiceEnv{UID: container.Config.Labels["uid"]}
+		s := ServiceEnv{UID: container.Config.Labels["uid"], FirstTime: true}
 		worker.Queue(&s)
 	}
 
