@@ -18,7 +18,7 @@ import (
 	"github.com/jcelliott/lumber"
 
 	"github.com/nanobox-io/golang-hatchet"
-	"github.com/nanobox-io/golang-mist"
+	"github.com/nanopack/mist/core"
 	"github.com/nanobox-io/nanobox-logtap"
 )
 

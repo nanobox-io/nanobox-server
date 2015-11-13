@@ -23,7 +23,7 @@ import (
 func main() {
 
 	// create a new mist and start listening for messages at *:1445
-	config.Mist.Listen(config.Ports["mist"])
+	config.Mist.Listen(config.Ports["mist"], nil)
 
 	setupLogtap()
 

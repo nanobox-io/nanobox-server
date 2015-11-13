@@ -9,13 +9,8 @@
 		},
 		{
 			"ImportPath": "github.com/boltdb/bolt",
-			"Comment": "v1.0-4-g293da01",
-			"Rev": "293da013aec93d4d96c702cc5ddf1aae17ef0bc3"
-		},
-		{
-			"ImportPath": "github.com/deckarep/golang-set",
-			"Comment": "v1-28-g52ba7f2",
-			"Rev": "52ba7f28f319e9d560acbf47c7fcf9b9ee7aa7d3"
+			"Comment": "v1.1.0-12-g47d80ed",
+			"Rev": "47d80ed8a451fe9c07069e845e93b79291bb0532"
 		},
 		{
 			"ImportPath": "github.com/docker/docker/pkg/signal",
@@ -59,10 +54,6 @@
 			"Rev": "dec82651ee5b3bf6a95ec1cde070c5951a29bb14"
 		},
 		{
-			"ImportPath": "github.com/nanobox-io/golang-mist",
-			"Rev": "27db5972ced4c9280ac90810a43a29ec7edebbf5"
-		},
-		{
 			"ImportPath": "github.com/nanobox-io/nanobox-boxfile",
 			"Rev": "1bd63c5cab8b4ba8b626fdbba313f014b2865922"
 		},
@@ -80,7 +71,15 @@
 		},
 		{
 			"ImportPath": "github.com/nanobox-io/nanobox-router",
-			"Rev": "eefcb701868152971d91943cd7bb401346dc179b"
+			"Rev": "35bd5bd8267a9f8c44e073a3f4b236dbd3c08914"
+		},
+		{
+			"ImportPath": "github.com/nanopack/mist/core",
+			"Rev": "a6ac0446c8b6fc1ae46d63dd1eddf93e1f1fe8ff"
+		},
+		{
+			"ImportPath": "github.com/nanopack/mist/subscription",
+			"Rev": "a6ac0446c8b6fc1ae46d63dd1eddf93e1f1fe8ff"
 		},
 		{
 			"ImportPath": "github.com/pborman/uuid",

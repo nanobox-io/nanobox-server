@@ -16,7 +16,7 @@ import (
 	"github.com/nanobox-io/nanobox-logtap/drain"
 	"github.com/nanobox-io/nanobox-logtap/collector"
 
-	"github.com/nanobox-io/golang-mist"
+	"github.com/nanopack/mist/core"
 	"github.com/nanobox-io/nanobox-server/api"
 	"github.com/nanobox-io/nanobox-server/config"
 	"github.com/nanobox-io/nanobox-server/util/docker"

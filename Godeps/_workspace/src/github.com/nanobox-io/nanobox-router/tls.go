@@ -19,11 +19,10 @@ type KeyPair struct {
 }
 
 var address = ":443"
-
 // Start listening for secure connection.
-// The web server is split out from the much simpler from of
+// The web server is split out from the much simpler from of 
 //   http.ListenAndServeTLS(addr string, certFile string, keyFile string, handler Handler)
-// because we needed to handle multiple certs all at the same time and we needed
+// because we needed to handle multiple certs all at the same time and we needed 
 // to be able to change the set of certs without restarting the server
 // this can be done by establishing a tls listener seperate form the http Server.
 func StartTLS(addr string) error {
@@ -50,22 +49,20 @@ func StartTLS(addr string) error {
 }
 
 // update the stored certificates and restart the web server
-func UpdateCerts(newKeys []KeyPair) error {
+func UpdateCerts(newKeys []KeyPair) {
 	newCerts := []tls.Certificate{}
 	for _, newKey := range newKeys {
 		cert, err := tls.X509KeyPair([]byte(newKey.Cert), []byte(newKey.Key))
-		if err != nil {
-			return err
+		if err == nil {
+			newCerts = append(newCerts, cert)
 		}
-		newCerts = append(newCerts, cert)
+		
 	}
 	domainLock.Lock()
 	keys = newKeys
 	certificates = newCerts
 	domainLock.Unlock()
 	StartTLS(address)
-
-	return nil
 }
 
 // list the cached keys.
