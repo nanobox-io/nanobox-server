@@ -1,0 +1,94 @@
+{
+	"ImportPath": "github.com/nanobox-io/nanobox-server",
+	"GoVersion": "go1.5",
+	"Deps": [
+		{
+			"ImportPath": "github.com/Sirupsen/logrus",
+			"Comment": "v0.8.5-1-g11538ee",
+			"Rev": "11538ee6888f72d4ab44a1aeba06b9bc4cb134a1"
+		},
+		{
+			"ImportPath": "github.com/boltdb/bolt",
+			"Comment": "v1.1.0-19-g0b00eff",
+			"Rev": "0b00effdd7a8270ebd91c24297e51643e370dd52"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/signal",
+			"Comment": "v1.4.1-5087-g542de78",
+			"Rev": "542de786c2600f5936224308d293d25a588513a4"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient",
+			"Rev": "44f75219dec4d25d3ac5483d38d3ada7eaf047ab"
+		},
+		{
+			"ImportPath": "github.com/gorilla/context",
+			"Rev": "14f550f51af52180c2eefed15e5fd18d63c0a64a"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Rev": "e444e69cbd2e2e3e0749a2f3c717cec491552bbf"
+		},
+		{
+			"ImportPath": "github.com/gorilla/pat",
+			"Rev": "ae2e162c4b2ae96aa66b596b2c18f17834299ed0"
+		},
+		{
+			"ImportPath": "github.com/gorilla/websocket",
+			"Rev": "b6ab76f1fe9803ee1d59e7e5b2a797c1fe897ce5"
+		},
+		{
+			"ImportPath": "github.com/jcelliott/lumber",
+			"Rev": "b3aa8d335513329fefdb0b7422251a6113ca8ea2"
+		},
+		{
+			"ImportPath": "github.com/jeromer/syslogparser",
+			"Rev": "812866d0389ae7e1f5a0110d47dea20224fc776f"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/go-wordwrap",
+			"Rev": "ad45545899c7b13c020ea92b2072220eefad42b8"
+		},
+		{
+			"ImportPath": "github.com/nanobox-io/golang-hatchet",
+			"Rev": "dec82651ee5b3bf6a95ec1cde070c5951a29bb14"
+		},
+		{
+			"ImportPath": "github.com/nanobox-io/nanobox-boxfile",
+			"Rev": "1bd63c5cab8b4ba8b626fdbba313f014b2865922"
+		},
+		{
+			"ImportPath": "github.com/nanobox-io/nanobox-golang-stylish",
+			"Rev": "8b1728713afff7463e5c45e5bd63e3b7958fffa6"
+		},
+		{
+			"ImportPath": "github.com/nanobox-io/nanobox-logtap",
+			"Rev": "76abd4667b2e834388b64188135dc1d6902ecf6d"
+		},
+		{
+			"ImportPath": "github.com/nanobox-io/nanobox-lvs",
+			"Rev": "620cc8911569686135cfd0d1e94e519992d12696"
+		},
+		{
+			"ImportPath": "github.com/nanobox-io/nanobox-router",
+			"Rev": "35bd5bd8267a9f8c44e073a3f4b236dbd3c08914"
+		},
+		{
+			"ImportPath": "github.com/nanopack/mist/core",
+			"Rev": "df8325e77b1a2d86d4193af7791ec4edbdb26bcf"
+		},
+		{
+			"ImportPath": "github.com/nanopack/mist/subscription",
+			"Rev": "df8325e77b1a2d86d4193af7791ec4edbdb26bcf"
+		},
+		{
+			"ImportPath": "github.com/pborman/uuid",
+			"Rev": "cccd189d45f7ac3368a0d127efb7f4d08ae0b655"
+		},
+		{
+			"ImportPath": "launchpad.net/goyaml",
+			"Comment": "51",
+			"Rev": "gustavo@niemeyer.net-20140305200416-7gh64vkcckre5mob"
+		}
+	]
+}
