@@ -1,25 +1,25 @@
 package main
 
 import (
-	"os"
+	"io/ioutil"
 	"net"
 	"net/http"
+	"os"
 	"testing"
 	"time"
-	"io/ioutil"
 	// "runtime"
-	"fmt"
 	"encoding/json"
+	"fmt"
 
 	"github.com/jcelliott/lumber"
 
-	"github.com/nanobox-io/nanobox-logtap/drain"
 	"github.com/nanobox-io/nanobox-logtap/collector"
+	"github.com/nanobox-io/nanobox-logtap/drain"
 
-	"github.com/nanopack/mist/core"
 	"github.com/nanobox-io/nanobox-server/api"
 	"github.com/nanobox-io/nanobox-server/config"
 	"github.com/nanobox-io/nanobox-server/util/docker"
+	"github.com/nanopack/mist/core"
 )
 
 var apiClient = api.Init()
@@ -36,7 +36,7 @@ func TestMain(m *testing.M) {
 	config.App, _ = config.AppName()
 
 	config.Logtap.AddDrain("console", drain.AdaptLogger(config.Log))
-	config.Logtap.AddDrain("mist", drain.AdaptPublisher(config.Mist))	
+	config.Logtap.AddDrain("mist", drain.AdaptPublisher(config.Mist))
 	// define logtap collectors/drains; we don't need to defer Close() anything here,
 	// because these want to live as long as the server
 	if _, err := collector.SyslogUDPStart("app", config.Ports["logtap"]+"1", config.Logtap); err != nil {
@@ -102,7 +102,7 @@ func TestDeploy(t *testing.T) {
 	mistClient := mist.NewLocalClient(config.Mist, 1)
 	mistClient.Subscribe([]string{"job", "deploy"})
 
-	message := <- mistClient.Messages()
+	message := <-mistClient.Messages()
 
 	data := map[string]interface{}{}
 
@@ -144,7 +144,7 @@ func TestBuild(t *testing.T) {
 	mistClient := mist.NewLocalClient(config.Mist, 1)
 	mistClient.Subscribe([]string{"job", "build"})
 
-	message := <- mistClient.Messages()
+	message := <-mistClient.Messages()
 
 	data := map[string]interface{}{}
 
@@ -165,7 +165,7 @@ func TestBuild(t *testing.T) {
 }
 
 func TestDevelop(t *testing.T) {
-	conn, err := net.Dial("tcp4", "localhost:1757")	
+	conn, err := net.Dial("tcp4", "localhost:1757")
 	if err != nil {
 		t.Errorf("unable to establish connection")
 	}
@@ -184,7 +184,7 @@ func TestDevelop(t *testing.T) {
 	<-time.After(1 * time.Second)
 	if _, err := docker.GetContainer("dev1"); err == nil {
 		t.Errorf("There should not be a dev1 container")
-	}	
+	}
 }
 
 func TestRoutes(t *testing.T) {

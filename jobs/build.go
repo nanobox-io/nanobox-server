@@ -9,7 +9,7 @@ package jobs
 
 import (
 	"strings"
-	
+
 	"github.com/nanobox-io/nanobox-golang-stylish"
 	"github.com/nanobox-io/nanobox-server/config"
 	"github.com/nanobox-io/nanobox-server/util"
@@ -50,7 +50,7 @@ func (j *Build) Process() {
 		"boxfile":     box.Node("build").Parsed,
 		"logtap_host": config.LogtapHost,
 	}
-	
+
 	// grab the environment data from all service containers
 
 	worker := worker.New()

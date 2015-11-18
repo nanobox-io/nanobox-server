@@ -17,18 +17,18 @@ import (
 
 	"github.com/jcelliott/lumber"
 
-	"github.com/nanopack/mist/core"
 	"github.com/nanobox-io/nanobox-logtap"
+	"github.com/nanopack/mist/core"
 )
 
 //
 var (
-	App            string
-	LogtapHost     string
-	Ports          map[string]string
-	IP             string
-	MountFolder    string
-	DockerMount    string
+	App         string
+	LogtapHost  string
+	Ports       map[string]string
+	IP          string
+	MountFolder string
+	DockerMount string
 
 	Log        lumber.Logger
 	Logtap     *logtap.Logtap
@@ -122,7 +122,7 @@ func AppName() (name string, e error) {
 
 		if len(files) < 1 || !files[0].IsDir() {
 			<-time.After(time.Second)
-			e = errors.New("There is no code in your "+MountFolder+"code/ folder")
+			e = errors.New("There is no code in your " + MountFolder + "code/ folder")
 			continue
 		}
 		name = files[0].Name()

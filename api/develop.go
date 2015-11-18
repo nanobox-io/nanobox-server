@@ -35,7 +35,7 @@ func (api *API) Develop(rw http.ResponseWriter, req *http.Request) {
 		image = image + ":" + stab
 	}
 
-	control, err := ensureContainer(image) 
+	control, err := ensureContainer(image)
 	if err != nil {
 		rw.Write([]byte(err.Error()))
 		return
@@ -62,7 +62,7 @@ func ensureContainer(image string) (control bool, err error) {
 			config.Log.Debug("develop container config: %+v", container.Config)
 			config.Log.Debug("develop container host: %+v", container.HostConfig)
 		}
-		
+
 		if container != nil && !container.State.Running {
 			config.Log.Debug("removing old dev1")
 			err = docker.RemoveContainer(container.ID)

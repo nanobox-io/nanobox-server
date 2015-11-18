@@ -6,13 +6,13 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/nanobox-io/nanobox-boxfile"
 
-	"github.com/nanobox-io/nanobox-server/jobs"
-	"github.com/nanobox-io/nanobox-server/util/docker/mock_docker"
-	"github.com/nanobox-io/nanobox-server/util/docker"
 	dc "github.com/fsouza/go-dockerclient"
+	"github.com/nanobox-io/nanobox-server/jobs"
+	"github.com/nanobox-io/nanobox-server/util/docker"
+	"github.com/nanobox-io/nanobox-server/util/docker/mock_docker"
 
-	"github.com/nanobox-io/nanobox-server/util/fs/mock_fs"
 	"github.com/nanobox-io/nanobox-server/util/fs"
+	"github.com/nanobox-io/nanobox-server/util/fs/mock_fs"
 
 	"github.com/nanobox-io/nanobox-server/util/script"
 )
@@ -24,7 +24,7 @@ func TestDeployRemoveOldContainers(t *testing.T) {
 	mDocker := mock_docker.NewMockDockerDefault(ctrl)
 	docker.Default = mDocker
 
-	mDocker.EXPECT().ListContainers("code", "build", "bootstrap", "dev", "tcp", "udp").Return([]*dc.Container{&dc.Container{ID:"1234", NetworkSettings: &dc.NetworkSettings{IPAddress: "1.2.3.4"}}}, nil)
+	mDocker.EXPECT().ListContainers("code", "build", "bootstrap", "dev", "tcp", "udp").Return([]*dc.Container{&dc.Container{ID: "1234", NetworkSettings: &dc.NetworkSettings{IPAddress: "1.2.3.4"}}}, nil)
 	mDocker.EXPECT().RemoveContainer("1234")
 
 	deploy := jobs.Deploy{}
@@ -38,7 +38,7 @@ func TestDeploySetupFs(t *testing.T) {
 
 	mFs := mock_fs.NewMockFsUtil(ctrl)
 	fs.FsDefault = mFs
-	
+
 	mFs.EXPECT().CreateDirs()
 	mFs.EXPECT().Clean()
 
@@ -59,7 +59,7 @@ func TestCreateBuildContainer(t *testing.T) {
 		mDocker.EXPECT().InstallImage("nanobox/build"),
 		mDocker.EXPECT().CreateContainer(docker.CreateConfig{Image: "nanobox/build", Category: "build", UID: "build1"}),
 	)
-	
+
 	deploy := jobs.Deploy{}
 	deploy.CreateBuildContainer(boxfile.Boxfile{})
 
@@ -71,21 +71,21 @@ func TestSetupBuild(t *testing.T) {
 
 	mFs := mock_fs.NewMockFsUtil(ctrl)
 	fs.FsDefault = mFs
-	
-	mFs.EXPECT().UserPayload()	
+
+	mFs.EXPECT().UserPayload()
 
 	names := []string{}
-	script.Exec = func(name, container string, payload map[string]interface{}) ([]byte, error)  {
+	script.Exec = func(name, container string, payload map[string]interface{}) ([]byte, error) {
 		names = append(names, name)
 		return []byte{}, nil
 	}
 	deploy := jobs.Deploy{}
 	deploy.SetupBuild()
 	expectedNames := []string{
-		"default-user", 
-		"default-configure", 
-		"default-detect", 
-		"default-sync", 
+		"default-user",
+		"default-configure",
+		"default-detect",
+		"default-sync",
 		"default-setup",
 	}
 	if len(names) != len(expectedNames) {
@@ -101,7 +101,7 @@ func TestSetupBuild(t *testing.T) {
 
 func TestRunBuild(t *testing.T) {
 	names := []string{}
-	script.Exec = func(name, container string, payload map[string]interface{}) ([]byte, error)  {
+	script.Exec = func(name, container string, payload map[string]interface{}) ([]byte, error) {
 		names = append(names, name)
 		return []byte{}, nil
 	}
@@ -126,7 +126,7 @@ func TestRunBuild(t *testing.T) {
 
 func TestRunDeployScripts(t *testing.T) {
 	names := []string{}
-	script.Exec = func(name, container string, payload map[string]interface{}) ([]byte, error)  {
+	script.Exec = func(name, container string, payload map[string]interface{}) ([]byte, error) {
 		names = append(names, name)
 		return []byte{}, nil
 	}
@@ -165,4 +165,3 @@ build:
 		t.Error("Numeric ports are not being processed correctly")
 	}
 }
-

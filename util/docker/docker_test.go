@@ -4,8 +4,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"testing"
 
-	"github.com/nanobox-io/nanobox-server/config"
 	dc "github.com/fsouza/go-dockerclient"
+	"github.com/nanobox-io/nanobox-server/config"
 	"github.com/nanobox-io/nanobox-server/util/docker"
 	"github.com/nanobox-io/nanobox-server/util/docker/mock_docker"
 )

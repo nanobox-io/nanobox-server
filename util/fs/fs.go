@@ -51,7 +51,7 @@ func UserPayload() map[string]interface{} {
 
 func (f Fs) CreateDirs() error {
 	for _, dir := range dirs {
-		err := os.MkdirAll(config.DockerMount + "sda/var/nanobox/"+dir+"/", 0755)
+		err := os.MkdirAll(config.DockerMount+"sda/var/nanobox/"+dir+"/", 0755)
 		if err != nil {
 			return err
 		}

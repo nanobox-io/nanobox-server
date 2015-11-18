@@ -12,8 +12,8 @@ import (
 	"fmt"
 
 	"github.com/nanobox-io/nanobox-golang-stylish"
-	"github.com/nanobox-io/nanobox-server/util/docker"
 	"github.com/nanobox-io/nanobox-server/util"
+	"github.com/nanobox-io/nanobox-server/util/docker"
 )
 
 // Exec executes a script using docker
@@ -34,7 +34,7 @@ var Exec = func(name, container string, payload map[string]interface{}) ([]byte,
 
 	out, err := docker.ExecInContainer(container, "/opt/bin/"+name, string(b))
 	if err != nil {
-		util.LogDebug("Failed script output(%s): \n %s",name,  out)
+		util.LogDebug("Failed script output(%s): \n %s", name, out)
 		util.HandleError(stylish.Error(fmt.Sprintf("Failed to run %s script", name), err.Error()))
 	}
 	return out, err

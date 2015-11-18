@@ -6,8 +6,8 @@ package mock_docker
 import (
 	go_dockerclient "github.com/fsouza/go-dockerclient"
 	gomock "github.com/golang/mock/gomock"
-	io "io"
 	docker "github.com/nanobox-io/nanobox-server/util/docker"
+	io "io"
 )
 
 // Mock of ClientInterface interface

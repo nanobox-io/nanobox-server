@@ -127,7 +127,6 @@ func (j *Deploy) Process() {
 	// make the worker concurrent from here on
 	worker.Concurrent = true
 
-
 	failedStart := false
 	// ensure all services started correctly before continuing
 	for _, starts := range serviceStarts {
