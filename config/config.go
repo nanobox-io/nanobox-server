@@ -112,7 +112,7 @@ func externalIP() (string, error) {
 
 //
 func AppName() (name string, e error) {
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 100; i++ {
 		files, err := ioutil.ReadDir(MountFolder + "code/")
 		if err != nil {
 			<-time.After(time.Second)
