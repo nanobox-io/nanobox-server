@@ -97,7 +97,6 @@ func (j *Deploy) Process() {
 
 	worker := worker.New()
 	worker.Blocking = true
-	worker.Concurrent = true
 
 	//
 	serviceStarts := []*ServiceStart{}
@@ -122,7 +121,12 @@ func (j *Deploy) Process() {
 		util.LogInfo(stylish.Bullet("Launching data services"))
 	}
 
+	// we dont want service starts to be concurrent here for messaging
+	worker.Concurrent = false
 	worker.Process()
+	// make the worker concurrent from here on
+	worker.Concurrent = true
+
 
 	failedStart := false
 	// ensure all services started correctly before continuing

@@ -17,7 +17,6 @@ import (
 
 	"github.com/jcelliott/lumber"
 
-	"github.com/nanobox-io/golang-hatchet"
 	"github.com/nanopack/mist/core"
 	"github.com/nanobox-io/nanobox-logtap"
 )
@@ -31,7 +30,7 @@ var (
 	MountFolder    string
 	DockerMount    string
 
-	Log        hatchet.Logger
+	Log        lumber.Logger
 	Logtap     *logtap.Logtap
 	Mist       *mist.Mist
 	LogHandler http.HandlerFunc

@@ -9,8 +9,8 @@
 		},
 		{
 			"ImportPath": "github.com/boltdb/bolt",
-			"Comment": "v1.1.0-12-g47d80ed",
-			"Rev": "47d80ed8a451fe9c07069e845e93b79291bb0532"
+			"Comment": "v1.1.0-19-g0b00eff",
+			"Rev": "0b00effdd7a8270ebd91c24297e51643e370dd52"
 		},
 		{
 			"ImportPath": "github.com/docker/docker/pkg/signal",
@@ -75,11 +75,11 @@
 		},
 		{
 			"ImportPath": "github.com/nanopack/mist/core",
-			"Rev": "a6ac0446c8b6fc1ae46d63dd1eddf93e1f1fe8ff"
+			"Rev": "df8325e77b1a2d86d4193af7791ec4edbdb26bcf"
 		},
 		{
 			"ImportPath": "github.com/nanopack/mist/subscription",
-			"Rev": "a6ac0446c8b6fc1ae46d63dd1eddf93e1f1fe8ff"
+			"Rev": "df8325e77b1a2d86d4193af7791ec4edbdb26bcf"
 		},
 		{
 			"ImportPath": "github.com/pborman/uuid",
