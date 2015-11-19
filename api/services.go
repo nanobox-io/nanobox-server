@@ -35,6 +35,11 @@ func (api *API) ListRoutes(rw http.ResponseWriter, req *http.Request) {
 	writeBody(router.Routes(), rw, http.StatusOK)
 }
 
+func (api *API) ListVips(rw http.ResponseWriter, req *http.Request) {
+	vips, _ := util.ListVips()
+	writeBody(vips, rw, http.StatusOK)	
+}
+
 // ListServices
 func (api *API) ListServices(rw http.ResponseWriter, req *http.Request) {
 

@@ -2,3 +2,5 @@ build:
   app_module: "app:wsgiapp"
 web1:
   name: py
+  ports:
+    - 3000

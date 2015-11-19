@@ -93,7 +93,7 @@ func (api *API) registerRoutes() (*pat.Router, error) {
 
 	router.Get("/services", api.handleRequest(api.ListServices))
 	router.Get("/routes", api.handleRequest(api.ListRoutes))
-
+	router.Get("/vips", api.handleRequest(api.ListVips))
 	return router, nil
 }
 

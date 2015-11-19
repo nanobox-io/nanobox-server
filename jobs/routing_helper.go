@@ -3,6 +3,7 @@ package jobs
 import (
 	"fmt"
 	"strings"
+	"strconv"
 
 	"github.com/nanobox-io/nanobox-boxfile"
 	"github.com/nanobox-io/nanobox-router"
@@ -95,15 +96,17 @@ func configurePorts(box boxfile.Boxfile) error {
 		if err != nil {
 			// if the container doesnt exist just continue and dont
 			// add routes for that node
+			config.Log.Debug("no container for %s", node)
 			continue
 		}
 		ip := container.NetworkSettings.IPAddress
 		for from, to := range ports(b) {
-			util.AddForward(from, ip, to)
+			err := util.AddForward(from, ip, to)
+			if err != nil {
+				config.Log.Debug("failed to add forward %+v", err)
+			}
 		}
-
 	}
-
 	return nil
 }
 
@@ -152,6 +155,11 @@ func ports(box boxfile.Boxfile) map[string]string {
 				rtn[portParts[0]] = portParts[1]
 			}
 		}
+		portInt, ok := port.(int)
+		if ok {
+			rtn[strconv.Itoa(portInt)] = strconv.Itoa(portInt)
+		}
+
 	}
 	return rtn
 }
