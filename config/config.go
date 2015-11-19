@@ -43,7 +43,7 @@ func init() {
 	// create an error object
 	var err error
 
-	Log = lumber.NewConsoleLogger(lumber.INFO)
+	Log = lumber.NewConsoleLogger(lumber.DEBUG)
 
 	//
 	Ports = map[string]string{
