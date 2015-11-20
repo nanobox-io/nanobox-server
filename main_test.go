@@ -18,6 +18,7 @@ import (
 
 	"github.com/nanobox-io/nanobox-server/api"
 	"github.com/nanobox-io/nanobox-server/config"
+	"github.com/nanobox-io/nanobox-server/jobs"
 	"github.com/nanobox-io/nanobox-server/util/docker"
 	"github.com/nanopack/mist/core"
 )
@@ -25,7 +26,10 @@ import (
 var apiClient = api.Init()
 
 func TestMain(m *testing.M) {
-	config.Log = lumber.NewConsoleLogger(lumber.DEBUG)
+	config.Log = lumber.NewConsoleLogger(lumber.ERROR)
+	if testing.Verbose() {
+		config.Log = lumber.NewConsoleLogger(lumber.DEBUG)
+	}
 
 	curDir, err := os.Getwd()
 	if err != nil {
@@ -60,7 +64,10 @@ func TestMain(m *testing.M) {
 			os.Exit(1)
 		}
 	}()
-	<-time.After(time.Second)
+
+	// make sure the images are up to date
+	iu := jobs.ImageUpdate{}
+	iu.Process()
 	rtn := m.Run()
 
 	// Remove all containers
