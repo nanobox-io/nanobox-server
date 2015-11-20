@@ -105,8 +105,9 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 // necessary for anything using a windowing system through the exec.
 func (api *API) ResizeExec(rw http.ResponseWriter, req *http.Request) {
 	pid := req.FormValue("pid")
-	if execKeys[pid] == "" {
-		time.Sleep(1 * time.Second)
+	// give it 10 seconds to show up
+	for i := 0; (i < 20 || execKeys[pid] == ""); i++ {
+			<-time.After(1 * time.Second)
 	}
 	if pid == "" || execKeys[pid] == "" {
 		rw.WriteHeader(http.StatusNotFound)
@@ -120,5 +121,5 @@ func (api *API) ResizeExec(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	err := docker.ResizeExecTTY(execKeys[pid], h, w)
-	fmt.Println(err)
+	fmt.Println("resize error:", err)
 }
