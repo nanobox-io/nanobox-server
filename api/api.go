@@ -51,7 +51,7 @@ func (api *API) Start(port string) error {
 	config.Log.Info("[nanobox/api] Listening on port %v\n", port)
 
 	// blocking...
-	if err := http.ListenAndServe(port, routes); err != nil {
+	if err := http.ListenAndServe("0.0.0.0"+port, routes); err != nil {
 		return err
 	}
 
@@ -81,7 +81,6 @@ func (api *API) registerRoutes() (*pat.Router, error) {
 
 	router.Post("/console", api.handleRequest(api.Exec))
 	router.Post("/resizeexec", api.handleRequest(api.ResizeExec))
-	// router.Post("/killexec", api.handleRequest(api.KillRun))
 
 	router.Get("/libdirs", api.handleRequest(api.LibDirs))
 	router.Post("/file-change", api.handleRequest(api.FileChange))
