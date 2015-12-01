@@ -72,6 +72,7 @@ func ensureContainer(image string) (control bool, err error) {
 			}
 		}
 		control = true
+		err = nil
 
 		container, err = docker.CreateContainer(docker.CreateConfig{Image: image, Category: "dev", UID: "dev1"})
 		if err != nil {

@@ -30,6 +30,7 @@ func TestMain(m *testing.M) {
 	config.Log = lumber.NewConsoleLogger(lumber.DEBUG)
 	if testing.Verbose() {
 		// not working.. not sure why
+
 	}
 
 	curDir, err := os.Getwd()
@@ -180,7 +181,7 @@ func TestDevelop(t *testing.T) {
 	fmt.Fprintf(conn, "POST /develop? HTTP/1.1\r\n\r\n")
 
 	// give the server time to start the dev
-	<-time.After(1 * time.Second)
+	<-time.After(2 * time.Second)
 
 	if c, err := docker.GetContainer("dev1"); err != nil || c.Name == "" {
 		t.Errorf("There should be a dev1 container")

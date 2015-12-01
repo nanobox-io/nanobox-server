@@ -23,9 +23,6 @@ func (c createMatcher) Matches(x interface{}) bool {
 	if !ok {
 		return false
 	}
-	fmt.Printf("matcher!! %+v\n\n", createConfig)
-	fmt.Printf("matcher!! %+v\n\n", createConfig.HostConfig)
-	fmt.Printf("matcher!! %+v\n\n", createConfig.Config)
 	binds := []string{
 		"/mnt/sda/var/nanobox/cache/:/mnt/cache/",
 		"/mnt/sda/var/nanobox/deploy/:/mnt/deploy/",
