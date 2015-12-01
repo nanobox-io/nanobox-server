@@ -106,22 +106,22 @@ func externalIP() (string, error) {
 }
 
 //
-func App() (name string) {
+func App() string {
 	if app != "" {
-		name = app
-		return
+		return app
 	}
+	Log.Error("appfolder: ", MountFolder + "code/")
+
 	files, err := ioutil.ReadDir(MountFolder + "code/")
 	if err != nil {
 		Log.Error(err.Error())
-		return
+		return ""
 	}
 
 	if len(files) < 1 || !files[0].IsDir() {
 		Log.Error("There is no code in your " + MountFolder + "code/ folder")
-		return
+		return ""
 	}
-	name = files[0].Name()
-	app = name
-	return
+	app = files[0].Name()
+	return app
 }

@@ -45,6 +45,7 @@ func (api *API) FileChange(rw http.ResponseWriter, req *http.Request) {
 	body := bufio.NewReader(req.Body)
 	
 	for line, _, err := body.ReadLine(); err != io.EOF; line, _, err = body.ReadLine() {
+		fmt.Println("file:", string(line))
 		if len(line) != 0 {
 			go fn(string(line))
 		}

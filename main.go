@@ -23,7 +23,7 @@ import (
 //
 func main() {
 	// dont start until the app is populated
-	for config.App() != "" {
+	for config.App() == "" {
 		<-time.After(time.Second)
 		config.Log.Info("waiting on app mount")
 	}
