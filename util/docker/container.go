@@ -57,7 +57,7 @@ func addCategoryConfig(category string, cConfig *dc.CreateContainerOptions) {
 		cConfig.Config.WorkingDir = "/code"
 		cConfig.Config.User = "gonano"
 		cConfig.HostConfig.Binds = append([]string{
-			config.MountFolder + "code/" + config.App + "/:/code/",
+			config.MountFolder + "code/" + config.App() + "/:/code/",
 		}, libDirs()...)
 		if container, err := GetContainer("build1"); err == nil {
 			cConfig.HostConfig.Binds = append(cConfig.HostConfig.Binds, fmt.Sprintf("/mnt/sda/var/lib/docker/aufs/mnt/%s/data/:/data/", container.ID))
@@ -70,7 +70,7 @@ func addCategoryConfig(category string, cConfig *dc.CreateContainerOptions) {
 			"/mnt/sda/var/nanobox/deploy/:/mnt/deploy/",
 			"/mnt/sda/var/nanobox/build/:/mnt/build/",
 
-			config.MountFolder + "code/" + config.App + "/:/share/code/:ro",
+			config.MountFolder + "code/" + config.App() + "/:/share/code/:ro",
 			config.MountFolder + "engines/:/share/engines/:ro",
 		}
 	case "bootstrap":
@@ -79,7 +79,7 @@ func addCategoryConfig(category string, cConfig *dc.CreateContainerOptions) {
 			"/mnt/sda/var/nanobox/cache/:/mnt/cache/",
 			"/mnt/sda/var/nanobox/deploy/:/mnt/deploy/",
 
-			config.MountFolder + "code/" + config.App + "/:/code/",
+			config.MountFolder + "code/" + config.App() + "/:/code/",
 			config.MountFolder + "engines/:/share/engines/:ro",
 		}
 	case "code":

@@ -37,7 +37,7 @@ func (api *API) ListRoutes(rw http.ResponseWriter, req *http.Request) {
 
 func (api *API) ListVips(rw http.ResponseWriter, req *http.Request) {
 	vips, _ := util.ListVips()
-	writeBody(vips, rw, http.StatusOK)	
+	writeBody(vips, rw, http.StatusOK)
 }
 
 // ListServices

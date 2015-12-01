@@ -1,10 +1,15 @@
 package docker_test
 
 import (
-	"github.com/golang/mock/gomock"
 	"testing"
+	"os"
+	"fmt"
+	"strings"
 
+	"github.com/golang/mock/gomock"
+	"github.com/jcelliott/lumber"
 	dc "github.com/fsouza/go-dockerclient"
+
 	"github.com/nanobox-io/nanobox-server/config"
 	"github.com/nanobox-io/nanobox-server/util/docker"
 	"github.com/nanobox-io/nanobox-server/util/docker/mock_docker"
@@ -18,6 +23,9 @@ func (c createMatcher) Matches(x interface{}) bool {
 	if !ok {
 		return false
 	}
+	fmt.Printf("matcher!! %+v\n\n", createConfig)
+	fmt.Printf("matcher!! %+v\n\n", createConfig.HostConfig)
+	fmt.Printf("matcher!! %+v\n\n", createConfig.Config)
 	binds := []string{
 		"/mnt/sda/var/nanobox/cache/:/mnt/cache/",
 		"/mnt/sda/var/nanobox/deploy/:/mnt/deploy/",
@@ -37,8 +45,25 @@ func (c createMatcher) String() string {
 	return "is a CreateContainerOptions"
 }
 
+func TestMain(m *testing.M) {
+	config.Log = lumber.NewConsoleLogger(lumber.ERROR)
+	if testing.Verbose() {
+		config.Log = lumber.NewConsoleLogger(lumber.DEBUG)
+	}
+
+	curDir, err := os.Getwd()
+	if err != nil {
+		os.Exit(1)
+	}
+	dir := strings.Replace(curDir, "/util/docker", "/test/", 1)
+	config.MountFolder = dir
+	config.DockerMount = dir
+	fmt.Println("appname: ", config.App())
+	os.Exit(m.Run())
+}
+
 func TestCreatContainer(t *testing.T) {
-	config.App = "app"
+
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 

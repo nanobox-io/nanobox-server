@@ -56,7 +56,7 @@ func (j *Deploy) Process() {
 
 	// parse the boxfile
 	util.LogDebug(stylish.Bullet("Parsing Boxfile"))
-	box := boxfile.NewFromPath(config.MountFolder + "code/" + config.App + "/Boxfile")
+	box := boxfile.NewFromPath(config.MountFolder + "code/" + config.App() + "/Boxfile")
 
 	if err := j.CreateBuildContainer(box.Node("build")); err != nil {
 		util.UpdateStatus(j, "errored")
@@ -66,8 +66,8 @@ func (j *Deploy) Process() {
 	// define the deploy payload
 	j.payload = map[string]interface{}{
 		"platform":    "local",
-		"app":         config.App,
-		"dns":         []string{config.App + ".dev"},
+		"app":         config.App(),
+		"dns":         []string{config.App() + ".dev"},
 		"port":        "8080",
 		"boxfile":     box.Node("build").Parsed,
 		"logtap_host": config.LogtapHost,

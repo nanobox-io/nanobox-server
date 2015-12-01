@@ -9,6 +9,7 @@ package main
 
 import (
 	"os"
+	"time"
 
 	logapi "github.com/nanobox-io/nanobox-logtap/api"
 	"github.com/nanobox-io/nanobox-logtap/archive"
@@ -21,6 +22,11 @@ import (
 
 //
 func main() {
+	// dont start until the app is populated
+	for config.App() != "" {
+		<-time.After(time.Second)
+		config.Log.Info("waiting on app mount")
+	}
 
 	// create a new mist and start listening for messages at *:1445
 	config.Mist.Listen(config.Ports["mist"], nil)

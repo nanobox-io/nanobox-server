@@ -27,8 +27,9 @@ var apiClient = api.Init()
 
 func TestMain(m *testing.M) {
 	config.Log = lumber.NewConsoleLogger(lumber.ERROR)
+	config.Log = lumber.NewConsoleLogger(lumber.DEBUG)
 	if testing.Verbose() {
-		config.Log = lumber.NewConsoleLogger(lumber.DEBUG)
+		// not working.. not sure why
 	}
 
 	curDir, err := os.Getwd()
@@ -37,7 +38,6 @@ func TestMain(m *testing.M) {
 	}
 	config.MountFolder = curDir + "/test/"
 	config.DockerMount = curDir + "/test/"
-	config.App, _ = config.AppName()
 
 	config.Logtap.AddDrain("console", drain.AdaptLogger(config.Log))
 	config.Logtap.AddDrain("mist", drain.AdaptPublisher(config.Mist))

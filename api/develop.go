@@ -90,7 +90,7 @@ func ensureContainer(image string) (control bool, err error) {
 }
 
 func combinedBox() boxfile.Boxfile {
-	box := boxfile.NewFromPath(config.MountFolder + "code/" + config.App + "/Boxfile")
+	box := boxfile.NewFromPath(config.MountFolder + "code/" + config.App() + "/Boxfile")
 
 	if !box.Node("build").BoolValue("disable_engine_boxfile") {
 		if out, err := script.Exec("default-boxfile", "build1", nil); err == nil {

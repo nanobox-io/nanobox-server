@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"bufio"
 
 	"github.com/nanobox-io/nanobox-server/config"
 	"github.com/nanobox-io/nanobox-server/util"
@@ -42,9 +43,10 @@ func (api *API) FileChange(rw http.ResponseWriter, req *http.Request) {
 
 	// read all the body parts and post the files
 	body := bufio.NewReader(req.Body)
-	for line, _, err := body.ReadLine(); err != io.EOF {
+	
+	for line, _, err := body.ReadLine(); err != io.EOF; line, _, err = body.ReadLine() {
 		if len(line) != 0 {
-	  	go fn(string(line))
+			go fn(string(line))
 		}
 	}
 

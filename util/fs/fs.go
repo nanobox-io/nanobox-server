@@ -70,7 +70,7 @@ func (f Fs) Clean() error {
 }
 
 func (f Fs) Touch(file string) {
-	file = config.MountFolder + "code/" + config.App + file
+	file = config.MountFolder + "code/" + config.App() + file
 	exec.Command("touch", "-c", file).Output()
 }
 

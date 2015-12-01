@@ -2,8 +2,8 @@ package jobs
 
 import (
 	"fmt"
-	"strings"
 	"strconv"
+	"strings"
 
 	"github.com/nanobox-io/nanobox-boxfile"
 	"github.com/nanobox-io/nanobox-router"
@@ -45,7 +45,7 @@ func configureRoutes(box boxfile.Boxfile) error {
 	// add the default route if we dont have one
 	defaulted := false
 	for _, route := range newRoutes {
-		if route.Name == config.App+".dev" && route.Path == "/" {
+		if route.Name == config.App()+".dev" && route.Path == "/" {
 			defaulted = true
 			break
 		}
@@ -53,7 +53,7 @@ func configureRoutes(box boxfile.Boxfile) error {
 	if !defaulted {
 		if web1, err := docker.GetContainer("web1"); err == nil {
 			ip := web1.NetworkSettings.IPAddress
-			route := router.Route{Name: config.App + ".dev", Path: "/"}
+			route := router.Route{Name: config.App() + ".dev", Path: "/"}
 			b := box.Node("web1")
 			if len(ports(b)) == 0 {
 				route.URLs = []string{"http://" + ip + ":8080"}
@@ -127,10 +127,10 @@ func routes(box boxfile.Boxfile) (rtn []router.Route) {
 		routeParts := strings.Split(route, ":")
 		switch len(routeParts) {
 		case 1:
-			rtn = append(rtn, router.Route{Name: config.App + ".dev", Path: routeParts[0]})
+			rtn = append(rtn, router.Route{Name: config.App() + ".dev", Path: routeParts[0]})
 		case 2:
 			subDomain := strings.Trim(routeParts[0], ".")
-			rtn = append(rtn, router.Route{Name: subDomain + "." + config.App + ".dev", Path: routeParts[0]})
+			rtn = append(rtn, router.Route{Name: subDomain + "." + config.App() + ".dev", Path: routeParts[0]})
 		}
 
 	}
@@ -165,7 +165,7 @@ func ports(box boxfile.Boxfile) map[string]string {
 }
 
 func combinedBox() boxfile.Boxfile {
-	box := boxfile.NewFromPath(config.MountFolder + "code/" + config.App + "/Boxfile")
+	box := boxfile.NewFromPath(config.MountFolder + "code/" + config.App() + "/Boxfile")
 
 	if !box.Node("build").BoolValue("disable_engine_boxfile") {
 		if out, err := script.Exec("default-boxfile", "build1", nil); err == nil {
@@ -188,6 +188,6 @@ func DefaultEVars(box boxfile.Boxfile) map[string]string {
 		}
 	}
 
-	evar["APP_NAME"] = config.App
+	evar["APP_NAME"] = config.App()
 	return evar
 }

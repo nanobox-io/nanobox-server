@@ -133,7 +133,7 @@ func isDir(path string) bool {
 }
 
 func combinedBox() boxfile.Boxfile {
-	box := boxfile.NewFromPath(config.MountFolder + "code/" + config.App + "/Boxfile")
+	box := boxfile.NewFromPath(config.MountFolder + "code/" + config.App() + "/Boxfile")
 	// run boxfile script (blocking)
 	if !box.Node("build").BoolValue("disable_engine_boxfile") {
 		out, err := ExecInContainer("build1", "/opt/bin/default-boxfile", "{}")
