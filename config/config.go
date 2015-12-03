@@ -41,8 +41,11 @@ func init() {
 	DockerMount = "/mnt/"
 	// create an error object
 	var err error
-
-	Log = lumber.NewConsoleLogger(lumber.INFO)
+	levelEnv := os.Getenv("NANOBOX_LOGLEVEL")
+	if levelEnv == "" {
+		levelEnv = "INFO"
+	}
+	Log = lumber.NewConsoleLogger(lumber.LvlInt(levelEnv))
 
 	//
 	Ports = map[string]string{
