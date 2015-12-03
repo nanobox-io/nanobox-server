@@ -7,13 +7,13 @@
 package api
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
-	"bufio"
 
 	"github.com/nanobox-io/nanobox-server/config"
 	"github.com/nanobox-io/nanobox-server/util"
@@ -43,7 +43,7 @@ func (api *API) FileChange(rw http.ResponseWriter, req *http.Request) {
 
 	// read all the body parts and post the files
 	body := bufio.NewReader(req.Body)
-	
+
 	for line, _, err := body.ReadLine(); err != io.EOF; line, _, err = body.ReadLine() {
 		fmt.Println("file:", string(line))
 		if len(line) != 0 {
@@ -123,8 +123,8 @@ func (api *API) Exec(rw http.ResponseWriter, req *http.Request) {
 func (api *API) ResizeExec(rw http.ResponseWriter, req *http.Request) {
 	pid := req.FormValue("pid")
 	// give it 10 seconds to show up
-	for i := 0; (i < 20 || execKeys[pid] == ""); i++ {
-			<-time.After(1 * time.Second)
+	for i := 0; i < 20 || execKeys[pid] == ""; i++ {
+		<-time.After(1 * time.Second)
 	}
 	if pid == "" || execKeys[pid] == "" {
 		rw.WriteHeader(http.StatusNotFound)

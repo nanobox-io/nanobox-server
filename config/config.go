@@ -22,7 +22,6 @@ import (
 
 //
 var (
-
 	app         string
 	LogtapHost  string
 	Ports       map[string]string
@@ -110,7 +109,7 @@ func App() string {
 	if app != "" {
 		return app
 	}
-	Log.Error("appfolder: ", MountFolder + "code/")
+	Log.Error("appfolder: ", MountFolder+"code/")
 
 	files, err := ioutil.ReadDir(MountFolder + "code/")
 	if err != nil {

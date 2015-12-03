@@ -1,14 +1,14 @@
 package docker_test
 
 import (
-	"testing"
-	"os"
 	"fmt"
+	"os"
 	"strings"
+	"testing"
 
+	dc "github.com/fsouza/go-dockerclient"
 	"github.com/golang/mock/gomock"
 	"github.com/jcelliott/lumber"
-	dc "github.com/fsouza/go-dockerclient"
 
 	"github.com/nanobox-io/nanobox-server/config"
 	"github.com/nanobox-io/nanobox-server/util/docker"

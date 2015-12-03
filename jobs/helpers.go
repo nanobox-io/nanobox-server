@@ -15,8 +15,8 @@ import (
 	"github.com/nanobox-io/nanobox-server/util/script"
 )
 
-var userBoxfile     *boxfile.Boxfile
-var engineBoxfile   *boxfile.Boxfile
+var userBoxfile *boxfile.Boxfile
+var engineBoxfile *boxfile.Boxfile
 var combinedBoxfile *boxfile.Boxfile
 
 // grab the original boxfile and loop through the webs
@@ -183,7 +183,7 @@ func UserBoxfile(refresh bool) *boxfile.Boxfile {
 	// create a new one if we didnt have one
 	box := boxfile.NewFromPath(config.MountFolder + "code/" + config.App() + "/Boxfile")
 	userBoxfile = &box
-	
+
 	return userBoxfile
 }
 
@@ -201,14 +201,16 @@ func EngineBoxfile(refresh bool) *boxfile.Boxfile {
 	// create a new one if we didnt have one
 	if !UserBoxfile(false).Node("build").BoolValue("disable_engine_boxfile") {
 		pload := map[string]interface{}{
-			"boxfile": UserBoxfile(false).Node("build").Parsed,
+			"platform":    "local",
+			"boxfile":     UserBoxfile(false).Node("build").Parsed,
+			"logtap_host": config.LogtapHost,
 		}
 		if out, err := script.Exec("default-boxfile", "build1", pload); err == nil {
 			box := boxfile.New([]byte(out))
 			engineBoxfile = &box
 		}
 	}
-	
+
 	return engineBoxfile
 }
 

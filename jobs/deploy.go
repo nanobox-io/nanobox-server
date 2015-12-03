@@ -10,8 +10,8 @@ package jobs
 //
 import (
 	"fmt"
-	"strings"
 	"reflect"
+	"strings"
 
 	"github.com/nanobox-io/nanobox-boxfile"
 	"github.com/nanobox-io/nanobox-golang-stylish"
@@ -99,12 +99,12 @@ func (j *Deploy) Process() {
 	serviceContainers, _ := docker.ListContainers("service")
 	for _, container := range serviceContainers {
 		if !box.Node(container.Config.Labels["uid"]).Valid {
-			util.LogDebug(stylish.SubBullet("- removing " +container.Config.Labels["uid"] ))
+			util.LogDebug(stylish.SubBullet("- removing " + container.Config.Labels["uid"]))
 			util.RemoveForward(container.NetworkSettings.IPAddress)
 			docker.RemoveContainer(container.ID)
 		}
 		if !reflect.DeepEqual(box.Node(container.Config.Labels["uid"]), oldCombinedBox.Node(container.Config.Labels["uid"])) {
-			util.LogDebug(stylish.SubBullet("- replacing " +container.Config.Labels["uid"] ))
+			util.LogDebug(stylish.SubBullet("- replacing " + container.Config.Labels["uid"]))
 			util.RemoveForward(container.NetworkSettings.IPAddress)
 			docker.RemoveContainer(container.ID)
 		}
