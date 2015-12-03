@@ -84,6 +84,7 @@ func TestPing(t *testing.T) {
 	r, err := http.Get("http://localhost:1757/ping")
 	if err != nil || r.StatusCode != 200 {
 		t.Errorf("unable to ping")
+		return
 	}
 	bytes, _ := ioutil.ReadAll(r.Body)
 	body := string(bytes)
