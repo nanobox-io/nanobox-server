@@ -67,6 +67,7 @@ func (j *Deploy) Process() {
 	// define the deploy payload
 	j.payload = map[string]interface{}{
 		"platform":    "local",
+		"run":         j.Run,
 		"app":         config.App(),
 		"dns":         []string{config.App() + ".dev"},
 		"port":        "8080",
