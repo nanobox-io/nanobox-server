@@ -21,10 +21,10 @@ func (j *Startup) Process() {
 	config.Log.Info("starting startup job")
 
 	docker.RemoveContainer("exec1")
-	box := combinedBox()
+	box := CombinedBoxfile(false)
 
-	configureRoutes(box)
-	configurePorts(box)
+	configureRoutes(*box)
+	configurePorts(*box)
 
 	// we also need to set up a ssh tunnel for each running docker container
 	// this is easiest to do by creating a ServiceEnv job and working it

@@ -10,8 +10,8 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/nanobox-io/nanobox-boxfile"
 	"github.com/nanobox-io/nanobox-server/config"
+	"github.com/nanobox-io/nanobox-server/jobs"
 	"github.com/nanobox-io/nanobox-server/util/docker"
 	"github.com/nanobox-io/nanobox-server/util/fs"
 	"github.com/nanobox-io/nanobox-server/util/script"
@@ -28,7 +28,7 @@ func (api *API) Develop(rw http.ResponseWriter, req *http.Request) {
 	// force the exec route to go into a dev1 container
 	req.Form["container"] = []string{"dev1"}
 
-	box := combinedBox()
+	box := jobs.CombinedBoxfile(false)
 
 	image := "nanobox/build"
 	if stab := box.Node("build").StringValue("stability"); stab != "" {
@@ -74,6 +74,9 @@ func ensureContainer(image string) (control bool, err error) {
 		control = true
 		err = nil
 
+		// give docker a new set of lib dirs
+		jobs.SetLibDirs()
+
 		container, err = docker.CreateContainer(docker.CreateConfig{Image: image, Category: "dev", UID: "dev1"})
 		if err != nil {
 			config.Log.Debug("develop create containter: %s", err.Error())
@@ -88,15 +91,4 @@ func ensureContainer(image string) (control bool, err error) {
 		}
 	}
 	return
-}
-
-func combinedBox() boxfile.Boxfile {
-	box := boxfile.NewFromPath(config.MountFolder + "code/" + config.App() + "/Boxfile")
-
-	if !box.Node("build").BoolValue("disable_engine_boxfile") {
-		if out, err := script.Exec("default-boxfile", "build1", nil); err == nil {
-			box.Merge(boxfile.New([]byte(out)))
-		}
-	}
-	return box
 }

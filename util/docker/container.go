@@ -58,7 +58,7 @@ func addCategoryConfig(category string, cConfig *dc.CreateContainerOptions) {
 		cConfig.Config.User = "gonano"
 		cConfig.HostConfig.Binds = append([]string{
 			config.MountFolder + "code/" + config.App() + "/:/code/",
-		}, libDirs()...)
+		}, LibDirs...)
 		if container, err := GetContainer("build1"); err == nil {
 			cConfig.HostConfig.Binds = append(cConfig.HostConfig.Binds, fmt.Sprintf("/mnt/sda/var/lib/docker/aufs/mnt/%s/data/:/data/", container.ID))
 		}

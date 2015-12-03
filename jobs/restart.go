@@ -31,7 +31,7 @@ func (j *Restart) Process() {
 	j.Success = false
 
 	util.LogInfo(stylish.Bullet("Restarting app in %s container...", j.UID))
-	box := combinedBox()
+	box := CombinedBoxfile(false)
 	// restart payload
 	payload := map[string]interface{}{
 		"platform":    "local",

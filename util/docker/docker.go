@@ -1,15 +1,12 @@
 package docker
 
 import (
-	"fmt"
 	"io"
-	"os"
 
 	dc "github.com/fsouza/go-dockerclient"
-	"github.com/nanobox-io/nanobox-boxfile"
-
-	"github.com/nanobox-io/nanobox-server/config"
 )
+
+var LibDirs = []string{}
 
 type ClientInterface interface {
 	ListImages(opts dc.ListImagesOptions) ([]dc.APIImages, error)
@@ -107,40 +104,4 @@ func ResizeExecTTY(id string, height, width int) error {
 }
 func RunExec(exec *dc.Exec, in io.Reader, out io.Writer, err io.Writer) (*dc.ExecInspect, error) {
 	return Default.RunExec(exec, in, out, err)
-}
-
-// These functions are bandaids. I will be removing them once I have a clear place to put them
-func libDirs() (rtn []string) {
-	box := combinedBox()
-	libDirs, ok := box.Node("build").Value("lib_dirs").([]interface{})
-	if ok && !box.Node("console").BoolValue("ignore_lib_dirs") {
-		for _, libDir := range libDirs {
-			strDir, ok := libDir.(string)
-			if ok && isDir("/mnt/sda/var/nanobox/cache/lib_dirs/"+strDir) {
-				rtn = append(rtn, fmt.Sprintf("/mnt/sda/var/nanobox/cache/lib_dirs/%s/:/code/%s/", strDir, strDir))
-			}
-		}
-	}
-	return
-}
-
-func isDir(path string) bool {
-	fi, err := os.Stat(path)
-	if err != nil {
-		return false
-	}
-	return fi.IsDir()
-}
-
-func combinedBox() boxfile.Boxfile {
-	box := boxfile.NewFromPath(config.MountFolder + "code/" + config.App() + "/Boxfile")
-	// run boxfile script (blocking)
-	if !box.Node("build").BoolValue("disable_engine_boxfile") {
-		out, err := ExecInContainer("build1", "/opt/bin/default-boxfile", "{}")
-		if err == nil {
-			eBox := boxfile.New([]byte(out))
-			box.Merge(eBox)
-		}
-	}
-	return box
 }

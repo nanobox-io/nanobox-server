@@ -38,8 +38,7 @@ func (j *Build) Process() {
 		return
 	}
 
-	// parse the boxfile
-	box := combinedBox()
+	box := CombinedBoxfile(false)
 
 	// define the build payload
 	j.payload = map[string]interface{}{
@@ -71,7 +70,7 @@ func (j *Build) Process() {
 
 	worker.Process()
 
-	evars := DefaultEVars(box)
+	evars := DefaultEVars(*box)
 
 	failedEnv := false
 	for _, env := range serviceEnvs {

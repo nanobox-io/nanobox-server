@@ -11,6 +11,7 @@ package jobs
 import (
 	"fmt"
 	"strings"
+	"reflect"
 
 	"github.com/nanobox-io/nanobox-boxfile"
 	"github.com/nanobox-io/nanobox-golang-stylish"
@@ -56,7 +57,7 @@ func (j *Deploy) Process() {
 
 	// parse the boxfile
 	util.LogDebug(stylish.Bullet("Parsing Boxfile"))
-	box := boxfile.NewFromPath(config.MountFolder + "code/" + config.App() + "/Boxfile")
+	box := UserBoxfile(true)
 
 	if err := j.CreateBuildContainer(box.Node("build")); err != nil {
 		util.UpdateStatus(j, "errored")
@@ -73,23 +74,37 @@ func (j *Deploy) Process() {
 		"logtap_host": config.LogtapHost,
 	}
 
-	j.payload["env"] = DefaultEVars(box)
+	j.payload["env"] = DefaultEVars(*box)
 
 	if err := j.SetupBuild(); err != nil {
 		util.UpdateStatus(j, "errored")
 		return
 	}
 
-	box = combinedBox()
+	// get a cached copy of the combined boxfile
+	oldCombinedBox := CombinedBoxfile(false)
+
+	// make sure to grab the new engine boxfile
+	EngineBoxfile(true)
+	// grab a new boxfile
+	box = CombinedBoxfile(true)
 	// add the missing storage nodes to the boxfile
 	box.AddStorageNode()
+
 	j.payload["boxfile"] = box.Node("build").Parsed
 
 	// remove any containers no longer in the boxfile
+	// this will also remove any services where the boxfile has been modified since last deploy
 	util.LogDebug(stylish.Bullet("Removing old containers..."))
 	serviceContainers, _ := docker.ListContainers("service")
 	for _, container := range serviceContainers {
 		if !box.Node(container.Config.Labels["uid"]).Valid {
+			util.LogDebug(stylish.SubBullet("- removing " +container.Config.Labels["uid"] ))
+			util.RemoveForward(container.NetworkSettings.IPAddress)
+			docker.RemoveContainer(container.ID)
+		}
+		if !reflect.DeepEqual(box.Node(container.Config.Labels["uid"]), oldCombinedBox.Node(container.Config.Labels["uid"])) {
+			util.LogDebug(stylish.SubBullet("- replacing " +container.Config.Labels["uid"] ))
 			util.RemoveForward(container.NetworkSettings.IPAddress)
 			docker.RemoveContainer(container.ID)
 		}
@@ -229,20 +244,20 @@ func (j *Deploy) Process() {
 
 	util.LogDebug(stylish.Bullet("Running before deploy scripts..."))
 
-	if err := j.RunDeployScripts("before", box); err != nil {
+	if err := j.RunDeployScripts("before", *box); err != nil {
 		util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// configure the port forwards per service
-	if err := configurePorts(box); err != nil {
+	if err := configurePorts(*box); err != nil {
 		util.HandleError(stylish.Error("Failed to configure Ports", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
 	}
 
 	// configure the routing mesh for any web services
-	if err := configureRoutes(box); err != nil {
+	if err := configureRoutes(*box); err != nil {
 		util.HandleError(stylish.Error("Failed to configure Routes", err.Error()))
 		util.UpdateStatus(j, "errored")
 		return
@@ -251,7 +266,7 @@ func (j *Deploy) Process() {
 	//
 	util.LogDebug(stylish.Bullet("Running after deploy hooks..."))
 
-	if err := j.RunDeployScripts("after", box); err != nil {
+	if err := j.RunDeployScripts("after", *box); err != nil {
 		util.UpdateStatus(j, "errored")
 		return
 	}

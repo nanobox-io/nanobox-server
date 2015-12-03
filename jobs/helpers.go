@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -13,6 +14,10 @@ import (
 	"github.com/nanobox-io/nanobox-server/util/docker"
 	"github.com/nanobox-io/nanobox-server/util/script"
 )
+
+var userBoxfile     *boxfile.Boxfile
+var engineBoxfile   *boxfile.Boxfile
+var combinedBoxfile *boxfile.Boxfile
 
 // grab the original boxfile and loop through the webs
 // find all routes and regsiter the routes with the router
@@ -164,16 +169,67 @@ func ports(box boxfile.Boxfile) map[string]string {
 	return rtn
 }
 
-func combinedBox() boxfile.Boxfile {
-	box := boxfile.NewFromPath(config.MountFolder + "code/" + config.App() + "/Boxfile")
+func UserBoxfile(refresh bool) *boxfile.Boxfile {
+	// clear the cached boxfile if we need to
+	if refresh == true {
+		userBoxfile = nil
+	}
 
-	if !box.Node("build").BoolValue("disable_engine_boxfile") {
-		if out, err := script.Exec("default-boxfile", "build1", nil); err == nil {
-			box.Merge(boxfile.New([]byte(out)))
+	// return the cached one if we have it
+	if userBoxfile != nil {
+		return userBoxfile
+	}
+
+	// create a new one if we didnt have one
+	box := boxfile.NewFromPath(config.MountFolder + "code/" + config.App() + "/Boxfile")
+	userBoxfile = &box
+	
+	return userBoxfile
+}
+
+func EngineBoxfile(refresh bool) *boxfile.Boxfile {
+	// clear the cached boxfile if we need to
+	if refresh == true {
+		engineBoxfile = nil
+	}
+
+	// return the cached one if we have it
+	if engineBoxfile != nil {
+		return engineBoxfile
+	}
+
+	// create a new one if we didnt have one
+	if !UserBoxfile(false).Node("build").BoolValue("disable_engine_boxfile") {
+		pload := map[string]interface{}{
+			"boxfile": UserBoxfile(false).Node("build").Parsed
+		}
+		if out, err := script.Exec("default-boxfile", "build1", pload); err == nil {
+			box := boxfile.New([]byte(out))
+			engineBoxfile = &box
 		}
 	}
-	util.LogDebug("combined Boxfile: %+v", box.Parsed)
-	return box
+	
+	return engineBoxfile
+}
+
+func CombinedBoxfile(refresh bool) *boxfile.Boxfile {
+	// clear the cached boxfile if we need to
+	if refresh == true {
+		combinedBoxfile = nil
+	}
+
+	// return the cached one if we have it
+	if combinedBoxfile != nil {
+		return combinedBoxfile
+	}
+
+	box := UserBoxfile(false)
+	if eBox := EngineBoxfile(false); eBox != nil {
+		box.Merge(*eBox)
+	}
+	combinedBoxfile = box
+
+	return combinedBoxfile
 }
 
 func DefaultEVars(box boxfile.Boxfile) map[string]string {
@@ -190,4 +246,27 @@ func DefaultEVars(box boxfile.Boxfile) map[string]string {
 
 	evar["APP_NAME"] = config.App()
 	return evar
+}
+
+func SetLibDirs() {
+	dockerLibDirs := []string{}
+	box := CombinedBoxfile(false)
+	libDirs, ok := box.Node("build").Value("lib_dirs").([]interface{})
+	if ok && !box.Node("console").BoolValue("ignore_lib_dirs") {
+		for _, libDir := range libDirs {
+			strDir, ok := libDir.(string)
+			if ok && isDir("/mnt/sda/var/nanobox/cache/lib_dirs/"+strDir) {
+				dockerLibDirs = append(dockerLibDirs, fmt.Sprintf("/mnt/sda/var/nanobox/cache/lib_dirs/%s/:/code/%s/", strDir, strDir))
+			}
+		}
+	}
+	docker.LibDirs = dockerLibDirs
+}
+
+func isDir(path string) bool {
+	fi, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return fi.IsDir()
 }
