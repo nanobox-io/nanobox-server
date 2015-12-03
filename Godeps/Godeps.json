@@ -50,10 +50,6 @@
 			"Rev": "ad45545899c7b13c020ea92b2072220eefad42b8"
 		},
 		{
-			"ImportPath": "github.com/nanobox-io/golang-hatchet",
-			"Rev": "dec82651ee5b3bf6a95ec1cde070c5951a29bb14"
-		},
-		{
 			"ImportPath": "github.com/nanobox-io/nanobox-boxfile",
 			"Rev": "1bd63c5cab8b4ba8b626fdbba313f014b2865922"
 		},
@@ -63,7 +59,7 @@
 		},
 		{
 			"ImportPath": "github.com/nanobox-io/nanobox-logtap",
-			"Rev": "76abd4667b2e834388b64188135dc1d6902ecf6d"
+			"Rev": "6c2dbca35bc23457c562e9a5e7dafb4b8ccf8257"
 		},
 		{
 			"ImportPath": "github.com/nanobox-io/nanobox-lvs",
@@ -71,15 +67,15 @@
 		},
 		{
 			"ImportPath": "github.com/nanobox-io/nanobox-router",
-			"Rev": "35bd5bd8267a9f8c44e073a3f4b236dbd3c08914"
+			"Rev": "b57d37bbe0ced3987d1a73c11406f3f31c25877f"
 		},
 		{
 			"ImportPath": "github.com/nanopack/mist/core",
-			"Rev": "df8325e77b1a2d86d4193af7791ec4edbdb26bcf"
+			"Rev": "cad1e283375c8eb84314478fe87c626257cb0c05"
 		},
 		{
 			"ImportPath": "github.com/nanopack/mist/subscription",
-			"Rev": "df8325e77b1a2d86d4193af7791ec4edbdb26bcf"
+			"Rev": "cad1e283375c8eb84314478fe87c626257cb0c05"
 		},
 		{
 			"ImportPath": "github.com/pborman/uuid",

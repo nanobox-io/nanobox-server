@@ -201,7 +201,7 @@ func EngineBoxfile(refresh bool) *boxfile.Boxfile {
 	// create a new one if we didnt have one
 	if !UserBoxfile(false).Node("build").BoolValue("disable_engine_boxfile") {
 		pload := map[string]interface{}{
-			"boxfile": UserBoxfile(false).Node("build").Parsed
+			"boxfile": UserBoxfile(false).Node("build").Parsed,
 		}
 		if out, err := script.Exec("default-boxfile", "build1", pload); err == nil {
 			box := boxfile.New([]byte(out))

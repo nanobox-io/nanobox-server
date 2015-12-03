@@ -189,7 +189,7 @@ func TestDevelop(t *testing.T) {
 	conn.Close()
 
 	// give the server time to start the dev
-	<-time.After(1 * time.Second)
+	<-time.After(2 * time.Second)
 	if _, err := docker.GetContainer("dev1"); err == nil {
 		t.Errorf("There should not be a dev1 container")
 	}
