@@ -19,6 +19,14 @@ var userBoxfile *boxfile.Boxfile
 var engineBoxfile *boxfile.Boxfile
 var combinedBoxfile *boxfile.Boxfile
 
+func init() {
+	// on start pull the cached boxfile if it is there
+	box := boxfile.NewFromPath(config.CachedBox)
+	if box.Valid {
+		combinedBoxfile = &box
+	}
+}
+
 // grab the original boxfile and loop through the webs
 // find all routes and regsiter the routes with the router
 //
@@ -230,9 +238,13 @@ func CombinedBoxfile(refresh bool) *boxfile.Boxfile {
 		box.Merge(*eBox)
 	}
 	combinedBoxfile = box
+	// save the combined boxfile to a file so can recover from crashes
+	go combinedBoxfile.SaveToPath(config.CachedBox)
 
 	return combinedBoxfile
 }
+
+
 
 func DefaultEVars(box boxfile.Boxfile) map[string]string {
 	evar := map[string]string{}

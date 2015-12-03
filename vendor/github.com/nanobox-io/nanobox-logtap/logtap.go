@@ -22,7 +22,7 @@ type (
 		Info(string, ...interface{})
 		Debug(string, ...interface{})
 		Trace(string, ...interface{})
-	}
+	}	
 
 	Archive interface {
 		Slice(name string, offset, limit uint64, level int) ([]Message, error)

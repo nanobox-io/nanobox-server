@@ -12,8 +12,8 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"strings"
 	"os"
+	"strings"
 
 	"github.com/jcelliott/lumber"
 
@@ -29,6 +29,7 @@ var (
 	IP          string
 	MountFolder string
 	DockerMount string
+	CachedBox   string
 
 	Log        lumber.Logger
 	Logtap     *logtap.Logtap
@@ -40,6 +41,7 @@ var (
 func init() {
 	MountFolder = "/vagrant/"
 	DockerMount = "/mnt/"
+	CachedBox = DockerMount+"sda/var/nanobox/Boxfile.cache"
 	// create an error object
 	var err error
 	levelEnv := os.Getenv("NANOBOX_LOGLEVEL")

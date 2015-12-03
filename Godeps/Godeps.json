@@ -51,7 +51,7 @@
 		},
 		{
 			"ImportPath": "github.com/nanobox-io/nanobox-boxfile",
-			"Rev": "1bd63c5cab8b4ba8b626fdbba313f014b2865922"
+			"Rev": "02e5dd361dd48654605dc43ecb883cb1545639fc"
 		},
 		{
 			"ImportPath": "github.com/nanobox-io/nanobox-golang-stylish",

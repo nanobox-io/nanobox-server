@@ -39,6 +39,7 @@ func TestMain(m *testing.M) {
 	}
 	config.MountFolder = curDir + "/test/"
 	config.DockerMount = curDir + "/test/"
+	config.CachedBox   = curDir + "/test/"
 
 	config.Logtap.AddDrain("console", drain.AdaptLogger(config.Log))
 	config.Logtap.AddDrain("mist", drain.AdaptPublisher(config.Mist))

@@ -19,7 +19,7 @@ var domainLock = sync.Mutex{}
 
 var domains = []Domain{}
 
-// A Domain representation
+// A Domain representation 
 // used for matching routes to web requests.
 // It also knows how to forward requests to the appropriate servers.
 type Domain struct {

@@ -103,6 +103,7 @@ func (j *Deploy) Process() {
 			util.LogDebug(stylish.SubBullet("- removing " + container.Config.Labels["uid"]))
 			util.RemoveForward(container.NetworkSettings.IPAddress)
 			docker.RemoveContainer(container.ID)
+			continue
 		}
 		if !reflect.DeepEqual(box.Node(container.Config.Labels["uid"]), oldCombinedBox.Node(container.Config.Labels["uid"])) {
 			util.LogDebug(stylish.SubBullet("- replacing " + container.Config.Labels["uid"]))
