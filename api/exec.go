@@ -43,7 +43,7 @@ func (api *API) FileChange(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	// read all the body parts and post the files
-	body := bufio.Scanner(req.Body)
+	body := bufio.NewScanner(req.Body)
 
 	for body.Scan() {
 		fmt.Println("file:", body.Text())
