@@ -33,6 +33,7 @@ func (api *API) FileChange(rw http.ResponseWriter, req *http.Request) {
 	fn := func(file string) {
 		<-time.After(time.Second)
 		fs.Touch(file)
+		fmt.Println("file touched:", file)
 	}
 
 	// read the file from the header so the old way works
@@ -42,13 +43,16 @@ func (api *API) FileChange(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	// read all the body parts and post the files
-	body := bufio.NewReader(req.Body)
+	body := bufio.Scanner(req.Body)
 
-	for line, _, err := body.ReadLine(); err != io.EOF; line, _, err = body.ReadLine() {
-		fmt.Println("file:", string(line))
-		if len(line) != 0 {
-			go fn(string(line))
+	for body.Scan() {
+		fmt.Println("file:", body.Text())
+		if len(body.Text()) != 0 {
+			go fn(body.Text())
 		}
+	}
+	if err := body.Err(); err != nil {
+		fmt.Println("body error:", err)
 	}
 
 	writeBody(nil, rw, http.StatusOK)

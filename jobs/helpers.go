@@ -244,8 +244,6 @@ func CombinedBoxfile(refresh bool) *boxfile.Boxfile {
 	return combinedBoxfile
 }
 
-
-
 func DefaultEVars(box boxfile.Boxfile) map[string]string {
 	evar := map[string]string{}
 	if box.Node("env").Valid {
