@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/nanobox-io/nanobox-server",
-	"GoVersion": "go1.5",
+	"GoVersion": "go1.5.2",
 	"Deps": [
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
@@ -50,6 +50,10 @@
 			"Rev": "ad45545899c7b13c020ea92b2072220eefad42b8"
 		},
 		{
+			"ImportPath": "github.com/nanobox-io/golang-lvs",
+			"Rev": "620cc8911569686135cfd0d1e94e519992d12696"
+		},
+		{
 			"ImportPath": "github.com/nanobox-io/nanobox-boxfile",
 			"Rev": "02e5dd361dd48654605dc43ecb883cb1545639fc"
 		},
@@ -60,10 +64,6 @@
 		{
 			"ImportPath": "github.com/nanobox-io/nanobox-logtap",
 			"Rev": "6c2dbca35bc23457c562e9a5e7dafb4b8ccf8257"
-		},
-		{
-			"ImportPath": "github.com/nanobox-io/nanobox-lvs",
-			"Rev": "620cc8911569686135cfd0d1e94e519992d12696"
 		},
 		{
 			"ImportPath": "github.com/nanobox-io/nanobox-router",

@@ -33,7 +33,6 @@ func (api *API) FileChange(rw http.ResponseWriter, req *http.Request) {
 	fn := func(file string) {
 		<-time.After(time.Second)
 		fs.Touch(file)
-		fmt.Println("file touched:", file)
 	}
 
 	// read the file from the header so the old way works
@@ -46,7 +45,6 @@ func (api *API) FileChange(rw http.ResponseWriter, req *http.Request) {
 	body := bufio.NewScanner(req.Body)
 
 	for body.Scan() {
-		fmt.Println("file:", body.Text())
 		if len(body.Text()) != 0 {
 			go fn(body.Text())
 		}

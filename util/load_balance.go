@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/nanobox-io/nanobox-lvs"
+	"github.com/nanobox-io/golang-lvs"
 	"github.com/nanobox-io/nanobox-server/config"
 )
 
