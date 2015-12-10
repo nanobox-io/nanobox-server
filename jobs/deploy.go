@@ -363,16 +363,14 @@ func (j *Deploy) RunBuild() error {
 		return err
 	}
 
-	if j.Run {
-		// run build script (blocking)
-		if _, err := script.Exec("default-build", "build1", j.payload); err != nil {
-			return err
-		}
+	// run build script (blocking)
+	if _, err := script.Exec("default-build", "build1", j.payload); err != nil {
+		return err
+	}
 
-		// run publish script (blocking)
-		if _, err := script.Exec("default-publish", "build1", j.payload); err != nil {
-			return err
-		}
+	// run publish script (blocking)
+	if _, err := script.Exec("default-publish", "build1", j.payload); err != nil {
+		return err
 	}
 
 	// run cleanup script (blocking)
