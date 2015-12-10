@@ -264,7 +264,7 @@ func SetLibDirs() {
 	dockerLibDirs := []string{}
 	box := CombinedBoxfile(false)
 	libDirs, ok := box.Node("build").Value("lib_dirs").([]interface{})
-	if ok && !box.Node("console").BoolValue("ignore_lib_dirs") {
+	if ok && !box.Node("dev").BoolValue("ignore_lib_dirs") {
 		for _, libDir := range libDirs {
 			strDir, ok := libDir.(string)
 			if ok && isDir("/mnt/sda/var/nanobox/cache/lib_dirs/"+strDir) {
