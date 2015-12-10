@@ -35,7 +35,7 @@ func (api *API) Develop(rw http.ResponseWriter, req *http.Request) {
 		image = image + ":" + stab
 	}
 
-	control, err := ensureContainer(image)
+	control, err := ensureContainer(image, req.FormValue("dev_config"))
 	if err != nil {
 		rw.Write([]byte(err.Error()))
 		return
@@ -49,7 +49,7 @@ func (api *API) Develop(rw http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func ensureContainer(image string) (control bool, err error) {
+func ensureContainer(image, dev_config string) (control bool, err error) {
 	developTex.Lock()
 	defer developTex.Unlock()
 	// if there is no dev1 it needs to be created and this thread needs to remember
@@ -89,6 +89,18 @@ func ensureContainer(image string) (control bool, err error) {
 			config.Log.Debug("Failed script output: \n %s", out)
 			config.Log.Debug("out: %s", string(out))
 		}
+
+		pload := map[string]interface{}{
+			"boxfile": jobs.CombinedBoxfile(false).Node("dev").Parsed,
+			"dev_config": dev_config,
+		}
+
+		out, err = script.Exec("dev-prepare", "dev1", pload)
+		if err != nil {
+			config.Log.Debug("Failed script output: \n %s", out)
+			config.Log.Debug("out: %s", string(out))
+		}
+
 	}
 	return
 }
