@@ -61,6 +61,7 @@ func addCategoryConfig(category string, cConfig *dc.CreateContainerOptions) {
 		}, LibDirs...)
 		if container, err := GetContainer("build1"); err == nil {
 			cConfig.HostConfig.Binds = append(cConfig.HostConfig.Binds, fmt.Sprintf("/mnt/sda/var/lib/docker/aufs/mnt/%s/data/:/data/", container.ID))
+			cConfig.HostConfig.Binds = append(cConfig.HostConfig.Binds, "/mnt/sda/var/nanobox/build/:/mnt/build/")
 		}
 		cConfig.HostConfig.NetworkMode = "host"
 	case "build":
