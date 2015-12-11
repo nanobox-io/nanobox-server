@@ -91,7 +91,7 @@ func ensureContainer(image, dev_config string) (control bool, err error) {
 		}
 
 		pload := map[string]interface{}{
-			"boxfile": jobs.CombinedBoxfile(false).Node("dev").Parsed,
+			"boxfile":    jobs.CombinedBoxfile(false).Node("dev").Parsed,
 			"dev_config": dev_config,
 		}
 

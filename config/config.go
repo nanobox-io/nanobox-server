@@ -41,7 +41,7 @@ var (
 func init() {
 	MountFolder = "/vagrant/"
 	DockerMount = "/mnt/"
-	CachedBox = DockerMount+"sda/var/nanobox/Boxfile.cache"
+	CachedBox = DockerMount + "sda/var/nanobox/Boxfile.cache"
 	// create an error object
 	var err error
 	levelEnv := os.Getenv("NANOBOX_LOGLEVEL")
