@@ -55,6 +55,9 @@ func addCategoryConfig(category string, cConfig *dc.CreateContainerOptions) {
 		cConfig.Config.AttachStdout = true
 		cConfig.Config.AttachStderr = true
 		cConfig.Config.WorkingDir = "/code"
+		if WorkingDir != "" {
+			cConfig.Config.WorkingDir = WorkingDir
+		}
 		cConfig.Config.User = "gonano"
 		cConfig.HostConfig.Binds = append([]string{
 			config.MountFolder + "code/" + config.App() + "/:/code/",

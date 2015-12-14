@@ -7,6 +7,7 @@ import (
 )
 
 var LibDirs = []string{}
+var WorkingDir = ""
 
 type ClientInterface interface {
 	ListImages(opts dc.ListImagesOptions) ([]dc.APIImages, error)

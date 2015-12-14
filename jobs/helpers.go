@@ -275,6 +275,10 @@ func SetLibDirs() {
 	docker.LibDirs = dockerLibDirs
 }
 
+func SetWorkingDir() {
+	docker.WorkingDir = CombinedBoxfile(false).Node("dev").StringValue("working_dir")
+}
+
 func isDir(path string) bool {
 	fi, err := os.Stat(path)
 	if err != nil {

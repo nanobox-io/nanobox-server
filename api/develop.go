@@ -76,6 +76,7 @@ func ensureContainer(image, dev_config string) (control bool, err error) {
 
 		// give docker a new set of lib dirs
 		jobs.SetLibDirs()
+		jobs.SetWorkingDir()
 
 		container, err = docker.CreateContainer(docker.CreateConfig{Image: image, Category: "dev", UID: "dev1"})
 		if err != nil {
