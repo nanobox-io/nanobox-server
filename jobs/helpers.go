@@ -29,7 +29,6 @@ func init() {
 
 // grab the original boxfile and loop through the webs
 // find all routes and regsiter the routes with the router
-//
 func configureRoutes(box boxfile.Boxfile) error {
 	newRoutes := []router.Route{}
 	webs := box.Nodes("web")
@@ -44,11 +43,8 @@ func configureRoutes(box boxfile.Boxfile) error {
 
 		ip := container.NetworkSettings.IPAddress
 		for _, route := range routes(b) {
-			if len(ports(b)) == 0 {
-				route.URLs = []string{"http://" + ip + ":8080"}
-			}
-			fmt.Printf("web:ports: %+v\n", ports(b))
-			for _, to := range ports(b) {
+			config.Log.Debug("web:ports: %+v\n", ports(b))
+			for _, to := range ports(b)["http"] {
 				route.URLs = append(route.URLs, "http://"+ip+":"+to)
 			}
 			newRoutes = append(newRoutes, route)
@@ -68,10 +64,7 @@ func configureRoutes(box boxfile.Boxfile) error {
 			ip := web1.NetworkSettings.IPAddress
 			route := router.Route{Name: config.App() + ".dev", Path: "/"}
 			b := box.Node("web1")
-			if len(ports(b)) == 0 {
-				route.URLs = []string{"http://" + ip + ":8080"}
-			}
-			for _, to := range ports(b) {
+			for _, to := range ports(b)["http"] {
 				route.URLs = append(route.URLs, "http://"+ip+":"+to)
 			}
 			newRoutes = append(newRoutes, route)
@@ -90,6 +83,7 @@ func clearPorts() {
 
 	// remove all old forwards
 	for _, vip := range vips {
+		// leave in our reserved router ports
 		if vip.Port != 80 && vip.Port != 443 {
 			for _, server := range vip.Servers {
 				util.RemoveForward(server.Host)
@@ -99,7 +93,6 @@ func clearPorts() {
 }
 
 func configurePorts(box boxfile.Boxfile) error {
-
 	// loop through the boxfile container nodes
 	// and add in any new port maps
 	nodes := box.Nodes("container")
@@ -113,10 +106,21 @@ func configurePorts(box boxfile.Boxfile) error {
 			continue
 		}
 		ip := container.NetworkSettings.IPAddress
-		for from, to := range ports(b) {
-			err := util.AddForward(from, ip, to)
-			if err != nil {
-				config.Log.Debug("failed to add forward %+v", err)
+		for pType, ports := range ports(b) {
+			// TEMPORARY if conditional
+			// can remove once https://github.com/nanobox-io/golang-lvs/issues/3
+			// has been solved
+			if pType == "http" || pType == "tcp" {
+				for from, to := range ports {
+					// dont over write our reserved router
+					// ports
+					if from != "443" && from != "80" {
+						err := util.AddForward(from, ip, to)
+						if err != nil {
+							config.Log.Debug("failed to add forward %+v", err)
+						}
+					}
+				}
 			}
 		}
 	}
@@ -151,8 +155,13 @@ func routes(box boxfile.Boxfile) (rtn []router.Route) {
 	return
 }
 
-func ports(box boxfile.Boxfile) map[string]string {
-	rtn := map[string]string{}
+func ports(box boxfile.Boxfile) map[string]map[string]string {
+	rtn := map[string]map[string]string{
+		"http": map[string]string{},
+		"tcp": map[string]string{},
+		"udp": map[string]string{},
+	}
+
 	ports, ok := box.Value("ports").([]interface{})
 	if !ok {
 		return rtn
@@ -163,14 +172,22 @@ func ports(box boxfile.Boxfile) map[string]string {
 			portParts := strings.Split(p, ":")
 			switch len(portParts) {
 			case 1:
-				rtn[portParts[0]] = portParts[0]
+				rtn["tcp"][portParts[0]] = portParts[0]
 			case 2:
-				rtn[portParts[0]] = portParts[1]
+				rtn["tcp"][portParts[0]] = portParts[1]
+			case 3:
+				switch portParts[0] {
+				case "http", "udp":
+					rtn[portParts[0]][portParts[1]] = portParts[2]
+				default:
+					rtn["tcp"][portParts[1]] = portParts[2]
+				}
+
 			}
 		}
 		portInt, ok := port.(int)
 		if ok {
-			rtn[strconv.Itoa(portInt)] = strconv.Itoa(portInt)
+			rtn["tcp"][strconv.Itoa(portInt)] = strconv.Itoa(portInt)
 		}
 
 	}

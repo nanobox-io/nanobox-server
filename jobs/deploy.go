@@ -70,7 +70,6 @@ func (j *Deploy) Process() {
 		"run":         j.Run,
 		"app":         config.App(),
 		"dns":         []string{config.App() + ".dev"},
-		"port":        "8080",
 		"boxfile":     box.Node("build").Parsed,
 		"logtap_host": config.LogtapHost,
 	}

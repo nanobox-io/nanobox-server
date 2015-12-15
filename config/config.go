@@ -115,7 +115,7 @@ func App() string {
 	if app != "" {
 		return app
 	}
-	Log.Error("appfolder: ", MountFolder+"code/")
+	Log.Debug("appfolder: %s", MountFolder+"code/")
 
 	files, err := ioutil.ReadDir(MountFolder + "code/")
 	if err != nil {
