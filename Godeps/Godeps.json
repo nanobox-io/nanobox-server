@@ -67,7 +67,7 @@
 		},
 		{
 			"ImportPath": "github.com/nanobox-io/nanobox-router",
-			"Rev": "b57d37bbe0ced3987d1a73c11406f3f31c25877f"
+			"Rev": "e6362e82d70453be3a130eda8d672ebccc53e3a4"
 		},
 		{
 			"ImportPath": "github.com/nanopack/mist/core",

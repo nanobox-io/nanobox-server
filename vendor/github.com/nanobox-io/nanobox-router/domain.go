@@ -3,8 +3,7 @@
 // Proprietary and confidential
 package router
 
-import (
-)
+import ()
 
 var routes = []Route{}
 
@@ -13,13 +12,18 @@ func UpdateRoutes(newRoutes []Route) {
 	newDomains := []Domain{}
 	for _, route := range newRoutes {
 		dom := Domain{Name: route.Name, Path: route.Path, proxies: []*Proxy{}}
+		if route.Page != "" {
+			// if im given a page for the route
+			// do not populate the proxies.
+			dom.Page = []byte(route.Page)
+		}
 		for _, url := range route.URLs {
 			prox := &Proxy{URL: url}
 			err := prox.initProxy()
 			if err == nil {
 				dom.proxies = append(dom.proxies, prox)
 			}
-			
+
 		}
 		newDomains = append(newDomains, dom)
 	}
@@ -28,7 +32,6 @@ func UpdateRoutes(newRoutes []Route) {
 	domains = newDomains
 	domainLock.Unlock()
 }
-
 
 // Show my cached copy of the routes.
 // This is used for syncronization.

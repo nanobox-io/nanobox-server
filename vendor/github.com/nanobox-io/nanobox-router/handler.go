@@ -17,7 +17,7 @@ type handler struct {
 	https bool
 }
 
-// Implement the http.Handler interface. Also let clients know when I have 
+// Implement the http.Handler interface. Also let clients know when I have
 // no matching route listeners
 func (self handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	if ErrorHandler != nil {
@@ -30,8 +30,17 @@ func (self handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	re := regexp.MustCompile(`:\d+`) // used to remove the port from the host
 	host := string(re.ReplaceAll([]byte(req.Host), nil))
-	proxy := bestMatch(host, req.URL.Path)
-	if proxy != nil {
+	domain := bestMatch(host, req.URL.Path)
+	if domain != nil {
+		if domain.Page != nil {
+			rw.Write(domain.Page)
+			return
+		}
+		if len(domain.proxies) == 0 {
+			NoRoutes{}.ServeHTTP(rw, req)
+			return
+		}
+		proxy := domain.proxies[atomic.AddUint32(&robiner, 1)%uint32(len(domain.proxies))]
 		proxy.reverseProxy.ServeHTTP(rw, req)
 		return
 	}
@@ -39,24 +48,24 @@ func (self handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 }
 
 // route and subdomain matching system.
-// This first makes sure the domain matches in a recursive manor 
-// example: sub.domain.com is requested and we recursively strip subdomains 
+// This first makes sure the domain matches in a recursive manor
+// example: sub.domain.com is requested and we recursively strip subdomains
 // until we find a match. Then score the path match and confirm it is a match.
-func bestMatch(host, path string) *Proxy {
-	dom := Domain{}
+func bestMatch(host, path string) *Domain {
+	var dom *Domain
 	matchScore := 0
-	for _, domain := range domains {
-		if domain.Name == host && strings.HasPrefix(path, domain.Path) && matchScore < len(domain.Path) {
-			dom = domain
-			matchScore = len(domain.Path)
+	for i := 0; i < len(domains); i++ {
+		if domains[i].Name == host && strings.HasPrefix(path, domains[i].Path) && matchScore < len(domains[i].Path) {
+			dom = &domains[i]
+			matchScore = len(domains[i].Path)
 		}
 	}
-	if dom.Name == "" {
+	if dom == nil {
 		hostParts := strings.Split(host, ".")
 		if len(hostParts) <= 2 {
 			return nil
 		}
 		return bestMatch(strings.Join(hostParts[1:], "."), path)
 	}
-	return dom.proxies[atomic.AddUint32(&robiner, 1)%uint32(len(dom.proxies))]
+	return dom
 }

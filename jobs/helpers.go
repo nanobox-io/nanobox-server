@@ -252,7 +252,9 @@ func CombinedBoxfile(refresh bool) *boxfile.Boxfile {
 
 	box := UserBoxfile(false)
 	if eBox := EngineBoxfile(false); eBox != nil {
-		box.Merge(*eBox)
+		ebox := eBox
+		ebox.Merge(*box)
+		box = ebox
 	}
 	combinedBoxfile = box
 	// save the combined boxfile to a file so can recover from crashes
