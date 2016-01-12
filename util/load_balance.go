@@ -1,7 +1,7 @@
 package util
 
 import (
-	"fmt"
+	// "fmt"
 	"strconv"
 
 	"github.com/nanobox-io/golang-lvs"
@@ -20,12 +20,14 @@ func AddForward(fromPort, toIp, toPort string) error {
 	if err != nil {
 		return err
 	}
-	_, err = lvs.AddVip(config.IP, fromInt)
+	service := lvs.Service{Host: config.IP, Port: fromInt, Type: "tcp"}
+	err = lvs.DefaultIpvs.AddService(service)
 	if err != nil {
 		return err
 	}
 	toInt, _ := strconv.Atoi(toPort)
-	_, err = lvs.AddServer(fmt.Sprintf("%s:%d", config.IP, fromInt), toIp, toInt)
+	server := lvs.Server{Host: toIp, Port: toInt}
+	err = service.AddServer(server)
 	if err != nil {
 		return err
 	}
@@ -33,31 +35,43 @@ func AddForward(fromPort, toIp, toPort string) error {
 }
 
 func RemoveForward(ip string) error {
-	vips, err := lvs.ListVips()
-	if err != nil {
-		return err
-	}
-
-	errorString := ""
-
-	for _, vip := range vips {
-		for _, server := range vip.Servers {
+	for _, service := range lvs.DefaultIpvs.Services {
+		for _, server := range service.Servers {
 			if server.Host == ip {
-				err := lvs.DeleteVip(fmt.Sprintf("%s:%d", vip.Host, vip.Port))
+				err := lvs.DefaultIpvs.RemoveService(service)
 				if err != nil {
-					errorString = fmt.Sprintf("%s%v\n", errorString, err.Error())
+					return err
 				}
-				break
 			}
 		}
 	}
-
-	if errorString != "" {
-		return fmt.Errorf(errorString)
-	}
 	return nil
+
+	// vips, err := lvs.ListVips()
+	// if err != nil {
+	// 	return err
+	// }
+
+	// errorString := ""
+
+	// for _, vip := range vips {
+	// 	for _, server := range vip.Servers {
+	// 		if server.Host == ip {
+	// 			err := lvs.DeleteVip(fmt.Sprintf("%s:%d", vip.Host, vip.Port))
+	// 			if err != nil {
+	// 				errorString = fmt.Sprintf("%s%v\n", errorString, err.Error())
+	// 			}
+	// 			break
+	// 		}
+	// 	}
+	// }
+
+	// if errorString != "" {
+	// 	return fmt.Errorf(errorString)
+	// }
+	// return nil
 }
 
-func ListVips() ([]lvs.Vip, error) {
-	return lvs.ListVips()
+func ListVips() ([]lvs.Service, error) {
+	return lvs.DefaultIpvs.Services, nil
 }
