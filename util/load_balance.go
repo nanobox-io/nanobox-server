@@ -10,6 +10,7 @@ import (
 
 // make sure the router is being forwarded
 func init() {
+	lvs.DefaultIpvs.Save()
 	AddForward("80", config.IP, config.Ports["router"])
 	AddForward("443", config.IP, config.Ports["router"])
 }
@@ -18,17 +19,20 @@ func init() {
 func AddForward(fromPort, toIp, toPort string) error {
 	fromInt, err := strconv.Atoi(fromPort)
 	if err != nil {
+		config.Log.Error("error: %s\n", err.Error())
 		return err
 	}
-	service := lvs.Service{Host: config.IP, Port: fromInt, Type: "tcp"}
+	service := lvs.Service{Host: config.IP, Port: fromInt, Type: "tcp", Persistance: 300}
 	err = lvs.DefaultIpvs.AddService(service)
 	if err != nil {
+		config.Log.Error("error: %s\n", err.Error())
 		return err
 	}
 	toInt, _ := strconv.Atoi(toPort)
-	server := lvs.Server{Host: toIp, Port: toInt}
+	server := lvs.Server{Host: toIp, Port: toInt, Weight: 1, Forwarder: "m"}
 	err = service.AddServer(server)
 	if err != nil {
+		config.Log.Error("error: %s\n", err.Error())
 		return err
 	}
 	return nil
@@ -40,6 +44,7 @@ func RemoveForward(ip string) error {
 			if server.Host == ip {
 				err := lvs.DefaultIpvs.RemoveService(service)
 				if err != nil {
+					config.Log.Error("error: %s\n", err.Error())
 					return err
 				}
 			}

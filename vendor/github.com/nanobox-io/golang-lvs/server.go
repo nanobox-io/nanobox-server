@@ -42,7 +42,7 @@ func (s Server) getHostPort() string {
 }
 
 func (s Server) String() string {
-	return fmt.Sprintf("%s %s -y %s -x %s -w %s",
+	return fmt.Sprintf("%s %s -y %d -x %d -w %d",
 		s.getHostPort(), ServerForwarderFlag[s.Forwarder],
 		s.LowerThreshold, s.UpperThreshold, s.Weight)
 }

@@ -8,9 +8,11 @@ package lvs
 
 import (
 	"errors"
+	// "fmt"
 	"io"
 	"net"
 	"os/exec"
+	// "strings"
 )
 
 var (
@@ -78,6 +80,7 @@ func run(args []string) ([]byte, error) {
 }
 
 func execute(exe string, args ...string) error {
+	// fmt.Printf("%s\n", strings.Join(append([]string{exe}, args...), " "))
 	cmd := exec.Command(exe, args...)
 	return cmd.Run()
 }
