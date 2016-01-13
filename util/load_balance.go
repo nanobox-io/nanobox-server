@@ -1,7 +1,7 @@
 package util
 
 import (
-	// "fmt"
+	"fmt"
 	"strconv"
 
 	"github.com/nanobox-io/golang-lvs"
@@ -11,6 +11,7 @@ import (
 // make sure the router is being forwarded
 func init() {
 	lvs.DefaultIpvs.Save()
+	fmt.Println(lvs.DefaultIpvs.Services)
 	AddForward("80", config.IP, config.Ports["router"])
 	AddForward("443", config.IP, config.Ports["router"])
 }
@@ -30,7 +31,8 @@ func AddForward(fromPort, toIp, toPort string) error {
 	}
 	toInt, _ := strconv.Atoi(toPort)
 	server := lvs.Server{Host: toIp, Port: toInt, Weight: 1, Forwarder: "m"}
-	err = service.AddServer(server)
+	real_service := lvs.DefaultIpvs.FindService(service)
+	err = real_service.AddServer(server)
 	if err != nil {
 		config.Log.Error("error: %s\n", err.Error())
 		return err

@@ -52,6 +52,10 @@ func (s Service) FindServer(server Server) *Server {
 }
 
 func (s *Service) AddServer(server Server) error {
+	testServer := s.FindServer(server)
+	if testServer != nil {
+		return nil
+	}
 	s.Servers = append(s.Servers, server)
 	return backend("ipvsadm", append([]string{"-a", ServiceTypeFlag[s.Type], s.getHostPort(), "-r"}, strings.Split(server.String(), " ")...)...)
 }

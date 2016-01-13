@@ -32,6 +32,10 @@ func (i Ipvs) FindService(service Service) *Service {
 }
 
 func (i *Ipvs) AddService(service Service) error {
+	testService := i.FindService(service)
+	if testService != nil {
+		return nil
+	}
 	i.Services = append(i.Services, service)
 	return backend("ipvsadm", append([]string{"-A", ServiceTypeFlag[service.Type], service.getHostPort(),
 		"-s", ServiceSchedulerFlag[service.Scheduler],
@@ -57,7 +61,7 @@ func (i *Ipvs) RemoveService(service Service) error {
 			break
 		}
 	}
-	return backend("-D", ServiceTypeFlag[service.Type], service.getHostPort())
+	return backend("ipvsadm", "-D", ServiceTypeFlag[service.Type], service.getHostPort())
 }
 
 func (i *Ipvs) Clear() error {
