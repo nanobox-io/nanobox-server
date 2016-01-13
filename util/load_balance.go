@@ -11,7 +11,6 @@ import (
 // make sure the router is being forwarded
 func init() {
 	lvs.DefaultIpvs.Save()
-	fmt.Println(lvs.DefaultIpvs.Services)
 	AddForward("80", config.IP, config.Ports["router"])
 	AddForward("443", config.IP, config.Ports["router"])
 }
