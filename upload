@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-GOOS=linux godep go build 
+
+set -e
+
+GO15VENDOREXPERIMENT=1 GOOS=linux go build 
 
 cat nanobox-server | md5 >> nanobox-server.md5
 
