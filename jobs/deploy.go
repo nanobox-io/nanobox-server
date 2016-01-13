@@ -169,7 +169,7 @@ func (j *Deploy) Process() {
 	serviceContainers, _ = docker.ListContainers("service")
 	for _, container := range serviceContainers {
 
-		s := ServiceEnv{UID: container.Config.Labels["uid"]}
+		s := ServiceEnv{UID: container.Config.Labels["uid"], FirstTime: true}
 		for _, serviceStart := range serviceStarts {
 			if serviceStart.UID == s.UID {
 				s.FirstTime = true
