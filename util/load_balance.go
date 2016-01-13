@@ -1,7 +1,6 @@
 package util
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/nanobox-io/golang-lvs"
