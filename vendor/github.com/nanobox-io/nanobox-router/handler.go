@@ -30,17 +30,17 @@ func (self handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	re := regexp.MustCompile(`:\d+`) // used to remove the port from the host
 	host := string(re.ReplaceAll([]byte(req.Host), nil))
-	domain := bestMatch(host, req.URL.Path)
-	if domain != nil {
-		if domain.Page != nil {
-			rw.Write(domain.Page)
+	route := bestMatch(host, req.URL.Path)
+	if route != nil {
+		if route.Page != "" {
+			rw.Write([]byte(route.Page))
 			return
 		}
-		if len(domain.proxies) == 0 {
+		if len(route.proxies) == 0 {
 			NoRoutes{}.ServeHTTP(rw, req)
 			return
 		}
-		proxy := domain.proxies[atomic.AddUint32(&robiner, 1)%uint32(len(domain.proxies))]
+		proxy := route.proxies[atomic.AddUint32(&robiner, 1)%uint32(len(route.proxies))]
 		proxy.reverseProxy.ServeHTTP(rw, req)
 		return
 	}
@@ -51,21 +51,46 @@ func (self handler) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 // This first makes sure the domain matches in a recursive manor
 // example: sub.domain.com is requested and we recursively strip subdomains
 // until we find a match. Then score the path match and confirm it is a match.
-func bestMatch(host, path string) *Domain {
-	var dom *Domain
+func bestMatch(host, path string) (route *Route) {
 	matchScore := 0
-	for i := 0; i < len(domains); i++ {
-		if domains[i].Name == host && strings.HasPrefix(path, domains[i].Path) && matchScore < len(domains[i].Path) {
-			dom = &domains[i]
-			matchScore = len(domains[i].Path)
+	for _, r := range routes {
+		if domainMatch(host, r) && pathMatch(path, r) && matchScore < len(r.Path) {
+			route = &r
+			matchScore = len(r.Path)
 		}
 	}
-	if dom == nil {
+
+	if route == nil {
 		hostParts := strings.Split(host, ".")
 		if len(hostParts) <= 2 {
 			return nil
 		}
 		return bestMatch(strings.Join(hostParts[1:], "."), path)
 	}
-	return dom
+	return route
+}
+
+// match the different parts of the domain
+func domainMatch(requestHost string, r Route) bool {
+	switch {
+	case r.Domain != "" && r.SubDomain != "":
+		return requestHost == (r.SubDomain + "." + r.Domain)
+	case r.Domain != "":
+		return strings.HasSuffix(requestHost, r.Domain)
+	case r.SubDomain != "":
+		// remove domain.com part of the host string
+		hostParts := strings.Split(requestHost, ".")
+		if len(hostParts) < 2 {
+			return false
+		}
+		subHost := strings.Join(hostParts[:len(hostParts)-2], ".")
+		
+		// direct compare
+		return subHost == r.SubDomain
+	}
+	return true
+}
+
+func pathMatch(requestPath string , r Route) bool {
+	return strings.HasPrefix(requestPath, r.Path)
 }

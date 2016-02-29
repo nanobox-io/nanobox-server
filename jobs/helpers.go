@@ -45,7 +45,7 @@ func configureRoutes(box boxfile.Boxfile) error {
 		for _, route := range routes(b) {
 			config.Log.Debug("web:ports: %+v\n", ports(b))
 			for _, to := range ports(b)["http"] {
-				route.URLs = append(route.URLs, "http://"+ip+":"+to)
+				route.Targets = append(route.Targets, "http://"+ip+":"+to)
 			}
 			newRoutes = append(newRoutes, route)
 		}
@@ -54,7 +54,7 @@ func configureRoutes(box boxfile.Boxfile) error {
 	// add the default route if we dont have one
 	defaulted := false
 	for _, route := range newRoutes {
-		if route.Name == config.App()+".dev" && route.Path == "/" {
+		if route.Domain == "" && route.Path == "/" {
 			defaulted = true
 			break
 		}
@@ -62,10 +62,10 @@ func configureRoutes(box boxfile.Boxfile) error {
 	if !defaulted {
 		if web1, err := docker.GetContainer("web1"); err == nil {
 			ip := web1.NetworkSettings.IPAddress
-			route := router.Route{Name: config.App() + ".dev", Path: "/"}
+			route := router.Route{Path: "/"}
 			b := box.Node("web1")
 			for _, to := range ports(b)["http"] {
-				route.URLs = append(route.URLs, "http://"+ip+":"+to)
+				route.Targets = append(route.Targets, "http://"+ip+":"+to)
 			}
 			newRoutes = append(newRoutes, route)
 		}
@@ -144,10 +144,10 @@ func routes(box boxfile.Boxfile) (rtn []router.Route) {
 		routeParts := strings.Split(route, ":")
 		switch len(routeParts) {
 		case 1:
-			rtn = append(rtn, router.Route{Name: config.App() + ".dev", Path: routeParts[0]})
+			rtn = append(rtn, router.Route{Path: routeParts[0]})
 		case 2:
 			subDomain := strings.Trim(routeParts[0], ".")
-			rtn = append(rtn, router.Route{Name: subDomain + "." + config.App() + ".dev", Path: routeParts[0]})
+			rtn = append(rtn, router.Route{SubDomain: subDomain, Path: routeParts[0]})
 		}
 
 	}

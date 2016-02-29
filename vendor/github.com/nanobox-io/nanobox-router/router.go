@@ -11,34 +11,48 @@ import (
 
 // A route object from the api
 type Route struct {
-	Name string   `json:"name"`
+	SubDomain string `json:"subdomain"`
+	Domain    string `json:"subdomain"`
 	Path string   `json:"path"`
-	URLs []string `json:"urls"`
+	Targets []string `json:"targets"`
 	Page string   `json:"page"`
-}
 
-var domainLock = sync.Mutex{}
-
-var domains = []Domain{}
-
-// A Domain representation
-// used for matching routes to web requests.
-// It also knows how to forward requests to the appropriate servers.
-type Domain struct {
-	Name    string
-	Path    string
-	proxies []*Proxy
-	Page    []byte
+	proxies []*proxy
 }
 
 // Simple Ip storage for creating Reverse Proxies
-type Proxy struct {
+type proxy struct {
 	URL          string
 	reverseProxy *httputil.ReverseProxy
 }
 
+var routes = []Route{}
+var mutex = sync.Mutex{}
+
+// replace my routes with a new set
+func UpdateRoutes(newRoutes []Route) {
+	for _, route := range newRoutes {
+		for _, target := range route.Targets {
+			prox := &proxy{URL: target}
+			err := prox.initProxy()
+			if err == nil {
+				route.proxies = append(route.proxies, prox)
+			}
+		}
+	}
+	mutex.Lock()
+	routes = newRoutes
+	mutex.Unlock()
+}
+
+// Show my cached copy of the routes.
+// This is used for syncronization.
+func Routes() []Route {
+	return routes
+}
+
 // Establish the ReverseProxy
-func (self *Proxy) initProxy() error {
+func (self *proxy) initProxy() error {
 	if self.reverseProxy == nil {
 		url, err := url.Parse(self.URL)
 		if err != nil {

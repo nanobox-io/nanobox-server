@@ -15,7 +15,8 @@ var certificates = []tls.Certificate{}
 var keys = []KeyPair{}
 
 type KeyPair struct {
-	Cert, Key string
+	Cert string `json:"cert"`
+	Key  string `json:"key"`
 }
 
 var address = ":443"
@@ -59,10 +60,10 @@ func UpdateCerts(newKeys []KeyPair) {
 		}
 
 	}
-	domainLock.Lock()
+	mutex.Lock()
 	keys = newKeys
 	certificates = newCerts
-	domainLock.Unlock()
+	mutex.Unlock()
 	StartTLS(address)
 }
 
