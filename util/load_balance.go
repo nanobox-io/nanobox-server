@@ -21,16 +21,18 @@ func AddForward(fromPort, toIp, toPort string) error {
 		config.Log.Error("error: %s\n", err.Error())
 		return err
 	}
-	service := lvs.Service{Host: config.IP, Port: fromInt, Type: "tcp", Persistance: 300}
-	err = lvs.DefaultIpvs.AddService(service)
+	err = lvs.DefaultIpvs.AddService(lvs.Service{Host: config.IP, Port: fromInt, Type: "tcp", Persistence: 300})
 	if err != nil {
 		config.Log.Error("error: %s\n", err.Error())
 		return err
 	}
+	// look up the service instead of using the one we created
+	// this keeps the communication with the lvs package simple
+	service := lvs.DefaultIpvs.FindService("tcp", config.IP, fromInt)
+
 	toInt, _ := strconv.Atoi(toPort)
 	server := lvs.Server{Host: toIp, Port: toInt, Weight: 1, Forwarder: "m"}
-	real_service := lvs.DefaultIpvs.FindService(service)
-	err = real_service.AddServer(server)
+	err = service.AddServer(server)
 	if err != nil {
 		config.Log.Error("error: %s\n", err.Error())
 		return err
@@ -42,7 +44,7 @@ func RemoveForward(ip string) error {
 	for _, service := range lvs.DefaultIpvs.Services {
 		for _, server := range service.Servers {
 			if server.Host == ip {
-				err := lvs.DefaultIpvs.RemoveService(service)
+				err := lvs.DefaultIpvs.RemoveService(service.Type, service.Host, service.Port)
 				if err != nil {
 					config.Log.Error("error: %s\n", err.Error())
 					return err
