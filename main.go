@@ -18,6 +18,7 @@ import (
 	"github.com/nanobox-io/nanobox-router"
 	"github.com/nanobox-io/nanobox-server/api"
 	"github.com/nanobox-io/nanobox-server/config"
+	mistServer "github.com/nanopack/mist/server"
 )
 
 //
@@ -28,8 +29,8 @@ func main() {
 		config.Log.Info("waiting on app mount")
 	}
 
-	// create a new mist and start listening for messages at *:1445
-	config.Mist.Listen(config.Ports["mist"], nil)
+	// start a mist TCP server listening at 0.0.0.0:1445
+	mistServer.Start([]string{"tcp://0.0.0.0:1445"}, "")
 
 	setupLogtap()
 

@@ -18,7 +18,6 @@ import (
 	"github.com/jcelliott/lumber"
 
 	"github.com/nanobox-io/nanobox-logtap"
-	"github.com/nanopack/mist/core"
 )
 
 //
@@ -33,7 +32,6 @@ var (
 
 	Log        lumber.Logger
 	Logtap     *logtap.Logtap
-	Mist       *mist.Mist
 	LogHandler http.HandlerFunc
 )
 
@@ -54,7 +52,6 @@ func init() {
 	Ports = map[string]string{
 		"api":    ":1757",
 		"logtap": ":514",
-		"mist":   ":1445",
 		"router": "60000",
 	}
 
@@ -65,7 +62,6 @@ func init() {
 
 	LogtapHost = IP
 
-	Mist = mist.New()
 	Logtap = logtap.New(Log)
 }
 
