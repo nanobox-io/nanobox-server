@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/nanobox-io/nanobox-server/config"
+	"github.com/nanopack/mist/core"
 )
 
 // due to the way this uses the reflect library there are certain assumptions made
@@ -25,5 +25,5 @@ func UpdateStatus(v interface{}, status string) {
 
 	// allow any messages that were waiting to be sent before me
 	runtime.Gosched()
-	config.Mist.Publish([]string{"job", strings.ToLower(name)}, fmt.Sprintf(`{"model":"%s", "action":"update", "document":{"id":"%s", "status":"%s"}}`, name, id, status))
+	mist.Publish([]string{"job", strings.ToLower(name)}, fmt.Sprintf(`{"model":"%s", "action":"update", "document":{"id":"%s", "status":"%s"}}`, name, id, status))
 }
