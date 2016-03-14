@@ -19,6 +19,7 @@ import (
 	"github.com/nanobox-io/nanobox-server/api"
 	"github.com/nanobox-io/nanobox-server/config"
 	mistServer "github.com/nanopack/mist/server"
+	"github.com/nanopack/mist/core"
 )
 
 //
@@ -81,6 +82,6 @@ func setupLogtap() {
 
 	//
 	config.Logtap.AddDrain("historical", db.Write)
-	config.Logtap.AddDrain("mist", drain.AdaptPublisher(config.Mist))
+	config.Logtap.AddDrain("mist", drain.AdaptPublisher(&mist.Proxy{}))
 
 }
